@@ -1,0 +1,5 @@
+Django==5.0.1
+shioaji==1.2.1
+djangorestframework==3.14.0
+pyyaml==6.0.1
+django_cors_headers==4.3.1

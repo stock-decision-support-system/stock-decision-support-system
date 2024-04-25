@@ -1,0 +1,13 @@
+{
+  "name": "stock-decision-support-system",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently \"npm run start-server\" \"npm run start-client\"",
+    "start-server": "cd backend && python manage.py runserver",
+    "start-client": "cd frontend && npm start"
+  },
+  "author": "113401",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

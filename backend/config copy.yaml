@@ -1,0 +1,10 @@
+database:
+  host: 你的ip
+  port: 你的port
+  name: 照db命名
+  user: 帳號
+  password: 密碼
+
+shioaji:
+  api_key: 群組看或自己註冊
+  secret_key: 群組看或自己註冊

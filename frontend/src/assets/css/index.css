@@ -1,0 +1,56 @@
+@import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
+* {
+  font-family: 'Poppins','Helvetica', 'Arial', 'Noto Sans TC', '黑體-繁','微軟正黑體', sans-serif !important;
+}
+
+.nav-link{
+  color: #C0C2C6;
+  font-size: 15px !important;
+}
+
+.nav-link:hover{
+  color: #ffffff !important;
+}
+
+#btnb:hover{
+  background-color: rgba(1 , 198, 183, 80%);
+}
+
+.kv{
+  height: 100vh;
+  background-size: cover;
+}
+.larger-text {
+  font-size: 3em; /* 或者使用px, %, 等等來設置你想要的大小 */
+}
+.btn:hover{
+  
+}
+
+.navbar {
+  padding: 1rem 2rem; /* 调整导航栏的内边距 */
+}
+
+.navbar-brand img {
+  width: 30px; /* 设置导航栏品牌图标的宽度 */
+}
+
+.navbar-nav .nav-link {
+  color: #C0C2C6; /* 设置导航链接的颜色 */
+}
+
+.navbar-nav .nav-link.active {
+  font-weight: bold; /* 设置活动链接的加粗样式 */
+}
+
+.dropdown-menu {
+  background-color: #060A1B; /* 设置下拉菜单的背景颜色 */
+}
+
+.dropdown-menu .dropdown-item {
+  color: #C0C2C6; /* 设置下拉菜单项的颜色 */
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.1); /* 设置下拉菜单项的鼠标悬停背景颜色 */
+}
