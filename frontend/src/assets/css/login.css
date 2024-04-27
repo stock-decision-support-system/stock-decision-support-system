@@ -1,0 +1,71 @@
+@import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
+* {
+  font-family: 'Poppins','Helvetica', 'Arial', 'Noto Sans TC', '黑體-繁','微軟正黑體', sans-serif !important;
+}
+
+.nav-link{
+  color: #C0C2C6 !important;
+  font-size: 15px !important;
+}
+
+.nav-link:hover{
+  color: #ffffff !important;
+}
+
+#btnb:hover{
+  background-color: rgba(1 , 198, 183, 80%);
+}
+
+.btn{
+  color: white;
+  background: linear-gradient(to right, #47c7f2, #12ddbf);
+}
+
+.kv{
+  height: 638px;
+  background-image: url(../images/loginback.png);
+  background-attachment: fixed;
+  background-size: cover;
+}
+.larger-text {
+  font-size: 3em; /* 或者使用px, %, 等等來設置你想要的大小 */
+}
+
+.User{
+  color: #fff;
+}
+
+.input-group .form-control {
+  border-radius: 0; /* 移除輸入框的圓角 */
+  border-left: 0; /* 移除輸入框左側的邊框 */
+}
+
+.input-group .input-group-text {
+  border-radius: 0; /* 移除圖標包裹span的圓角 */
+  border-right: 0; /* 移除圖標包裹span右側的邊框 */
+}
+
+/* 這段代碼將移除input group裡面所有元素的圓角和邊框，讓它們看起來像是一個連續的元素。 */
+.input-group .form-control, .input-group .input-group-text {
+  border-color: #ced4da; /* 您可能需要根據實際情況調整這個顏色 */
+}
+
+.input-group .input-group-text {
+  background-color: #ffffff; /* 設置為與input相同的背景顏色 */
+}
+
+/* 選擇性：如果您想要在focus時有相同的邊框顏色 */
+.input-group .form-control:focus {
+  box-shadow: inset 0 -1px 0 #ced4da; /* 適當的陰影來替代輪廓線 */
+}
+
+.link{
+  text-decoration: none;
+  color: #ddd;
+}
+
+.link:hover{
+  color: white;
+}
+
+

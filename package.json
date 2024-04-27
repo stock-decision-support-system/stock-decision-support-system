@@ -9,5 +9,8 @@
   "author": "113401",
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "antd": "^5.16.4"
   }
 }
