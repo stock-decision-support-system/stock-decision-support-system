@@ -9,20 +9,45 @@ const Login = () => {
 
   
 
-  const handleSubmit = (event) => {
-    event.preventDefault(); // 防止表單默認提交行為
-
-    // 確保所有字段都已填寫
+  const handleSubmit = async (event) => {
+    event.preventDefault(); // 防止表单默认提交行为
+  
+    // 确保所有字段都已填写
     if (!username || !password) {
       alert('請填寫所有欄位');
       return;
     }
-
-    // 在這裡處理表單提交，例如發送到伺服器
-    console.log('Username:', username);
-    console.log('Password:', password);
-    // 發送表單到你的伺服器...
+  
+    // 准备要发送的数据
+    const loginData = {
+      username,
+      password,
+    };
+  
+    try {
+      // 使用 fetch API 发送数据
+      const response = await fetch('http://localhost:8000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loginData),
+      });
+  
+      // 检查响应是否成功
+      if (response.ok) {
+        const data = await response.json();
+        // 处理后端返回的数据，例如保存 token 或者重定向到其他页面
+        console.log(data);
+      } else {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+    } catch (error) {
+      // 处理错误情况
+      console.error('登录失败:', error);
+    }
   };
+  
 
   const executeRecaptcha = useCallback(() => {
     if (window.grecaptcha) {
@@ -122,7 +147,7 @@ const Login = () => {
                 </button>
                 {/* 其他鏈接 */}
                 <div className="text-center mb-3">
-                  <span>沒有帳號?立即<a href="./signUp.html">免費申請！</a></span>
+                  <span>沒有帳號?立即<a href="./signUp">免費申請！</a></span>
                 </div>
               </form>
             </div>

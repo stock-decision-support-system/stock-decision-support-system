@@ -3,6 +3,12 @@
   font-family: 'Poppins','Helvetica', 'Arial', 'Noto Sans TC', '黑體-繁','微軟正黑體', sans-serif !important;
 }
 
+body{
+  background-image: url(../images/loginback.png);
+  background-attachment: fixed;
+  background-size: cover;
+}
+
 .nav-link{
   color: #C0C2C6;
   font-size: 15px !important;

@@ -3,18 +3,12 @@
   font-family: 'Poppins','Helvetica', 'Arial', 'Noto Sans TC', '黑體-繁','微軟正黑體', sans-serif !important;
 }
 
-.fixed-top {
-  position: fixed;
-  top: 0;
-  right: 0;
-  left: 0;
-  z-index: 1030; /* 高於一般元素，低於 modal 等元素 */
+@media (min-width: 992px) { /* 這是 Bootstrap 的 'md' 斷點 */
+  .custom-col-lg {
+    width: 50%;
+    margin: 0 auto; /* 水平居中 */
+  }
 }
-
-body {
-  padding-top: 57.5px; /* 假設導航欄高度為 56px */
-}
-
 
 .nav-link{
   color: #C0C2C6 !important;
@@ -34,12 +28,20 @@ body {
   background: linear-gradient(to right, #47c7f2, #12ddbf);
 }
 
-.kv{
-  height: 91.7vh;
+.btn:hover{
+  
+}
+
+body{
   background-image: url(../images/loginback.png);
   background-attachment: fixed;
   background-size: cover;
 }
+
+/* .kv{
+  height: 91.7vh;
+
+} */
 .larger-text {
   font-size: 3em; /* 或者使用px, %, 等等來設置你想要的大小 */
 }
@@ -80,5 +82,4 @@ body {
 .link:hover{
   color: white;
 }
-
 

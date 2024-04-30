@@ -7,6 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from './components/navbar';
 import App from './pages/app.js';
 import Login from './pages/login';
+import SignUp from './pages/signUp.js';
 import AddBankForm from './pages/addBankForm.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'jquery/dist/jquery.min.js';
@@ -22,6 +23,7 @@ root.render(
         <Route exact path="/" element={<App />} />
         <Route path="/test" element={<AddBankForm />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/signUp" element={<SignUp />} />
       </Routes>
     </React.StrictMode>
   </Router>,

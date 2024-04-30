@@ -6,11 +6,11 @@ import '../assets/css/login.css';
 const Navbar = () => {
     return (
         <nav
-        className="navbar navbar-expand-lg navbar-dark"
+        className="navbar navbar-expand-lg navbar-dark fixed-top"
         style={{ backgroundColor: "#060A1B" }}
       >
         <div className="container-fluid">
-          <a className="navbar-brand" href="#">
+          <a className="navbar-brand" href="/#">
             <img
               src={iconImage}
               alt=""
@@ -72,8 +72,8 @@ const Navbar = () => {
                 </li>  
               <li className="nav-item">
                 <a
-                  className="nav-link me-3 text-center"
-                  href="#"
+                  className="nav-link me-3 ms-2 text-center"
+                  href="login"
                   id="btnb"
                   style={{ width: 100, height: 37 }}
                 >
@@ -83,7 +83,7 @@ const Navbar = () => {
               <li className="nav-item">
                 <a
                   className="nav-link me-3 text-center"
-                  href="#"
+                  href="/signUp"
                   id="btnb"
                   style={{ backgroundColor: "#424551", width: 200, height: 38 }}
                 >
