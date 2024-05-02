@@ -3,7 +3,7 @@ import backgroundImage from '../assets/images/background.png';
 
 const App = () => {
   return (
-    <div className="kv w-100" style={{ backgroundImage: `url(${backgroundImage})` }}>
+    <div className="kv w-100" style={{}}>
       <div className="container-fluid d-flex" style={{ color: 'white' }}>
         <div className="col-7">
           <div className="text-start mt-5 pt-5 ms-5">

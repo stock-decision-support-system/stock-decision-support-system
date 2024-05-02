@@ -1,50 +1,57 @@
+import axios from 'axios';
 import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom'; // 假設你使用 react-router-dom 進行導航
 import accountIcon from '../assets/images/account.png'
 import padlockIcon from '../assets/images/padlock.png'
 import '../assets/css/login.css';
+import { useUser } from '../userContext'; // 導入 useUser 鉤子
 
 const Login = () => {
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-
-  
+  // const { setUser } = useUser(); // 獲取 setUser 函數
+  const { login } = useUser();  // 使用 Context 中的 login 函数
 
   const handleSubmit = async (event) => {
     event.preventDefault(); // 防止表单默认提交行为
-  
+
     // 确保所有字段都已填写
     if (!username || !password) {
       alert('請填寫所有欄位');
       return;
     }
-  
+
     // 准备要发送的数据
     const loginData = {
       username,
       password,
     };
-  
+
     try {
-      // 使用 fetch API 发送数据
-      const response = await fetch('http://localhost:8000/api/login', {
-        method: 'POST',
+      // 使用 axios 发送数据
+      const response = await axios.post('http://localhost:8000/login/', loginData, {
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(loginData),
+        }
       });
-  
-      // 检查响应是否成功
-      if (response.ok) {
-        const data = await response.json();
-        // 处理后端返回的数据，例如保存 token 或者重定向到其他页面
-        console.log(data);
+
+      // 处理后端返回的数据，例如保存 token 或者重定向到其他页面
+      console.log(response.data);
+      if (response.data.status === 'success') {
+        login(username);  // 使用 login 方法设置用户
+        localStorage.setItem('token', response.data.token);
+        console.log(response.data)
+        console.log('登入成功');
+        navigate('/')
       } else {
-        throw new Error(`HTTP error: ${response.status}`);
+        // alert(response.data.message);
+        alert('帳號或密碼錯誤，請再試一次')
       }
     } catch (error) {
       // 处理错误情况
-      console.error('登录失败:', error);
+      console.error('登入失敗:', error);
+      alert('登入請求出錯');
     }
   };
   
@@ -124,7 +131,6 @@ const Login = () => {
                       className="form-check-input text-end mx-2"
                       defaultValue=""
                       id="flexCheckDefault"
-                      style={{}}
                       type="checkbox"
                     />
                   </span>
@@ -134,7 +140,7 @@ const Login = () => {
                   <div className="w-100">
                     <a
                       className="link align-items-center justify-content-center"
-                      href="./forget_password.html"
+                      href="./forgotPassword"
                     >
                       Forgot Password?
                     </a>

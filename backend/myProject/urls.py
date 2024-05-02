@@ -23,7 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     #資料庫轉換為json後的資料
-    path('users/', views.UserList.as_view(), name='user-list'),
+    path('users/', views.UserList.as_view(), name="anything"),
 
     # 註冊 URL
     path('register/', views.register, name='register'),

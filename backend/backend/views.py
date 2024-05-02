@@ -18,6 +18,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import CustomUserSerializer, AccountingSerializer, ConsumeTypeSerializer
 
 
@@ -25,9 +26,9 @@ class UserList(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, format=None):
-        users = CustomUser.objects.all()
-        serializer = CustomUserSerializer(users, many=True)
-        return Response(serializer.data)
+        output=[{"users":output.username}
+                for output in CustomUser.objects.all()]
+        return Response(output)
 
     def post(self, request, format=None):
         serializer = CustomUserSerializer(data=request.data)
@@ -61,29 +62,30 @@ def register(request):
         return Response({'status': 'error', 'message': 'Invalid request method.'},
                         status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-
-# 登入
 @api_view(['POST'])
 def login_view(request):
-    login_credential = request.data.get('username')  # 可以是用户名也可以是邮箱
+    login_credential = request.data.get('username')
     password = request.data.get('password')
 
     try:
-        # 確保用戶存在於數據庫中
         user = CustomUser.objects.get(username=login_credential)
     except CustomUser.DoesNotExist:
         return Response({'status': 'error', 'message': 'User does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
     if user and check_password(password, user.password):
-        # 更新最后登录时间
         user.last_login = timezone.now()
         user.save(update_fields=['last_login'])
-        # 登入用户并设置会话
         django_login(request, user)
-        # 重定向到主页
-        return Response({'status': 'success', 'username': user.username, 'is_superuser': user.is_superuser})
+
+        # 生成 token
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'status': 'success',
+            'username': user.username,
+            'is_superuser': user.is_superuser,
+            'token': str(refresh.access_token),  # 发送访问令牌
+        })
     else:
-        # 如果认证失败，返回登录页面并显示错误信息
         return Response({'status': 'error', 'message': 'Unable to log in with provided credentials.'})
 
 # 登出
