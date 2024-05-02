@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "concurrently \"npm run start-server\" \"npm run start-client\"",
-    "start-server": "cd backend && python manage.py runserver",
+    "start-server": "cd backend && call my_env/Scripts/activate && python manage.py runserver",
     "start-client": "cd frontend && npm start"
   },
   "author": "113401",

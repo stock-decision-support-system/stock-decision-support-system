@@ -5,7 +5,7 @@ from django.contrib.auth import login as django_login
 from django.contrib.auth import authenticate, login, logout
 
 from .models import CustomUser, Accounting, ConsumeType
-from .forms import RegistrationForm
+# from .forms import RegistrationForm
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
