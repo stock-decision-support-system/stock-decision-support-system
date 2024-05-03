@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
+    * {
+      font-family: 'Poppins','Helvetica', 'Arial', 'Noto Sans TC', '黑體-繁','微軟正黑體', sans-serif !important;
+    }
+    .nav-link{
+      color: #C0C2C6;
+      font-size: 15px !important;
+    }
+    .nav-link:hover{
+      color: #ffffff !important;
+    }
+    #btnb:hover{
+      background-color: rgba(1 , 198, 183, 80%);
+    }
+    /*.kv{
+      height: 100vh;
+      background-image: url(./image/background.png);
+      background-size: cover;
+    }*/
+    .larger-text {
+      font-size: 3em; /* 或者使用px, %, 等等來設置你想要的大小 */
+    }
+    /*.btn:hover{
+      
+    }*/
+    body, html {
+      height: 100%;
+      margin: 0;
+    }
+    .container {
+      display: flex;
+      height: 100%;
+    }
+    .flatpickr-calendar {
+      width: 300px !important; /* 調整寬度 */
+      height: 300px !important;
+      font-size: 14px !important; /* 調整字體大小 */
+    }
+    .flatpickr-calendar .flatpickr-innerContainer {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    .left-half {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 20px;
+    }
+    .right-half {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 20px;
+    }
+    #datepicker {
+      width: 100%;
+      text-align: left;
+    }
+    .transaction-container button {
+      margin-bottom: 10px;
+    }
+    .transaction {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px; /* 調整間距 */
+    }
+    .transaction span:nth-child(2) {
+      margin-right: px; /* 增加金額與類別之間的間距 沒屌用 */
+    }
+    .transaction span:nth-child(2)::before {
+      content: '$'; /* 在金額前面添加$符號 */
+    }
+    .transaction input[type="checkbox"] {
+      margin-right: 10px;
+    }
+    .transaction .edit-btn,
+    .transaction .delete-btn {
+      margin-left: 200px; /* 調整間距 */
+      cursor: pointer;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #f9f9f9;
+      padding: 20px;
+      border: 1px solid #ccc;
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      max-width: 400px;
+      width: 100%;
+      max-height: 360px;
+      height: 100%;
+    }
+    .modal-content {
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-content label {
+      margin-bottom: 5px;
+    }
+    .modal-content input[type="text"],
+    .modal-content select {
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      padding: 8px;
+      width: calc(100% - 16px);
+    }
+    .modal-content #note {
+      height: 60px;
+    }
+    .modal-content button {
+      width: auto;
+      margin: 0 5px;
+    }
+    .modal-content .action-buttons {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .close {
+      margin-left: auto;
+      cursor: pointer;
+    }
+    #todayTotalAmount {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    #totalAmount {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    #assetTotalAmount {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    canvas {
+      max-width: 600px;
+      margin-top: 20px;
+    }
+    canvas#assetChart {
+      width: 800px !important; /* 想要的寬度值 */
+      height: 400px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .left-half, .right-half {
+        width: 100%;
+        padding: 10px;
+      }
+
+      @media only screen and (max-width: 768px) {
+      .transaction span:nth-child(2) {
+        margin-right: 5px; /* 調整類別和備註之間的間距 */
+      }
+      .transaction .edit-btn,
+      .transaction .delete-btn {
+        margin-left: auto; /* 移除左邊距，並將編輯和刪除按鈕放到右側 */
+        margin-right: 20px; /* 添加右邊距以保持按鈕之間的間距 */
+      }
+    }
+
+    }
+  </style>
+
+</head>
+<body>
+  <div class="kv w-100">
+    <nav class="navbar navbar-expand-lg" style="background-color: #060A1B">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="index.html" style="color: #C0C2C6;">
+          <img src="./images/logo192.png" alt="" srcset="" class="img-fluid" style="width: 30px;">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse d-flex justify-content-end" id="navbarNavDropdown">
+          <ul class="navbar-nav d-none d-lg-flex"> <!-- 隱藏於小型螢幕 -->
+            <li class="nav-item mx-4">
+              <a class="nav-link" href="accounting.html">記帳</a>
+            </li>
+            <li class="nav-item mx-4" >
+              <a class="nav-link active" aria-current="page" href="/" style="color: #C0C2C6;">個股</a>
+            </li>
+            <li class="nav-item mx-4">
+              <a class="nav-link" href="#">熱門成交股</a>
+            </li>
+            <li class="nav-item mx-4">
+              <a class="nav-link" href="#">台灣五十股</a>
+            </li>
+            <li class="nav-item dropdown mx-4">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Dropdown link
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <li><a class="dropdown-item" href="#">Action</a></li>
+                <li><a class="dropdown-item" href="#">Another action</a></li>
+                <li><a class="dropdown-item" href="#">Something else here</a></li>
+              </ul>
+            </li>
+          </ul>
+          <div class="navbar-nav d-lg-none"> <!-- 隱藏於大型螢幕 -->
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+              選單
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+              <li><a class="dropdown-item" href="stock.html">記帳</a></li>
+              <li><a class="dropdown-item active" aria-current="page" href="stock.html">個股</a></li>
+              <li><a class="dropdown-item" href="#">熱門成交股</a></li>
+              <li><a class="dropdown-item" href="#">台灣五十股</a></li>
+              <li><a class="dropdown-item" href="#">Action</a></li>
+              <li><a class="dropdown-item" href="#">Another action</a></li>
+              <li><a class="dropdown-item" href="#">Something else here</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </div>
+  
+  <div class="container">
+    <div class="left-half">
+      <div id="datepicker"></div>
+      <div id="todayTotalAmount"></div>
+      <div id="assetTotalAmount"></div>
+      <div id="assetChartContainer">
+        <canvas id="assetChart" width=”1000px” height=”600px”></canvas>
+      </div>
+    </div>
+    <div class="right-half">
+      <div class="transaction-container" style="height: 300px; overflow-y: auto;">
+        <button onclick="openModal()">新增交易紀錄</button>
+        <div id="transactions"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <label for="amount">金額:</label>
+      <input type="text" id="amount">
+      <label for="category">類別:</label>
+      <select id="category">
+        <option value="飲食">飲食</option>
+        <option value="交通">交通</option>
+        <option value="娛樂">娛樂</option>
+      </select>
+      <label for="note">備註:</label>
+      <input type="text" id="note">
+      <div class="action-buttons">
+        <button onclick="addTransaction()">確定</button>
+        <button onclick="closeModal()">取消</button>
+      </div>
+    </div>
+  </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+  const transactionsByDate = {}; // 用來存儲每一天的交易紀錄
+
+  const datePicker = flatpickr("#datepicker", {
+    inline: true,
+    dateFormat: 'Y-m-d',
+    onChange: function(selectedDates, dateStr) {
+      showTransactions(dateStr);
+    }
+  });
+
+  function openModal() {
+    document.getElementById('myModal').style.display = 'block';
+  }
+
+  function closeModal() {
+    document.getElementById('myModal').style.display = 'none';
+  }
+
+  function addTransaction() {
+    const amountInput = document.getElementById('amount');
+    const amount = parseFloat(amountInput.value);
+
+    // 檢查是否有輸入金額，若無則彈出提示對話框
+    if (!amount || isNaN(amount)) {
+      alert('請輸入金額');
+      amountInput.focus(); // 將焦點設定在金額輸入框上
+      return;
+    }
+    const category = document.getElementById('category').value;
+    const note = document.getElementById('note').value;
+    const date = datePicker.selectedDates[0].toLocaleDateString().slice(0, 10); // 獲取選擇的日期
+
+    const transaction = document.createElement('div');
+    transaction.classList.add('transaction');
+    transaction.innerHTML = `
+      <input type="checkbox">
+      <span>${amount}  ${category}  ${note}</span>
+      <span class="edit-btn" onclick="openModal()">修改</span>
+      <span class="delete-btn" onclick="confirmDelete(this)">刪除</span>
+    `;
+
+    // 檢查是否為手機瀏覽器，如果是，將交易紀錄的寬度設置為100%
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      transaction.style.width = '100%';
+    }
+
+    // 將交易記錄添加到對應日期的物件中
+    if (!transactionsByDate[date]) {
+      transactionsByDate[date] = [];
+    }
+    transactionsByDate[date].push(transaction.outerHTML);
+
+    // 顯示交易記錄
+    showTransactions(date);
+
+    // 更新資產總額
+    updateTotalAmount();
+
+    // 新增交易後，更新 K 線圖
+    updateAssetChart(); // 更新 K 線圖
+  }
+
+  function confirmDelete(btn) {
+    if (confirm('是否要刪除此交易?')) {
+      const transaction = btn.parentElement;
+      transaction.remove();
+    }
+  }
+
+  function openModal() {
+    // 檢查是否有選擇日期，若無則彈出提示對話框
+    if (!datePicker.selectedDates.length) {
+      alert('請先選擇日期');
+      return;
+    }
+
+    document.getElementById('myModal').style.display = 'block';
+  }
+
+  function showTransactions(date) {
+    date = new Date(date).toLocaleDateString();
+    // 清空交易列表
+    const transactionsDiv = document.getElementById('transactions');
+    transactionsDiv.innerHTML = '';
+
+    // 檢查該日期是否有交易，如果有則顯示
+    if (transactionsByDate[date]) {
+      transactionsByDate[date].forEach(transaction => {
+        const div = document.createElement('div');
+        div.innerHTML = transaction;
+        transactionsDiv.appendChild(div);
+      });
+
+    // 計算當日總額
+    const totalAmount = transactionsByDate[date].reduce((acc, curr) => {
+      const amount = parseFloat(curr.match(/(\-?\d+\.\d+|\-?\d+)/)[0]); // 加上對負數的匹配
+      return acc + amount;
+    }, 0);
+
+    // 顯示當日總額
+    const todayTotalAmountDiv = document.getElementById('todayTotalAmount');
+    todayTotalAmountDiv.innerText = `今日總額: $${totalAmount.toFixed(2)}`;
+  } else {
+    const todayTotalAmountDiv = document.getElementById('todayTotalAmount');
+    todayTotalAmountDiv.innerText = '今日總額: $0.00'; // 清空當日總額文本
+  }
+  closeModal();
+}
+
+  function updateTotalAmount() {
+    let total = 0;
+    for (const date in transactionsByDate) {
+      transactionsByDate[date].forEach(transaction => {
+        const amount = parseFloat(transaction.match(/(\-?\d+\.\d+|\-?\d+)/)[0]); // 加上對負數的匹配
+        total += amount;
+      });
+    }
+    const totalAmountDiv = document.getElementById('assetTotalAmount');
+    totalAmountDiv.innerText = `資產總額: $${total.toFixed(2)}`;
+  }
+
+  // 初始化資產總額
+  updateTotalAmount();
+
+  const assetChart = document.getElementById('assetChart').getContext('2d');
+  let assetChartData = {
+    labels: [],
+    datasets: [{
+      label: 'Asset Value',
+      data: [],
+      backgroundColor: 'rgba(255, 99, 132, 0.2)',
+      borderColor: 'rgba(255, 99, 132, 1)',
+      borderWidth: 1
+    }]
+  };
+
+    
+
+  // 創建 K 線圖
+  const chart = new Chart(assetChart, {
+    type: 'line',
+    data: assetChartData,
+    options: {
+      maintainAspectRatio: false, // 不保持長寬比
+      responsive: true, // 允許響應式調整大小
+      width: 800, // 設置寬度
+      height: 400, // 設置高度
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  // 更新 K 線圖
+  function updateAssetChart() {
+    const labels = Object.keys(transactionsByDate);
+    const data = labels.map(date => {
+      const total = transactionsByDate[date].reduce((acc, curr) => {
+        const amount = parseFloat(curr.match(/(\-?\d+\.\d+|\-?\d+)/)[0]); // 加上對負數的匹配
+        return acc + amount;
+      }, 0);
+      return total;
+    });
+
+    assetChartData.labels = labels;
+    assetChartData.datasets[0].data = data;
+    chart.update();
+  }
+</script>
+</body>
+</html>
