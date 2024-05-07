@@ -51,5 +51,9 @@ urlpatterns = [
     # 修改個人資料 URL
     path('edit-profile/', views.edit_profile, name='profile'),
 
+    path('accounting/user/', views.accounting_list_for_user, name='accounting-list-user'),
+    path('accounting/admin/', views.accounting_list_for_admin, name='accounting-list-admin'),
+    path('consume-type/', views.consume_type_operations, name='consume_type_list'),
+    path('consume-type/<int:pk>/', views.consume_type_operations, name='consume_type_detail'),
 ]
 

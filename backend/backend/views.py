@@ -5,7 +5,7 @@ from django.contrib.auth import login as django_login
 from django.contrib.auth import authenticate, login, logout
 
 from .models import CustomUser, Accounting, ConsumeType
-from .forms import RegistrationForm
+# from .forms import RegistrationForm
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -282,3 +282,133 @@ def edit_profile(request):
         return Response({'status': 'success', 'message': 'User information updated successfully.'})
 
 
+@api_view(['GET', 'POST', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def accounting_list_for_user(request):
+    if request.method == 'GET':
+        create_id = request.GET.get('createId', request.user.username)
+        accountings = Accounting.objects.filter(createdId=create_id, available=True).select_related('consumeType')
+        serializer = AccountingSerializer(accountings, many=True)
+        return Response(serializer.data)
+    elif request.method == 'POST':
+        serializer = AccountingSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(createId=request.user.username,createDate=timezone.now())
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method in ['PUT', 'DELETE']:
+        pk = request.GET.get('accountingId')
+        accounting = Accounting.objects.get(accountingId=pk)
+        if request.method == 'PUT':
+            serializer = AccountingSerializer(accounting, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        elif request.method == 'DELETE' and request.user.username == accounting.createdId:
+            try:
+                # Use .update() for QuerySets
+                updated = Accounting.objects.filter(accountingId=pk).update(available=False)
+                if updated:
+                    return Response({'message': 'Accounting record has been soft-deleted.'},
+                                    status=status.HTTP_204_NO_CONTENT)
+                else:
+                    # If nothing was updated, then the accounting record doesn't exist
+                    return Response({'error': 'Accounting record not found.'}, status=status.HTTP_404_NOT_FOUND)
+            except Accounting.DoesNotExist:
+                return Response({'error': 'Accounting record not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAdminUser])
+def accounting_list_for_admin(request):
+    if request.method == 'GET':
+        create_id = request.query_params.get('createId')
+        available = request.query_params.get('available')
+        sort_order = request.query_params.get('sort', 'createDate')  # Use '-createDate' for descending order
+
+        # Build the query
+        query = Accounting.objects.all()
+        if create_id:
+            query = query.filter(createdId=create_id)
+        query = query.filter(available=available)
+        query = query.order_by(sort_order)
+
+        # Execute the query
+        if not query.exists():
+            return Response({'error': 'No accounting records found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Serialize the queryset
+        serializer = AccountingSerializer(query, many=True)
+        return Response(serializer.data)
+    elif request.method == 'PUT':
+        pk = request.GET.get('accountingId')
+        accounting = Accounting.objects.get(accountingId=pk)
+        serializer = AccountingSerializer(accounting, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'DELETE':
+        # Handle soft-delete for admin
+        pk = request.GET.get('accountingId')
+        try:
+            # Use .update() for QuerySets
+            updated = Accounting.objects.filter(accountingId=pk).update(available=False)
+            if updated:
+                return Response({'message': 'Accounting record has been soft-deleted.'},
+                                status=status.HTTP_204_NO_CONTENT)
+            else:
+                # If nothing was updated, then the accounting record doesn't exist
+                return Response({'error': 'Accounting record not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Accounting.DoesNotExist:
+            return Response({'error': 'Accounting record not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+# ConsumeType Views
+@api_view(['GET', 'POST', 'PUT', 'DELETE'])
+@permission_classes([IsAdminUser])
+def consume_type_operations(request, pk=None):
+    if request.method == 'GET':
+        if pk is not None:
+            try:
+                consume_type = ConsumeType.objects.get(pk=pk)
+                serializer = ConsumeTypeSerializer(consume_type)
+            except ConsumeType.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            consume_types = ConsumeType.objects.all()
+            serializer = ConsumeTypeSerializer(consume_types, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = ConsumeTypeSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(createdId=request.user.username, createDate=timezone.now())
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'PUT':
+        pk = request.GET.get('consumeTypeId')
+        try:
+            consume_type = ConsumeType.objects.get(consumeTypeId=pk)
+            serializer = ConsumeTypeSerializer(consume_type, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+        except ConsumeType.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    elif request.method == 'DELETE':
+        pk = request.GET.get('consumeTypeId')
+        try:
+            # Use .update() for QuerySets
+            updated = ConsumeType.objects.filter(consumeTypeId=pk).update(available=False)
+            if updated:
+                return Response({'message': 'ConsumeType record has been soft-deleted.'},
+                                status=status.HTTP_204_NO_CONTENT)
+            else:
+                # If nothing was updated, then the accounting record doesn't exist
+                return Response({'error': 'ConsumeType record not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except ConsumeType.DoesNotExist:
+            return Response({'error': 'ConsumeType record not found.'}, status=status.HTTP_404_NOT_FOUND)
