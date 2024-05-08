@@ -43,14 +43,35 @@
       height: 100%;
     }
     .flatpickr-calendar {
-      width: 300px !important; /* 調整寬度 */
-      height: 300px !important;
-      font-size: 14px !important; /* 調整字體大小 */
-    }
-    .flatpickr-calendar .flatpickr-innerContainer {
-      width: 100% !important;
-      height: 100% !important;
-    }
+  width: 100% !important; /* 調整寬度 */
+  height: 100% !important; /* 調整高度 */
+}
+
+.flatpickr-innerContainer {
+  width: 100% !important;
+  height: 100% !important;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.flatpickr-calendar .flatpickr-days {
+  flex-grow: 1;
+}
+
+/* 原有的 Flatpickr 樣式 */
+.flatpickr-calendar .flatpickr-days {
+  width: 100% !important; /* 調整寬度 */
+  height: 100% !important; /* 調整高度 */
+}
+
+/* 新增的具有更高優先順序的選擇器 */
+#datepicker .flatpickr-day {
+  width: calc(100% / 7) !important; /* 調整每個日期的寬度，並保持平均分配 */
+}
+
+
+    
     .left-half {
       flex: 1;
       display: flex;
@@ -178,6 +199,13 @@
       }
     }
 
+    @media (max-width: 768px) {
+      .flatpickr-calendar {
+      width: 100% !important;
+      height: auto !important;
+      } 
+    }
+
     }
   </style>
 
@@ -257,12 +285,12 @@
     <div class="modal-content">
       <span class="close" onclick="closeModal()">&times;</span>
       <label for="amount">金額:</label>
-      <input type="text" id="amount">
+      <input type="number" id="amount" min="0" required> <!-- 修改為 type="number"，並加上 min="0" 只允許輸入非負數 -->
+      <span class="invalid-feedback">請輸入金額</span> <!-- 新增的警示訊息 -->
       <label for="category">類別:</label>
       <select id="category">
-        <option value="飲食">飲食</option>
-        <option value="交通">交通</option>
-        <option value="娛樂">娛樂</option>
+        <option value="收入">收入</option> <!-- 修改選項 -->
+        <option value="支出">支出</option> <!-- 修改選項 -->
       </select>
       <label for="note">備註:</label>
       <input type="text" id="note">
@@ -295,35 +323,47 @@
 
   function addTransaction() {
     const amountInput = document.getElementById('amount');
-    const amount = parseFloat(amountInput.value);
+    let amount = parseFloat(amountInput.value);
 
     // 檢查是否有輸入金額，若無則彈出提示對話框
-    if (!amount || isNaN(amount)) {
-      alert('請輸入金額');
-      amountInput.focus(); // 將焦點設定在金額輸入框上
-      return;
+    if (isNaN(amount) || amount <= 0) {
+        amountInput.classList.add('is-invalid'); // 若金額無效，加上樣式
+        return; // 終止函數
+    } else {
+        amountInput.classList.remove('is-invalid'); // 若金額有效，移除樣式
     }
+
     const category = document.getElementById('category').value;
     const note = document.getElementById('note').value;
     const date = datePicker.selectedDates[0].toLocaleDateString().slice(0, 10); // 獲取選擇的日期
 
     const transaction = document.createElement('div');
     transaction.classList.add('transaction');
+
+    let amountText = ''; // 金額文本
+    // 根據類別計算金額
+    if (category === '支出') {
+        amount = -amount; // 將金額設置為負數
+        amountText = `-${Math.abs(amount).toFixed(2)}`; // 負數顯示金額前面加上"-$"
+    } else {
+        amountText = `${amount.toFixed(2)}`; // 正數顯示金額前面加上"$"
+    }
+
     transaction.innerHTML = `
-      <input type="checkbox">
-      <span>${amount}  ${category}  ${note}</span>
-      <span class="edit-btn" onclick="openModal()">修改</span>
-      <span class="delete-btn" onclick="confirmDelete(this)">刪除</span>
+        <input type="checkbox">
+        <span>${amountText}  ${category}  ${note}</span>
+        <span class="edit-btn" onclick="openModal()">修改</span>
+        <span class="delete-btn" onclick="confirmDelete(this)">刪除</span>
     `;
 
     // 檢查是否為手機瀏覽器，如果是，將交易紀錄的寬度設置為100%
     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-      transaction.style.width = '100%';
+        transaction.style.width = '100%';
     }
 
     // 將交易記錄添加到對應日期的物件中
     if (!transactionsByDate[date]) {
-      transactionsByDate[date] = [];
+        transactionsByDate[date] = [];
     }
     transactionsByDate[date].push(transaction.outerHTML);
 
@@ -335,7 +375,11 @@
 
     // 新增交易後，更新 K 線圖
     updateAssetChart(); // 更新 K 線圖
-  }
+}
+
+
+
+
 
   function confirmDelete(btn) {
     if (confirm('是否要刪除此交易?')) {
@@ -362,39 +406,50 @@
 
     // 檢查該日期是否有交易，如果有則顯示
     if (transactionsByDate[date]) {
-      transactionsByDate[date].forEach(transaction => {
-        const div = document.createElement('div');
-        div.innerHTML = transaction;
-        transactionsDiv.appendChild(div);
-      });
+        transactionsByDate[date].forEach(transaction => {
+            const div = document.createElement('div');
+            div.innerHTML = transaction;
+            transactionsDiv.appendChild(div);
+        });
 
-    // 計算當日總額
-    const totalAmount = transactionsByDate[date].reduce((acc, curr) => {
-      const amount = parseFloat(curr.match(/(\-?\d+\.\d+|\-?\d+)/)[0]); // 加上對負數的匹配
-      return acc + amount;
-    }, 0);
+        // 計算當日總額
+        const totalAmount = transactionsByDate[date].reduce((acc, curr) => {
+            const amount = parseFloat(curr.match(/(\-?\d+\.\d+|\-?\d+)/)[0]); // 加上對負數的匹配
+            return acc + amount;
+        }, 0);
 
-    // 顯示當日總額
-    const todayTotalAmountDiv = document.getElementById('todayTotalAmount');
-    todayTotalAmountDiv.innerText = `今日總額: $${totalAmount.toFixed(2)}`;
-  } else {
-    const todayTotalAmountDiv = document.getElementById('todayTotalAmount');
-    todayTotalAmountDiv.innerText = '今日總額: $0.00'; // 清空當日總額文本
-  }
-  closeModal();
+        // 顯示當日總額
+        const todayTotalAmountDiv = document.getElementById('todayTotalAmount');
+        if (totalAmount < 0) {
+            todayTotalAmountDiv.innerText = `今日總額: -$${Math.abs(totalAmount).toFixed(2)}`;
+        } else {
+            todayTotalAmountDiv.innerText = `今日總額: $${totalAmount.toFixed(2)}`;
+        }
+    } else {
+        const todayTotalAmountDiv = document.getElementById('todayTotalAmount');
+        todayTotalAmountDiv.innerText = '今日總額: $0.00'; // 清空當日總額文本
+    }
+    closeModal();
 }
 
-  function updateTotalAmount() {
-    let total = 0;
-    for (const date in transactionsByDate) {
-      transactionsByDate[date].forEach(transaction => {
-        const amount = parseFloat(transaction.match(/(\-?\d+\.\d+|\-?\d+)/)[0]); // 加上對負數的匹配
-        total += amount;
-      });
-    }
-    const totalAmountDiv = document.getElementById('assetTotalAmount');
+
+function updateTotalAmount() {
+  let total = 0;
+  for (const date in transactionsByDate) {
+    transactionsByDate[date].forEach(transaction => {
+      const amount = parseFloat(transaction.match(/(\-?\d+\.\d+|\-?\d+)/)[0]); // 加上對負數的匹配
+      total += amount;
+    });
+  }
+
+  const totalAmountDiv = document.getElementById('assetTotalAmount');
+  if (total < 0) {
+    totalAmountDiv.innerText = `資產總額: -$${Math.abs(total).toFixed(2)}`;
+  } else {
     totalAmountDiv.innerText = `資產總額: $${total.toFixed(2)}`;
   }
+}
+
 
   // 初始化資產總額
   updateTotalAmount();
