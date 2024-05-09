@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // 假設你使用 react-router-dom 進行導航
 import 'bootstrap/dist/css/bootstrap.min.css'; // 假設你通過 npm 或 yarn 安裝了 bootstrap
 import '../assets/css/signUp.css' // SignUp.css 的路徑
+import axios from 'axios'
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -19,33 +20,57 @@ const SignUp = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    // 進行表單驗證
+  
+    // 进行表单验证
     if (!formData.firstName || !formData.lastName || !formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
       alert('請填寫所有必填字段');
       return;
     }
-
+  
     if (formData.password !== formData.confirmPassword) {
       alert('密碼和確認密碼不一致');
       return;
     }
-
-    // 這裡實現提交邏輯...
-    console.log('表單數據:', formData);
-    // 可以使用 axios 或 fetch 提交到後端
-    alert('註冊成功！請返回登入頁面重新登入')
-    navigate('/login')
+  
+    // 准备要发送的数据
+    const dataToSend = {
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      username: formData.username,
+      email: formData.email,
+      password: formData.password,
+    };
+  
+    try {
+      // 使用 axios 发送数据到注册 API
+      const response = await axios.post('http://localhost:8000/register/', dataToSend, {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+  
+      // 处理响应
+      if (response.data.status === 'success') {
+        alert('註冊成功！請返回登入頁面重新登入');
+        navigate('/login'); // 导航到登录页面
+      } else {
+        alert('註冊失敗：' + response.data.message);
+      }
+    } catch (error) {
+      console.error('註冊請求出錯:', error);
+      alert('已有相同的使用者名稱或電子信箱，請再試一次');
+    }
   };
 
   return (
     <div className="kv w-100">
       {/*...導航欄組件...*/}
-      <div className="User">
+      <div className="register">
         <div className="container-fluid">
           <div className="row justify-content-center align-items-center h-100 pt-5">
-            <div className="col-12 col-sm-8 col-md-6 col-lg-4 text-light p-5 rounded custom-col-lg" style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)' }}>
+            <div className="col-12 col-sm-8 col-md-6 col-lg-4 p-5 rounded custom-col-lg" style={{ backgroundColor: 'rgba(232, 180, 188, 0.65)'}}>
               <h2 className="fw-bold text-center">註冊</h2>
               <h4 className="text-center mb-4">歡迎來到網站</h4>
               <form className="px-5" onSubmit={handleSubmit}>
@@ -86,8 +111,8 @@ const SignUp = () => {
                 </div>
               </div>
 
-                <button type="submit" className="btn w-100 fw-bolder login mb-4">立即註冊</button>
-                <button type="button" className="btn fw-bolder w-100 register mb-5" onClick={() => navigate('/login')}>返回上頁</button>
+                <button type="submit" className="button2 w-100 fw-bolder login mb-4">立即註冊</button>
+                <button type="button" className="button2 fw-bolder w-100 mb-1" onClick={() => navigate('/login')}>返回上頁</button>
               </form>
             </div>
           </div>

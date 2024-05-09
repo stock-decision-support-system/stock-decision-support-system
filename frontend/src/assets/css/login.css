@@ -16,22 +16,18 @@ body {
 }
 
 
-.nav-link{
-  color: #C0C2C6 !important;
-  font-size: 15px !important;
+.button2{
+  font-Weight: bolder;
+   color: #ffffff;
+   background:linear-gradient(to right, #BD4C7F, #f7b1bc);
+   border: 0px;
+   border-Radius:10px;
+   height: 3em;
 }
 
-.nav-link:hover{
-  color: #ffffff !important;
-}
+.button2:hover{
+  box-shadow: 3px 5px 5px #E8B4BC;
 
-#btnb:hover{
-  background-color: rgba(1 , 198, 183, 80%);
-}
-
-.btn{
-  color: white;
-  background: linear-gradient(to right, #47c7f2, #12ddbf);
 }
 
 .kv{
@@ -40,12 +36,14 @@ body {
   background-attachment: fixed;
   background-size: cover;
 }
+
 .larger-text {
   font-size: 3em; /* 或者使用px, %, 等等來設置你想要的大小 */
 }
 
 .User{
-  color: #fff;
+  padding-top: 3%;
+  color: #BD4C7F !important;
 }
 
 .input-group .form-control {
@@ -72,13 +70,13 @@ body {
   box-shadow: inset 0 -1px 0 #ced4da; /* 適當的陰影來替代輪廓線 */
 }
 
-.link{
+.linka{
   text-decoration: none;
-  color: #ddd;
+  color: #BD4C7F !important;
 }
 
-.link:hover{
-  color: white;
+.linka:hover{
+  color: white !important;
 }
 
 

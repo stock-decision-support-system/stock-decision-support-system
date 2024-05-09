@@ -26,26 +26,26 @@ const ForgotPassword = () => {
 
   return (
     <div className="container-fluid">
-      <div className="row justify-content-center align-items-center h-100">
-        <div className="col-md-4 mt-5" style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', padding: '50px' }}>
+      <div className="row justify-content-center align-items-center h-100 mt-4">
+        <div className="col-md-4 mt-5" style={{ backgroundColor: 'rgba(232, 180, 188, 0.65)', padding: '50px', color:'#BD4C7F' }}>
           <form onSubmit={handleSubmit}>
             <Row justify="center" style={{ marginBottom: '30px' }}>
               <Col>
                 <img
                   src={ForgotPasswordIcon}
                   alt="Forgot Password Icon"
-                  style={{ width: '100px', height: '100px', display: 'block', margin: '0 auto 30px' }}
+                  style={{ width: '100px', height: '100px', display: 'block', margin: '0 25px' }}
                 />
               </Col>
             </Row>
-            <Row justify="center" style={{ marginBottom: '2px' }}>
+            <Row justify="center" style={{marginBottom: '2px' }}>
               <Col>
-                <Title level={2} style={{ color: 'white', textAlign: 'center' }}>忘記密碼</Title>
+                <Title level={2} style={{color:'#BD4C7F', textAlign: 'center' }}>忘記密碼</Title>
               </Col>
             </Row>
             <Row justify="center" style={{ marginBottom: '10px' }}>
               <Col>
-                <p style={{ color: 'white', textAlign: 'center' }}>
+                <p style={{textAlign: 'center' }}>
                   請輸入您的電子郵件地址以便接收重設密碼的鏈接。
                 </p>
               </Col>
@@ -63,7 +63,7 @@ const ForgotPassword = () => {
             </Row>
             <Row justify="center">
               <Col>
-                <Button type="submit" className="btn w-100 d-flex align-items-center fw-bolder loginBtn mt-3" >
+                <Button type="submit" className="button2 w-100 d-flex align-items-center fw-bolder loginBtn mt-3" >
                   <span>發送重設郵件</span>
                 </Button>
               </Col>
