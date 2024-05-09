@@ -1,8 +1,3 @@
-@import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
-* {
-  font-family: 'Poppins','Helvetica', 'Arial', 'Noto Sans TC', '黑體-繁','微軟正黑體', sans-serif !important;
-}
-
 @media (min-width: 992px) { /* 這是 Bootstrap 的 'md' 斷點 */
   .custom-col-lg {
     width: 50%;
@@ -10,44 +5,8 @@
   }
 }
 
-.nav-link{
-  color: #C0C2C6 !important;
-  font-size: 15px !important;
-}
-
-.nav-link:hover{
-  color: #ffffff !important;
-}
-
-#btnb:hover{
-  background-color: rgba(1 , 198, 183, 80%);
-}
-
-.btn{
-  color: white;
-  background: linear-gradient(to right, #47c7f2, #12ddbf);
-}
-
-.btn:hover{
-  
-}
-
-body{
-  background-image: url(../images/loginback.png);
-  background-attachment: fixed;
-  background-size: cover;
-}
-
-/* .kv{
-  height: 91.7vh;
-
-} */
-.larger-text {
-  font-size: 3em; /* 或者使用px, %, 等等來設置你想要的大小 */
-}
-
-.User{
-  color: #fff;
+.register{
+  color: #BD4C7F;
 }
 
 .input-group .form-control {
@@ -73,13 +32,3 @@ body{
 .input-group .form-control:focus {
   box-shadow: inset 0 -1px 0 #ced4da; /* 適當的陰影來替代輪廓線 */
 }
-
-.link{
-  text-decoration: none;
-  color: #ddd;
-}
-
-.link:hover{
-  color: white;
-}
-

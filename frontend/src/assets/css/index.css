@@ -1,62 +1,78 @@
-@import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
-* {
-  font-family: 'Poppins','Helvetica', 'Arial', 'Noto Sans TC', '黑體-繁','微軟正黑體', sans-serif !important;
-}
-
-body{
+body {
   background-image: url(../images/loginback.png);
   background-attachment: fixed;
   background-size: cover;
 }
 
-.nav-link{
-  color: #C0C2C6;
-  font-size: 15px !important;
-}
-
-.nav-link:hover{
-  color: #ffffff !important;
-}
-
-#btnb:hover{
-  background-color: rgba(1 , 198, 183, 80%);
-}
-
-.kv{
+.kv {
   height: 100vh;
   background-size: cover;
 }
-.larger-text {
-  font-size: 3em; /* 或者使用px, %, 等等來設置你想要的大小 */
-}
-.btn:hover{
-  
+
+.button {
+  font-weight: bolder;
+  color: #ffffff;
+  background: linear-gradient(to right, #BD4C7F, #f7b1bc);
+  border: 0px;
+  border-radius: 10px;
 }
 
-.navbar {
-  padding: 1rem 2rem; /* 调整导航栏的内边距 */
+.button:hover {
+  box-shadow: 3px 5px 5px #E8B4BC;
 }
 
-.navbar-brand img {
-  width: 30px; /* 设置导航栏品牌图标的宽度 */
+.text-content, .image-content {
+  flex: 1; /* Ensure text and image sections take equal space in the container */
 }
 
-.navbar-nav .nav-link {
-  color: #C0C2C6; /* 设置导航链接的颜色 */
+.text-content {
+  padding-top: 7%;
 }
 
-.navbar-nav .nav-link.active {
-  font-weight: bold; /* 设置活动链接的加粗样式 */
+.image-content {
+  display: flex;
+  justify-content: center; /* Center the image */
+  align-items: center; /* Vertically center */
 }
 
-.dropdown-menu {
-  background-color: #060A1B; /* 设置下拉菜单的背景颜色 */
+.text-content h1{
+  font-size: 75px;
 }
 
-.dropdown-menu .dropdown-item {
-  color: #C0C2C6; /* 设置下拉菜单项的颜色 */
+.text-content h6{
+  font-size: 30px;
 }
 
-.dropdown-menu .dropdown-item:hover {
-  background-color: rgba(255, 255, 255, 0.1); /* 设置下拉菜单项的鼠标悬停背景颜色 */
+@media (max-width: 992px) {
+  .text-content h1 {
+    font-size: 40px; /* Smaller font size for smaller screens */
+  }
+  .text-content h6, .text-content span {
+    font-size: 20px; /* Smaller font size for subtext */
+  }
+}
+
+@media (max-width: 768px) {
+  .d-flex {
+    flex-direction: column; /* Stack elements vertically on smaller screens */
+  }
+  .text-content {
+    margin-bottom: 20px; /* Add some space between text content and image */
+  }
+  .button {
+    padding: 10px 20px; /* Smaller button */
+  }
+}
+
+@media (max-width: 480px) {
+  .text-content h1 {
+    font-size: 45px; /* Even smaller font size for very small screens */
+  }
+  .text-content h6{
+    font-size: 16px; /* Smaller subtext */
+  }
+  .button {
+    width: 100%; /* Full width button */
+    padding: 8px 0; /* Adjust padding */
+  }
 }
