@@ -18,7 +18,9 @@ const BankDialog = () => {
     bankCity: '',
     bankBranch: '',
     bankAccountName: '',
-    bankAccountNumber: ''
+    bankAccountNumber: '',
+    api: '',
+    secret: ''
   });
 
   const showModal = () => {
@@ -158,6 +160,18 @@ const BankDialog = () => {
                 className="mt-1"
                 value={formData.bankAccountNumber}
                 onChange={e => setFormData({ ...formData, bankAccountNumber: e.target.value })}
+              />
+              <Input
+                placeholder="金鑰"
+                className="mt-1"
+                value={formData.api}
+                onChange={e => setFormData({ ...formData, api: e.target.value })}
+              />
+              <Input
+                placeholder="密鑰"
+                className="mt-1"
+                value={formData.secret}
+                onChange={e => setFormData({ ...formData, secret: e.target.value })}
               />
             </>
           )}
