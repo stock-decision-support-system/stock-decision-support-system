@@ -174,4 +174,4 @@ EMAIL_USE_SSL = False  # 如果使用 SSL，則設置為 True，並將 EMAIL_USE
 EMAIL_HOST_USER = 'allen9111054@gmail.com'
 
 # 發送郵件的郵箱密碼
-EMAIL_HOST_PASSWORD = 'xyup kfnf ntgc oozs'
+EMAIL_HOST_PASSWORD = 'qesr hpzy anid oytr'
