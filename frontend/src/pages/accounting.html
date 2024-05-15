@@ -7,499 +7,321 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <style>
-    @import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
-    * {
-      font-family: 'Poppins','Helvetica', 'Arial', 'Noto Sans TC', '黑體-繁','微軟正黑體', sans-serif !important;
-    }
-    .nav-link{
-      color: #C0C2C6;
-      font-size: 15px !important;
-    }
-    .nav-link:hover{
-      color: #ffffff !important;
-    }
-    #btnb:hover{
-      background-color: rgba(1 , 198, 183, 80%);
-    }
-    /*.kv{
-      height: 100vh;
-      background-image: url(./image/background.png);
-      background-size: cover;
-    }*/
-    .larger-text {
-      font-size: 3em; /* 或者使用px, %, 等等來設置你想要的大小 */
-    }
-    /*.btn:hover{
-      
-    }*/
-    body, html {
-      height: 100%;
-      margin: 0;
-    }
-    .container {
-      display: flex;
-      height: 100%;
-    }
-    .flatpickr-calendar {
-  width: 100% !important; /* 調整寬度 */
-  height: 100% !important; /* 調整高度 */
-}
 
-.flatpickr-innerContainer {
-  width: 100% !important;
-  height: 100% !important;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-}
+      @import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
+        * {
+          font-family: 'Poppins','Helvetica', 'Arial', 'Noto Sans TC', '黑體-繁','微軟正黑體', sans-serif !important;
+        }
 
-.flatpickr-calendar .flatpickr-days {
-  flex-grow: 1;
-}
+        .nav-link{
+          color: #C0C2C6;
+          font-size: 15px !important;
+        }
 
-/* 原有的 Flatpickr 樣式 */
-.flatpickr-calendar .flatpickr-days {
-  width: 100% !important; /* 調整寬度 */
-  height: 100% !important; /* 調整高度 */
-}
+        .nav-link:hover{
+          color: #ffffff !important;
+        }
 
-/* 新增的具有更高優先順序的選擇器 */
-#datepicker .flatpickr-day {
-  width: calc(100% / 7) !important; /* 調整每個日期的寬度，並保持平均分配 */
-}
+        #btnb:hover{
+          background-color: rgba(1 , 198, 183, 80%);
+        }
 
+        .kv{
+          height: 100vh;
+        }
+        .larger-text {
+          font-size: 3em; /* 或者使用px, %, 等等來設置你想要的大小 */
+        }
+        .btn:hover{
 
-    
-    .left-half {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 20px;
-    }
-    .right-half {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      padding: 20px;
-    }
-    #datepicker {
-      width: 100%;
-      text-align: left;
-    }
-    .transaction-container button {
-      margin-bottom: 10px;
-    }
-    .transaction {
-      display: flex;
-      align-items: center;
-      margin-bottom: 15px; /* 調整間距 */
-    }
-    .transaction span:nth-child(2) {
-      margin-right: px; /* 增加金額與類別之間的間距 沒屌用 */
-    }
-    .transaction span:nth-child(2)::before {
-      content: '$'; /* 在金額前面添加$符號 */
-    }
-    .transaction input[type="checkbox"] {
-      margin-right: 10px;
-    }
-    .transaction .edit-btn,
-    .transaction .delete-btn {
-      margin-left: 200px; /* 調整間距 */
-      cursor: pointer;
-    }
-    .modal {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: #f9f9f9;
-      padding: 20px;
-      border: 1px solid #ccc;
-      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-      z-index: 1000;
-      max-width: 400px;
-      width: 100%;
-      max-height: 360px;
-      height: 100%;
-    }
-    .modal-content {
-      display: flex;
-      flex-direction: column;
-    }
-    .modal-content label {
-      margin-bottom: 5px;
-    }
-    .modal-content input[type="text"],
-    .modal-content select {
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      padding: 8px;
-      width: calc(100% - 16px);
-    }
-    .modal-content #note {
-      height: 60px;
-    }
-    .modal-content button {
-      width: auto;
-      margin: 0 5px;
-    }
-    .modal-content .action-buttons {
-      display: flex;
-      justify-content: flex-end;
-    }
-    .close {
-      margin-left: auto;
-      cursor: pointer;
-    }
-    #todayTotalAmount {
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    #totalAmount {
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    #assetTotalAmount {
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    canvas {
-      max-width: 600px;
-      margin-top: 20px;
-    }
-    canvas#assetChart {
-      width: 800px !important; /* 想要的寬度值 */
-      height: 400px;
-    }
+        }
 
-    @media (max-width: 768px) {
-      .container {
-        flex-direction: column;
-        align-items: center;
-      }
-      .left-half, .right-half {
-        width: 100%;
-        padding: 10px;
-      }
+        .account-form{
+            margin-left: 50px;
+        }
+        /* 自定義表單樣式 */
+        .account-form-container {
+        margin-top: 30px; /* 距離網頁上方的距離 */
+        margin-left: 20px; /* 距離網頁左邊的距離 */
+         }
 
-      @media only screen and (max-width: 768px) {
-      .transaction span:nth-child(2) {
-        margin-right: 5px; /* 調整類別和備註之間的間距 */
-      }
-      .transaction .edit-btn,
-      .transaction .delete-btn {
-        margin-left: auto; /* 移除左邊距，並將編輯和刪除按鈕放到右側 */
-        margin-right: 20px; /* 添加右邊距以保持按鈕之間的間距 */
-      }
-    }
+        .totalamounttitle{
+            margin-top: 20px;
+            margin-left: 20px;
+        }
 
-    @media (max-width: 768px) {
-      .flatpickr-calendar {
-      width: 100% !important;
-      height: auto !important;
-      } 
-    }
+        .totalamount{
+          background-color: aqua;
+          width: 292px;
+          height: 107px;
+          margin-top: 20px;
+          margin-left: 20px;
+          display: flex; /* 將內容置於 flexbox 中 */
+          align-items: center; /* 垂直居中 */
+          justify-content: flex-start; /* 水平靠左 */
+          padding-left: 20px; /* 左邊距 */
+          font-size: 40px;
+        }
+        /* 以下為進度條設定 */
+        .progress-container {
+            position: relative;
+            margin-top: 20px;
+            margin-right: 20px;
+            width: 500px;
+            height: 100px;
+            position: fixed;
+            right: 0;
+            top: 13%;
+            transform: translateY(-50%);
+        }
 
-    }
+        .progress-bar {
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: transparent; /* 將初始顏色設置為透明 */
+            transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out; /* 添加背景顏色的過渡效果 */
+        }
+
+        .progress-button {
+            display: block;
+            margin-bottom: 15px; /* 調整與其他元素的間距 */
+            }
+
+        .progress-label {
+            position: absolute;
+            font-size: 12px; /* 調整字體大小 */
+            }
+
+        #currentTotal {
+            bottom: 0;
+            left: 0;
+        }
+
+        #limitAmount {
+            bottom: 0;
+            right: 0;
+        }
+        /* 交易紀錄顯示 */
+        .outertradehistory{ /* 交易紀錄顯示總外框 */
+          width: 500px;
+          height: 700px;
+          border: 2px solid #ccc; /* 外框的顏色和寬度 */
+          position: absolute;
+          right: 0;
+          margin-right: 20px;
+          top: 60%; /* 進度條下方的位置 */
+          transform: translateY(-50%);
+          
+        }
+        /* 交易紀錄顯示 */
+        .tradehistory{
+          width: 450px;
+          height: 150px;
+          margin-top: 20px;
+          margin-left: 25px;
+          background-color: aqua;
+        }
   </style>
 
 </head>
 <body>
-  <div class="kv w-100">
-    <nav class="navbar navbar-expand-lg" style="background-color: #060A1B">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="index.html" style="color: #C0C2C6;">
-          <img src="./images/logo192.png" alt="" srcset="" class="img-fluid" style="width: 30px;">
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse d-flex justify-content-end" id="navbarNavDropdown">
-          <ul class="navbar-nav d-none d-lg-flex"> <!-- 隱藏於小型螢幕 -->
-            <li class="nav-item mx-4">
-              <a class="nav-link" href="accounting.html">記帳</a>
-            </li>
-            <li class="nav-item mx-4" >
-              <a class="nav-link active" aria-current="page" href="/" style="color: #C0C2C6;">個股</a>
-            </li>
-            <li class="nav-item mx-4">
-              <a class="nav-link" href="#">熱門成交股</a>
-            </li>
-            <li class="nav-item mx-4">
-              <a class="nav-link" href="#">台灣五十股</a>
-            </li>
-            <li class="nav-item dropdown mx-4">
-              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Dropdown link
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                <li><a class="dropdown-item" href="#">Action</a></li>
-                <li><a class="dropdown-item" href="#">Another action</a></li>
-                <li><a class="dropdown-item" href="#">Something else here</a></li>
-              </ul>
-            </li>
-          </ul>
-          <div class="navbar-nav d-lg-none"> <!-- 隱藏於大型螢幕 -->
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              選單
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-              <li><a class="dropdown-item" href="stock.html">記帳</a></li>
-              <li><a class="dropdown-item active" aria-current="page" href="stock.html">個股</a></li>
-              <li><a class="dropdown-item" href="#">熱門成交股</a></li>
-              <li><a class="dropdown-item" href="#">台灣五十股</a></li>
+<div class="kv w-100">
+
+  <nav class="navbar navbar-expand-lg" style="background-color: #060A1B">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#" style="color: #C0C2C6;">
+        <img src="./images/logo192.png" alt="" srcset="" class="img-fluid" style="width: 30px;">
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse d-flex justify-content-end" id="navbarNavDropdown">
+        <ul class="navbar-nav" >
+          <li class="nav-item mx-4">
+            <a class="nav-link" href="accounting v2.html">記帳</a>
+          <li class="nav-item mx-4" >
+            <a class="nav-link active" aria-current="page" href="/" style="color: #C0C2C6;">個股</a>
+          </li>
+          <li class="nav-item mx-4">
+            <a class="nav-link" href="#">熱門成交股</a>
+          </li>
+          <li class="nav-item mx-4">
+            <a class="nav-link" href="#">台灣五十股</a>
+          </li>
+          <li class="nav-item dropdown mx-4">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Dropdown link
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
               <li><a class="dropdown-item" href="#">Action</a></li>
               <li><a class="dropdown-item" href="#">Another action</a></li>
               <li><a class="dropdown-item" href="#">Something else here</a></li>
             </ul>
-          </div>
-        </div>
-      </div>
-    </nav>
-  </div>
-  
-  <div class="container">
-    <div class="left-half">
-      <div id="datepicker"></div>
-      <div id="todayTotalAmount"></div>
-      <div id="assetTotalAmount"></div>
-      <div id="assetChartContainer">
-        <canvas id="assetChart" width=”1000px” height=”600px”></canvas>
+          </li>
+          <li class="nav-item mx-4" style="border: 1px solid #ffffff;">
+            <a class="nav-link text-nowrap d-flex justify-content-center" id="btnb" href="#" style="width: 100px;height: 37px;color: white;">LOG IN</a>
+          </li>
+          <li class="nav-item mx-4" style="background-color: #424551;">
+            <a class="nav-link text-nowrap d-flex justify-content-center" id="btnb" href="#" style="width: 200px;height: 38px;color: white;">CREATE ACCOUNT</a>
+          </li>
+        </ul>
       </div>
     </div>
-    <div class="right-half">
-      <div class="transaction-container" style="height: 300px; overflow-y: auto;">
-        <button onclick="openModal()">新增交易紀錄</button>
-        <div id="transactions"></div>
-      </div>
-    </div>
+  </nav>
+<div class="account-form">
+  <h2 class="totalamounttitle">您的總資產</h2>
+  <div class="totalamount">
+    <!-- 初始總資產顯示在這裡 -->
+    $  <span id="totalAmountDisplay">0.00</span>
   </div>
+  <div class="account-form-container">
+  <h2>記帳表格</h2>
+    <form id="accountForm">
+        <label for="date">日期：</label>
+        <input type="text" id="date" name="date"><br><br>
 
-  <div id="myModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
-      <label for="amount">金額:</label>
-      <input type="number" id="amount" min="0" required> <!-- 修改為 type="number"，並加上 min="0" 只允許輸入非負數 -->
-      <span class="invalid-feedback">請輸入金額</span> <!-- 新增的警示訊息 -->
-      <label for="category">類別:</label>
-      <select id="category">
-        <option value="收入">收入</option> <!-- 修改選項 -->
-        <option value="支出">支出</option> <!-- 修改選項 -->
-      </select>
-      <label for="note">備註:</label>
-      <input type="text" id="note">
-      <div class="action-buttons">
-        <button onclick="addTransaction()">確定</button>
-        <button onclick="closeModal()">取消</button>
-      </div>
-    </div>
+        <label for="amount">金額：</label>
+        <input type="number" id="amount" name="amount" pattern="[0-9]*" title="請輸入數字" required><br><br>
+
+        <label for="category">類別：</label>
+        <select id="category" name="category">
+            <option value="飲食">飲食</option>
+            <option value="交通">交通</option>
+            <option value="娛樂">娛樂</option>
+            <!-- 其他類別 -->
+        </select><br><br>
+
+        <label for="description">描述/備註：</label><br>
+        <textarea id="description" name="description" rows="4" cols="50"></textarea><br><br>
+
+        <label for="payment">支付方式：</label>
+        <input type="text" id="payment" name="payment"><br><br>
+
+        <label for="recipient">對象/商家：</label>
+        <input type="text" id="recipient" name="recipient"><br><br>
+
+        <input type="radio" id="income" name="type" value="income">
+        <label for="income">收入</label>
+        <input type="radio" id="expense" name="type" value="expense">
+        <label for="expense">支出</label><br><br>
+
+        <input type="submit" value="提交">
+    </form>
   </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+</div>
+<!-- 以下為進度條 -->
+<div class="progress-container">
+  <button class="progress-button" onclick="setLimit()">設定上限</button>
+  <!-- 左下方顯示目前的總資產數字 -->
+  <div id="currentTotal" class="progress-label"></div>
+  <!-- 右下方顯示目前設定的上限數字 -->
+  <div id="limitAmount" class="progress-label"></div>
+  <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+  </div>
+</div>
+
+<div class="outertradehistory">
+  <div class="tradehistory"></div>
+</div>
+
 <script>
-  const transactionsByDate = {}; // 用來存儲每一天的交易紀錄
+flatpickr("#date", {
+// 在此處設置 Flatpickr 的選項（可選）
+});
+// 獲取表單元素
+const form = document.getElementById('accountForm');
+// 獲取顯示總資產的元素
+const totalAmountDisplay = document.querySelector('.totalamount');
+const progressBar = document.getElementById('progressFill');
+// 初始總資產
+let totalAmount = 0;
+let limit = 3000; // 預設上限
 
-  const datePicker = flatpickr("#datepicker", {
-    inline: true,
-    dateFormat: 'Y-m-d',
-    onChange: function(selectedDates, dateStr) {
-      showTransactions(dateStr);
-    }
-  });
+// 監聽表單提交事件
+form.addEventListener('submit', function(event) {
+    event.preventDefault(); // 阻止默認表單提交行為
 
-  function openModal() {
-    document.getElementById('myModal').style.display = 'block';
-  }
-
-  function closeModal() {
-    document.getElementById('myModal').style.display = 'none';
-  }
-
-  function addTransaction() {
+    // 獲取表單中的金額和收入/支出選擇
+    const dateInput = document.getElementById('date');
     const amountInput = document.getElementById('amount');
-    let amount = parseFloat(amountInput.value);
+    const amount = parseFloat(document.getElementById('amount').value);
+    const type = document.querySelector('input[name="type"]:checked').value;
 
-    // 檢查是否有輸入金額，若無則彈出提示對話框
+     // 檢查日期是否已選擇
+     if (!dateInput.value) {
+        alert('請選擇日期');
+        return;
+    }
+
+    // 檢查金額是否為空或者是否包含非數字字符
     if (isNaN(amount) || amount <= 0) {
-        amountInput.classList.add('is-invalid'); // 若金額無效，加上樣式
-        return; // 終止函數
-    } else {
-        amountInput.classList.remove('is-invalid'); // 若金額有效，移除樣式
+        alert('金額欄位請輸入正數');
+        return;
     }
 
-    const category = document.getElementById('category').value;
-    const note = document.getElementById('note').value;
-    const date = datePicker.selectedDates[0].toLocaleDateString().slice(0, 10); // 獲取選擇的日期
-
-    const transaction = document.createElement('div');
-    transaction.classList.add('transaction');
-
-    let amountText = ''; // 金額文本
-    // 根據類別計算金額
-    if (category === '支出') {
-        amount = -amount; // 將金額設置為負數
-        amountText = `-${Math.abs(amount).toFixed(2)}`; // 負數顯示金額前面加上"-$"
-    } else {
-        amountText = `${amount.toFixed(2)}`; // 正數顯示金額前面加上"$"
+    // 根據收入/支出選擇更新總資產
+    if (type === 'income') {
+        totalAmount += amount;
+    } else if (type === 'expense') {
+        totalAmount -= amount;
     }
 
-    transaction.innerHTML = `
-        <input type="checkbox">
-        <span>${amountText}  ${category}  ${note}</span>
-        <span class="edit-btn" onclick="openModal()">修改</span>
-        <span class="delete-btn" onclick="confirmDelete(this)">刪除</span>
-    `;
+    // 更新總資產顯示
+    updateTotalAmount(); // 更新目前總資產數字
+    totalAmountDisplay.textContent ='$' + totalAmount.toFixed(2); // 顯示到小數點後兩位
 
-    // 檢查是否為手機瀏覽器，如果是，將交易紀錄的寬度設置為100%
-    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-        transaction.style.width = '100%';
-    }
+    // 清空表單欄位
+    form.reset();
 
-    // 將交易記錄添加到對應日期的物件中
-    if (!transactionsByDate[date]) {
-        transactionsByDate[date] = [];
-    }
-    transactionsByDate[date].push(transaction.outerHTML);
+    updateProgressBar();
+});
 
-    // 顯示交易記錄
-    showTransactions(date);
-
-    // 更新資產總額
-    updateTotalAmount();
-
-    // 新增交易後，更新 K 線圖
-    updateAssetChart(); // 更新 K 線圖
-}
-
-
-
-
-
-  function confirmDelete(btn) {
-    if (confirm('是否要刪除此交易?')) {
-      const transaction = btn.parentElement;
-      transaction.remove();
-    }
-  }
-
-  function openModal() {
-    // 檢查是否有選擇日期，若無則彈出提示對話框
-    if (!datePicker.selectedDates.length) {
-      alert('請先選擇日期');
-      return;
-    }
-
-    document.getElementById('myModal').style.display = 'block';
-  }
-
-  function showTransactions(date) {
-    date = new Date(date).toLocaleDateString();
-    // 清空交易列表
-    const transactionsDiv = document.getElementById('transactions');
-    transactionsDiv.innerHTML = '';
-
-    // 檢查該日期是否有交易，如果有則顯示
-    if (transactionsByDate[date]) {
-        transactionsByDate[date].forEach(transaction => {
-            const div = document.createElement('div');
-            div.innerHTML = transaction;
-            transactionsDiv.appendChild(div);
-        });
-
-        // 計算當日總額
-        const totalAmount = transactionsByDate[date].reduce((acc, curr) => {
-            const amount = parseFloat(curr.match(/(\-?\d+\.\d+|\-?\d+)/)[0]); // 加上對負數的匹配
-            return acc + amount;
-        }, 0);
-
-        // 顯示當日總額
-        const todayTotalAmountDiv = document.getElementById('todayTotalAmount');
-        if (totalAmount < 0) {
-            todayTotalAmountDiv.innerText = `今日總額: -$${Math.abs(totalAmount).toFixed(2)}`;
+    function setLimit() {
+        const newLimit = prompt('請輸入新的上限');
+        if (!isNaN(newLimit) && newLimit > 0) {
+            limit = parseFloat(newLimit);
+            updateLimitAmount(); // 更新上限數字
+            updateProgressBar(); // 更新進度條
         } else {
-            todayTotalAmountDiv.innerText = `今日總額: $${totalAmount.toFixed(2)}`;
+            alert('請輸入正確的數字');
         }
-    } else {
-        const todayTotalAmountDiv = document.getElementById('todayTotalAmount');
-        todayTotalAmountDiv.innerText = '今日總額: $0.00'; // 清空當日總額文本
     }
-    closeModal();
-}
 
+    updateTotalAmount(); // 顯示目前的總資產數字
+    updateLimitAmount(); // 顯示設定的上限數字
 
-function updateTotalAmount() {
-  let total = 0;
-  for (const date in transactionsByDate) {
-    transactionsByDate[date].forEach(transaction => {
-      const amount = parseFloat(transaction.match(/(\-?\d+\.\d+|\-?\d+)/)[0]); // 加上對負數的匹配
-      total += amount;
-    });
-  }
-
-  const totalAmountDiv = document.getElementById('assetTotalAmount');
-  if (total < 0) {
-    totalAmountDiv.innerText = `資產總額: -$${Math.abs(total).toFixed(2)}`;
-  } else {
-    totalAmountDiv.innerText = `資產總額: $${total.toFixed(2)}`;
-  }
-}
-
-
-  // 初始化資產總額
-  updateTotalAmount();
-
-  const assetChart = document.getElementById('assetChart').getContext('2d');
-  let assetChartData = {
-    labels: [],
-    datasets: [{
-      label: 'Asset Value',
-      data: [],
-      backgroundColor: 'rgba(255, 99, 132, 0.2)',
-      borderColor: 'rgba(255, 99, 132, 1)',
-      borderWidth: 1
-    }]
-  };
-
-    
-
-  // 創建 K 線圖
-  const chart = new Chart(assetChart, {
-    type: 'line',
-    data: assetChartData,
-    options: {
-      maintainAspectRatio: false, // 不保持長寬比
-      responsive: true, // 允許響應式調整大小
-      width: 800, // 設置寬度
-      height: 400, // 設置高度
-      scales: {
-        y: {
-          beginAtZero: true
-        }
-      }
+    function updateTotalAmount() {
+        const currentTotalElement = document.getElementById('currentTotal');
+        currentTotalElement.textContent = '目前總資產：$' + totalAmount.toFixed(2);
     }
-  });
 
-  // 更新 K 線圖
-  function updateAssetChart() {
-    const labels = Object.keys(transactionsByDate);
-    const data = labels.map(date => {
-      const total = transactionsByDate[date].reduce((acc, curr) => {
-        const amount = parseFloat(curr.match(/(\-?\d+\.\d+|\-?\d+)/)[0]); // 加上對負數的匹配
-        return acc + amount;
-      }, 0);
-      return total;
-    });
+    function updateLimitAmount() {
+        const limitAmountElement = document.getElementById('limitAmount');
+        limitAmountElement.textContent = '上限：$' + limit.toFixed(2);
+    }
 
-    assetChartData.labels = labels;
-    assetChartData.datasets[0].data = data;
-    chart.update();
-  }
-</script>
+    function updateProgressBar() {
+        const progress = Math.min((totalAmount / limit) * 100, 100);
+        progressBar.style.width = progress + '%';
+        if (totalAmount <= 0) {
+            progressBar.style.backgroundColor = 'transparent'; // 無顏色填充
+        } else {
+            if (progress <= 100) {
+                progressBar.style.backgroundColor = '#3498db'; // 淺藍色
+            }   
+    }
+    }
+  </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>

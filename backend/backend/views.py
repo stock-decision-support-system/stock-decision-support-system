@@ -256,7 +256,7 @@ def profile(request):
 @permission_classes([IsAuthenticated])
 def edit_profile(request):
     if request.method == 'POST':
-        username = request.GET.get('username')
+        username = request.data.get('username')
         try:
             user = CustomUser.objects.get(username=username)
         except CustomUser.DoesNotExist:
