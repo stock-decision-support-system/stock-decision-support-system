@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Modal, Input, Select } from 'antd';
+import { BankProfileRequest } from '../api/request/bankProfileRequest.js';
 
 const { Option } = Select;
 
@@ -13,7 +14,10 @@ const BankDialog = () => {
     branch: '',
     account: '',
     api_key: '',
-    secret_key: ''
+    secret_key: '',
+    ca_path: 'test',
+    ca_passwd: 'test',
+    person_id: 'test',
   });
 
   const taiwanCities = [
@@ -24,18 +28,19 @@ const BankDialog = () => {
 
   const showModal = () => {
     setIsModalOpen(true);
-  };
+  }
 
   const handleOk = async () => {
-      const response = await fetch('http://localhost:8000/api/addBank', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      BankProfileRequest.addBankProfile(formData)
+      .then(response => {
+        alert(response.message);
+        window.location.reload();
+      })
+      .catch((error) => {
+          alert(error.message);
+      })
       setIsModalOpen(false);
-  };
+  }
 
   return (
     <>

@@ -21,6 +21,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import (
+    APICredentialsSerializer,
     CustomUserSerializer,
     AccountingSerializer,
     ConsumeTypeSerializer,
@@ -865,9 +866,10 @@ def consume_type_operations(request, pk=None):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def bankProfileList(request):
+def get_bank_profile_list(request):
     if request.method == "GET":
-        username = request.GET.get("username")
+        #username = request.user.username
+        username = "11046029"
         list = APICredentials.objects.filter(username=username)
         
         if not list.exists():
@@ -895,7 +897,7 @@ def bankProfileList(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def getbankProfile(request):
+def get_bank_profile(request):
     if request.method == "GET":
         id = request.GET.get("id")
         try:
@@ -916,5 +918,53 @@ def getbankProfile(request):
             "region": bank.region,
             "branch": bank.branch,
             "account": bank.account,
+            "ca_path": bank.ca_path,
+            "ca_passwd": bank.ca_passwd,
+            "person_id": bank.person_id,
         }
     )
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def add_bank_profile(request):
+    if request.method == "POST":
+        serializer = APICredentialsSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"status": "success", "message": "銀行資料新增成功"}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def update_bank_profile(request, id):
+    if request.method == "PUT":
+        try:
+            bank = APICredentials.objects.get(id=id)
+        except APICredentials.DoesNotExist:
+            return Response(
+                {"status": "error", "message": "查無此銀行資料"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = APICredentialsSerializer(bank, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"status": "success", "message": "銀行資料更新成功"})
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_bank_profile(request, id):
+    if request.method == "DELETE":
+        try:
+            bank = APICredentials.objects.get(id=id)
+            bank.delete()
+            return Response({"status": "success", "message": "銀行資料刪除成功"})
+        except APICredentials.DoesNotExist:
+            return Response(
+                {"status": "error", "message": "查無此銀行資料"},
+                status=status.HTTP_404_NOT_FOUND,
+            )

@@ -23,7 +23,7 @@ class AccountingSerializer(serializers.ModelSerializer):
 class APICredentialsSerializer(serializers.ModelSerializer):
     class Meta:
         model = APICredentials
-        fields = '__all__'
+        fields = ['id', 'api_key', 'secret_key', 'bank_name', 'region', 'branch', 'account']
 
 
 class InvestmentPortfolioSerializer(serializers.ModelSerializer):

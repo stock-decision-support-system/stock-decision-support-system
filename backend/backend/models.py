@@ -32,6 +32,9 @@ class CustomUser(AbstractBaseUser):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(null=True, blank=True)
+    net_assets = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    total_assets = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
@@ -111,7 +114,9 @@ class APICredentials(models.Model):
     account = models.CharField(max_length=20)
     region = models.CharField(max_length=10)
     branch = models.CharField(max_length=20)
-
+    ca_path = models.CharField(max_length=255)  # Path to the CA certificate
+    ca_passwd = models.CharField(max_length=255)  # CA certificate password
+    person_id = models.CharField(max_length=100)  # ID associated with the CA certificate
     class Meta:
         db_table = 'api_credentials'
 
