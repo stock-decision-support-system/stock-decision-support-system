@@ -6,22 +6,21 @@ const { Option } = Select;
 const BankDialog = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+
   const [formData, setFormData] = useState({
-    name: '',
-    idNumber: '',
-    birthday: null,
-    city: '',
-    district: '',
-    address: '',
-    postalCode: '',
     bankName: '',
-    bankCity: '',
-    bankBranch: '',
-    bankAccountName: '',
-    bankAccountNumber: '',
-    api: '',
-    secret: ''
+    region: '',
+    branch: '',
+    account: '',
+    api_key: '',
+    secret_key: ''
   });
+
+  const taiwanCities = [
+    "基隆市", "台北市", "新北市", "桃園市", "新竹市", "新竹縣", "苗栗縣",
+    "台中市", "彰化縣", "南投縣", "雲林縣", "嘉義市", "嘉義縣", "台南市",
+    "高雄市", "屏東縣", "宜蘭縣", "花蓮縣", "台東縣", "澎湖縣", "金門縣", "連江縣"
+];
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -58,123 +57,56 @@ const BankDialog = () => {
         footer={[
           <Button
             type="primary"
-            onClick={currentStep === 1 ? handleNext : handleOk}
+            onClick={handleOk}
           >
-            {currentStep === 1 ? '下一步' : '確定'}
+            確定
           </Button>,
         ]}
       >
         <div className="form-container">
-          {currentStep === 1 && (
             <>
               <Input
-                placeholder="姓名"
-                className="mt-2"
-                value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
-              />
-              <Input
-                placeholder="身份證字號"
+                placeholder="銀行名稱"
                 className="mt-1"
-                value={formData.idNumber}
-                onChange={e => setFormData({ ...formData, idNumber: e.target.value })}
-              />
-              <DatePicker
-                placeholder="yyyy/mm/dd"
-                className="w-100 mt-1"
-                value={formData.birthday}
-                onChange={date => setFormData({ ...formData, birthday: date })}
-              />
-              <Select
-                defaultValue="城市"
-                className="mt-1 w-100"
-                value={formData.city}
-                onChange={value => setFormData({ ...formData, city: value })}
-              >
-                <Option value="taipei">台北市</Option>
-                <Option value="newtaipei">新北市</Option>
-              </Select>
-              <Select
-                defaultValue="區"
-                className="mt-1 w-100"
-                value={formData.district}
-                onChange={value => setFormData({ ...formData, district: value })}
-              >
-                <Option value="xx">xx區</Option>
-                <Option value="oo">oo區</Option>
-              </Select>
-              <Input
-                placeholder="地址"
-                className="mt-1"
-                value={formData.address}
-                onChange={e => setFormData({ ...formData, address: e.target.value })}
-              />
-              <Input
-                placeholder="郵遞區號"
-                className="mt-1"
-                value={formData.postalCode}
-                onChange={e => setFormData({ ...formData, postalCode: e.target.value })}
-              />
-            </>
-          )}
-          {currentStep === 2 && (
-            <>
-              <div className="mt-2">銀行名稱</div>
-              <Select
-                defaultValue="請選擇"
-                className="mt-1 w-100"
                 value={formData.bankName}
-                onChange={value => setFormData({ ...formData, bankName: value })}
-              >
-                <Option value="bank1">銀行1</Option>
-                <Option value="bank2">銀行2</Option>
-              </Select>
+                onChange={e => setFormData({ ...formData, bankName: e.target.value })}
+              />
               <div className="mt-2">城市</div>
               <Select
-                defaultValue="請選擇"
-                className="mt-1 w-100"
-                value={formData.bankCity}
-                onChange={value => setFormData({ ...formData, bankCity: value })}
+                  defaultValue="請選擇"
+                  className="mt-1 w-100"
+                  value={formData.region}
+                  onChange={value => setFormData({ ...formData, region: value })}
               >
-                <Option value="taipei">台北市</Option>
-                <Option value="newtaipei">新北市</Option>
-              </Select>
-              <div className="mt-2">分行名稱</div>
-              <Select
-                defaultValue="請選擇"
-                className="mt-1 w-100"
-                value={formData.bankBranch}
-                onChange={value => setFormData({ ...formData, bankBranch: value })}
-              >
-                <Option value="branch1">分行1</Option>
-                <Option value="branch2">分行2</Option>
+                  {taiwanCities.map(city => (
+                      <Option key={city} value={city}>{city}</Option>
+                  ))}
               </Select>
               <Input
-                placeholder="銀行戶名"
+                placeholder="分行名稱"
                 className="mt-1"
-                value={formData.bankAccountName}
-                onChange={e => setFormData({ ...formData, bankAccountName: e.target.value })}
+                value={formData.branch}
+                onChange={e => setFormData({ ...formData, branch: e.target.value })}
               />
               <Input
                 placeholder="銀行帳號"
                 className="mt-1"
-                value={formData.bankAccountNumber}
-                onChange={e => setFormData({ ...formData, bankAccountNumber: e.target.value })}
+                value={formData.account}
+                onChange={e => setFormData({ ...formData, account: e.target.value })}
               />
               <Input
                 placeholder="金鑰"
                 className="mt-1"
-                value={formData.api}
-                onChange={e => setFormData({ ...formData, api: e.target.value })}
+                value={formData.api_key}
+                onChange={e => setFormData({ ...formData, api_key: e.target.value })}
               />
               <Input
                 placeholder="密鑰"
                 className="mt-1"
-                value={formData.secret}
-                onChange={e => setFormData({ ...formData, secret: e.target.value })}
+                value={formData.secret_key}
+                onChange={e => setFormData({ ...formData, secret_key: e.target.value })}
               />
             </>
-          )}
         </div>
       </Modal>
     </>

@@ -98,10 +98,14 @@ class Accounting(models.Model):
 
 #紀錄api憑證key
 class APICredentials(models.Model):
+    id = models.AutoField(primary_key=True)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='api_credentials')
     api_key = models.CharField(max_length=255)
     secret_key = models.CharField(max_length=255)
-    service_name = models.CharField(max_length=100)  # e.g., 'Yuanta Investment'
+    bank_name = models.CharField(max_length=100)  # e.g., 'Yuanta Investment'
+    account = models.CharField(max_length=20)
+    region = models.CharField(max_length=10)
+    branch = models.CharField(max_length=20)
 
     class Meta:
         db_table = 'api_credentials'
