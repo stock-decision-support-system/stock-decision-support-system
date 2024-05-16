@@ -46,17 +46,21 @@ class CustomUser(AbstractBaseUser):
     def has_module_perms(self, app_label):
         return True
 
-    #計算總資產
+    # 計算淨資產
     @property
     def net_assets(self):
         total_assets = sum(asset.balance for asset in self.asset_set.all())
         total_liabilities = sum(liability.amount for liability in self.liability_set.all())
         return total_assets - total_liabilities
 
+    # 計算總資產
+    def calculate_total_assets(self):
+        return sum(asset.balance for asset in self.asset_set.all())
+
     class Meta:
         db_table = 'auth_user'
 
-#消費類別
+# 消費類別
 class ConsumeType(models.Model):
     consumeTypeId = models.CharField(max_length=2, primary_key=True)
     icon = models.TextField()
@@ -84,12 +88,13 @@ class Accounting(models.Model):
 
 #判斷收入或是支出來讓總資產增加或減少
     def save(self, *args, **kwargs):
-        if self.assetType == '0':  # Assuming '0' is asset
-            asset = Asset.objects.get(user_id=self.createdId)  # Simplified, assumes user_id works directly
+        # 獲取對應的Asset實例，假設assetType字段與Asset的type字段匹配
+        asset = Asset.objects.filter(user_id=self.createdId, type=self.assetType).first()
+        if asset:
             if self.consumeType.name == "Income":
-                asset.balance += self.price
+                asset.balance += self.price  # 增加資產
             elif self.consumeType.name == "Expense":
-                asset.balance -= self.price
+                asset.balance -= self.price  # 減少資產
             asset.save()
         super(Accounting, self).save(*args, **kwargs)
 
@@ -154,9 +159,19 @@ class Liability(models.Model):
 class Transaction(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    fee = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # 可選的手續費欄位
     transaction_type = models.CharField(max_length=50)  # 'Income', 'Expense', 'Transfer'
     account = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='transactions')
     description = models.TextField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        total_amount = self.amount + (self.fee if self.fee else 0)  # 如果有手續費則加上
+        if self.transaction_type == 'Transfer' and 'out' in self.description.lower():
+            bank_assets = Asset.objects.filter(user=self.account.user, type='Bank')
+            for asset in bank_assets:
+                asset.balance -= total_amount  # 使用總額更新餘額
+                asset.save()
+        super(Transaction, self).save(*args, **kwargs)
 
     class Meta:
         db_table = 'transaction'
