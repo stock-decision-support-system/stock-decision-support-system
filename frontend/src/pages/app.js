@@ -1,8 +1,15 @@
 import React from 'react';
 import '../assets/css/index.css'
 import indexpic from '../assets/images/indexpic.png'
+import { useNavigate } from 'react-router-dom';
 
 const App = () => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate('#');
+  };
+
   return (
     <div className="kv w-100 container">
       <div className="d-flex justify-content-between" style={{ paddingTop: '8%', color: '#C25B8B' }}>
@@ -12,13 +19,13 @@ const App = () => {
             智投金紡
             </h1>
             <h6 className='mb-3'>
-              全面的市場分析，客製的投資策略
+            全面的財務管理，個性化的記帳策略
             </h6>
             <h6>
-            為您開啟一段卓越的財富增值之旅
+            為您開啟一段輕鬆掌控財務的旅程
             </h6>
           </div>
-          <button className="mt-4 px-5 py-3 button" type="button">
+          <button className="mt-4 px-5 py-3 button" type="button"  onClick={handleClick}>
             GET STARTED
           </button>
         </div>

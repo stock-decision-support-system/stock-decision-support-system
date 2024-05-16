@@ -31,6 +31,7 @@ body {
 .bbb{
   color: #dd87a8 !important;
   font-weight: lighter;
+  border: #ffffff 100px !important;
 }
 
 .bbb:hover{

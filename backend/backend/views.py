@@ -173,7 +173,8 @@ def password_reset_request(request):
             token = token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             # 創建密碼重置郵件的鏈接
-            reset_link = request.build_absolute_uri(f"/reset-password/{uid}/{token}/")
+            # reset_link = request.build_absolute_uri(f"/reset-password/{uid}/{token}/")
+            reset_link = request.build_absolute_uri(f"http://localhost:3000/reset-password/{uid}/{token}/")
             # 郵件內容
             message = render_to_string(
                 "password_reset_email.html",
@@ -209,7 +210,6 @@ def password_reset_request(request):
     )
 
 
-# 根據連結（含有Token）導入到重設密碼網頁
 @api_view(["POST"])
 def password_reset_confirm(request, uidb64, token):
     if request.method == "POST":
@@ -224,7 +224,8 @@ def password_reset_confirm(request, uidb64, token):
                     {
                         "status": "success",
                         "message": "Password has been reset successfully.",
-                    }
+                    },
+                    status=status.HTTP_200_OK
                 )
             else:
                 return Response(
@@ -240,6 +241,40 @@ def password_reset_confirm(request, uidb64, token):
         {"status": "error", "message": "Invalid request method."},
         status=status.HTTP_405_METHOD_NOT_ALLOWED,
     )
+
+
+
+# # 根據連結（含有Token）導入到重設密碼網頁
+# @api_view(["POST"])
+# def password_reset_confirm(request, uidb64, token):
+#     if request.method == "POST":
+#         password = request.data.get("password")
+#         try:
+#             uid = force_str(urlsafe_base64_decode(uidb64))
+#             user = CustomUser.objects.get(pk=uid)
+#             if token_generator.check_token(user, token):
+#                 user.set_password(password)
+#                 user.save()
+#                 return Response(
+#                     {
+#                         "status": "success",
+#                         "message": "Password has been reset successfully.",
+#                     }
+#                 )
+#             else:
+#                 return Response(
+#                     {"status": "error", "message": "Invalid token."},
+#                     status=status.HTTP_400_BAD_REQUEST,
+#                 )
+#         except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+#             return Response(
+#                 {"status": "error", "message": "Invalid request."},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+#     return Response(
+#         {"status": "error", "message": "Invalid request method."},
+#         status=status.HTTP_405_METHOD_NOT_ALLOWED,
+#     )
 
 
 # （管理員）帳戶管理GET帳戶資訊的頁面 - 有根據username的關鍵字搜尋、根據is-superuser, is_staff和is_active狀態做篩選、依據date_joined做排序

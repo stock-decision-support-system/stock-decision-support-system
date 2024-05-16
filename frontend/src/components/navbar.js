@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // 假設你使用 react-router-dom 進行導航
 import AntdDrop from './antdDrop.js';
-import iconImage from '../assets/images/logo192.png';
+import iconImage from '../assets/images/logo.png';
 import '../assets/css/navbar.css';
 import { Button, Dropdown, Space } from 'antd';
 import headIcon from '../assets/images/account.png'
@@ -52,12 +52,12 @@ const Navbar = () => {
         style={{}}
       >
         <div className="container">
-          <a className="navbar-brand" href="/#">
+          <a className="navbar-brand d-flex " href="/#">
             <img
               src={iconImage}
               alt=""
-              className="img-fluid"
-              style={{ width: 30 }}
+              className="img-fluid justify-content-center align-items-center"
+              style={{ width: 150 ,marginTop:'10px'}}
             />
           </a>
           <button
@@ -83,17 +83,17 @@ const Navbar = () => {
               </li>
               <li className="nav-item">
                 <a className="nav-link me-5  justify-content-center d-flex align-items-center" aria-current="page" href="#" style={{height:'37px'}}>
-                  個股
+                  記帳
                 </a>
               </li>
               <li className="nav-item">
                 <a className="nav-link me-5  justify-content-center d-flex align-items-center" href="#" style={{height:'37px'}}>
-                  熱門成交股
+                  報表
                 </a>
               </li>
               <li className="nav-item">
                 <a className="nav-link justify-content-center d-flex align-items-center" href="#" style={{height:'37px',marginRight:'25px'}}>
-                  台灣五十股
+                  投資績效
                 </a>
               </li>
               

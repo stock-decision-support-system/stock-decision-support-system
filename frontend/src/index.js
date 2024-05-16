@@ -12,6 +12,7 @@ import ForgotPassword from './pages/forgotPassword.js';
 import AddBankForm from './pages/addBankForm.js';
 import Test from './pages/test.js';
 import Profile from './pages/profile.js';
+import ResetPasswordPage from './pages/resetPassword.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'jquery/dist/jquery.min.js';
 import 'bootstrap/dist/js/bootstrap.min.js';
@@ -31,6 +32,7 @@ root.render(
           <Route path="/signUp" element={<SignUp />} />
           <Route path="/test1" element={<Test />} />
           <Route path="/forgotPassword" element={<ForgotPassword />} />
+          <Route path="/reset-password/:uid/:token" element={<ResetPasswordPage />} />
           <Route path="/profile" element={<Profile />} />
         </Routes>
       </React.StrictMode>
