@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Modal, DatePicker, Input, Select } from 'antd';
+import { Button, Modal, Input, Select } from 'antd';
 
 const { Option } = Select;
 
@@ -26,14 +26,7 @@ const BankDialog = () => {
     setIsModalOpen(true);
   };
 
-  const handleNext = () => {
-    if (currentStep === 1) {
-      setCurrentStep(2);
-    }
-  };
-
   const handleOk = async () => {
-    if (currentStep === 2) {
       const response = await fetch('http://localhost:8000/api/addBank', {
         method: 'POST',
         headers: {
@@ -42,8 +35,6 @@ const BankDialog = () => {
         body: JSON.stringify(formData),
       });
       setIsModalOpen(false);
-      setCurrentStep(1);
-    }
   };
 
   return (
