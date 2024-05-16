@@ -4,8 +4,8 @@ import { Card } from 'antd';
 import BankItem from '../components/bankItem.js';
 
 const banks = [
-    { bankName: '中國信託商業銀行', fullName: '中*', region: '台北市', branch: '大安分行', id: 5357 },
-    { bankName: '中國信託商業銀行', fullName: '中*', region: '台北市', branch: '大安分行', id: 53572 },
+    { id: 1, bankName: '中國信託商業銀行', region: '台北市', branch: '大安分行', account: 5357 },
+    { id: 2, bankName: '中國信託商業銀行', region: '台北市', branch: '大安分行', account: 53572 },
 ];
 
 const AddBankForm = () => (
@@ -20,10 +20,9 @@ const AddBankForm = () => (
                 <BankItem
                     key={bank.id}
                     bankName={bank.bankName}
-                    fullName={bank.fullName}
                     region={bank.region}
                     branch={bank.branch}
-                    account={bank.id}
+                    account={bank.account}
                     onModify={() => this.handleModify(bank.id)}
                     onDelete={() => this.handleDelete(bank.id)}
                 />
