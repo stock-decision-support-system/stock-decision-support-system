@@ -45,108 +45,108 @@ const Navbar = () => {
     { key: 'logout', label: <a onClick={handleLogout}>登出</a> }
   ];
 
-    return (
-      
-        <nav
-        className="navbar navbar-expand-lg fixed-top"
-        style={{}}
-      >
-        <div className="container">
-          <a className="navbar-brand d-flex " href="/#">
-            <img
-              src={iconImage}
-              alt=""
-              className="img-fluid justify-content-center align-items-center"
-              style={{ width: 150 ,marginTop:'10px'}}
-            />
-          </a>
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarNavDropdown"
-            aria-controls="navbarNavDropdown"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon" />
-          </button>
-          <div
-            className="collapse navbar-collapse justify-content-end"
-            id="navbarNavDropdown"
-          >
-            <ul className="navbar-nav">
+  return (
+
+    <nav
+      className="navbar navbar-expand-lg fixed-top"
+      style={{}}
+    >
+      <div className="container">
+        <a className="navbar-brand d-flex " href="/#">
+          <img
+            src={iconImage}
+            alt=""
+            className="img-fluid justify-content-center align-items-center"
+            style={{ width: 150, marginTop: '10px' }}
+          />
+        </a>
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNavDropdown"
+          aria-controls="navbarNavDropdown"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon" />
+        </button>
+        <div
+          className="collapse navbar-collapse justify-content-end"
+          id="navbarNavDropdown"
+        >
+          <ul className="navbar-nav">
             <li className="nav-item">
-                <a className="nav-link me-5  justify-content-center d-flex align-items-center" aria-current="page" href="/test" style={{height:'37px'}}>
-                  測路由
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link me-5  justify-content-center d-flex align-items-center" aria-current="page" href="#" style={{height:'37px'}}>
-                  記帳
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link me-5  justify-content-center d-flex align-items-center" href="#" style={{height:'37px'}}>
-                  報表
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link justify-content-center d-flex align-items-center" href="#" style={{height:'37px',marginRight:'25px'}}>
-                  投資績效
-                </a>
-              </li>
-              
-              <Dropdown
-                menu={{
+              <a className="nav-link me-5  justify-content-center d-flex align-items-center" aria-current="page" href="/test" style={{ height: '37px' }}>
+                測路由
+              </a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link me-5  justify-content-center d-flex align-items-center" aria-current="page" href="#" style={{ height: '37px' }}>
+                記帳
+              </a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link me-5  justify-content-center d-flex align-items-center" href="#" style={{ height: '37px' }}>
+                報表
+              </a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link justify-content-center d-flex align-items-center" href="#" style={{ height: '37px', marginRight: '25px' }}>
+                投資績效
+              </a>
+            </li>
+
+            <Dropdown
+              menu={{
                 items,
-                }}
-                placement="bottom"
-              >
-                {username ? (
-          // 如果用户已登录，显示用户名称
+              }}
+              placement="bottom"
+            >
+              {username ? (
+                // 如果用戶已登入，顯示用戶名稱
                 <li className="nav-item">
-                  <span className="nav-link ms-4 justify-content-center d-flex align-items-center" style={{height:'37px'}}>
+                  <span className="nav-link ms-4 justify-content-center d-flex align-items-center" style={{ height: '37px' }}>
                     <img
-                    src={headIcon}
-                    alt=""
-                    className="img-fluid me-3"
-                    style={{ width: 30 }}
-                  />
+                      src={headIcon}
+                      alt=""
+                      className="img-fluid me-3"
+                      style={{ width: 30 }}
+                    />
                     {username}
                   </span>
                 </li>
               ) : (
-                // 如果用户未登录，显示登录和注册链接
+                // 如果用戶未登入，顯示登入和註冊連結
                 <>
                   <li className="nav-item">
                     <a
                       className="nav-link me-3 justify-content-center d-flex align-items-center bbb"
-                      href="/login" // 使用路由路径，确保以 `/` 开头
+                      href="/login" // 使用路由路徑，確保已 '/' 開頭
                       id="btnb"
-                      style={{ width: 100, height: 37}}
+                      style={{ width: 100, height: 37 }}
                     >
-                      LOG IN
+                      登入
                     </a>
                   </li>
                   <li className="nav-item">
                     <a
                       className="nav-link  justify-content-center d-flex align-items-center ms-3 aaa"
-                      href="/signUp" // 使用路由路径，确保以 `/` 开头
+                      href="/signUp" // 使用路由路徑，確保已 '/' 開頭
                       id="btnb"
                       style={{ backgroundColor: "#E8B4BC", width: 200, height: 38 }}
                     >
-                      CREATE ACCOUNT
+                      建立帳號
                     </a>
                   </li>
                 </>
               )}
-              </Dropdown>
-            </ul>
-          </div>
+            </Dropdown>
+          </ul>
         </div>
-      </nav>
-    );
+      </div>
+    </nav>
+  );
 }
 
 export default Navbar;

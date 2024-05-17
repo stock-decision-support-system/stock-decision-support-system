@@ -1,9 +1,9 @@
 export class ValueCheckerUtil {
-    static isUndefinedOrNull(value, includeString=true) {
+    static isUndefinedOrNull(value, includeString = true) {
         return !this.isNotUndefinedAndNull(value, includeString);
     }
 
-    static isNotUndefinedAndNull(value, includeString=true) {
+    static isNotUndefinedAndNull(value, includeString = true) {
         if (includeString && typeof value === "string") {
             return value.toLowerCase() !== "undefined" && value.toLowerCase() !== "null";
         } else {

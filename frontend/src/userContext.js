@@ -8,7 +8,7 @@ export const UserProvider = ({ children }) => {
   const login = (username) => {
     setUser({ username });
     localStorage.setItem('username', username);
-    // 可以同时存储 token
+    // 可以同時儲存 token
   };
 
   const logout = () => {
