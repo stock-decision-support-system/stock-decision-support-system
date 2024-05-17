@@ -3,6 +3,7 @@ from django.db import models
 from decimal import Decimal
 
 class CustomUserManager(BaseUserManager):
+
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError('The Email field must be set')
@@ -55,6 +56,7 @@ class CustomUser(AbstractBaseUser):
     class Meta:
         db_table = 'auth_user'
 
+
 # 消費類別
 class ConsumeType(models.Model):
     consumeTypeId = models.CharField(max_length=2, primary_key=True)
@@ -66,6 +68,7 @@ class ConsumeType(models.Model):
 
     class Meta:
         db_table = 'consume_type'
+
 
 #記帳
 class Accounting(models.Model):
@@ -113,10 +116,15 @@ class APICredentials(models.Model):
     account = models.CharField(max_length=20)
     region = models.CharField(max_length=10)
     branch = models.CharField(max_length=20)
+    ca_path = models.CharField(max_length=255)  # Path to the CA certificate
+    ca_passwd = models.CharField(max_length=255)  # CA certificate password
+    person_id = models.CharField(
+        max_length=100)  # ID associated with the CA certificate
 
 
     class Meta:
         db_table = 'api_credentials'
+
 
 #投資組合
 class InvestmentPortfolio(models.Model):
@@ -127,9 +135,12 @@ class InvestmentPortfolio(models.Model):
     class Meta:
         db_table = 'investment_portfolio'
 
+
 #投資
 class Investment(models.Model):
-    portfolio = models.ForeignKey(InvestmentPortfolio, on_delete=models.CASCADE, related_name='investments')
+    portfolio = models.ForeignKey(InvestmentPortfolio,
+                                  on_delete=models.CASCADE,
+                                  related_name='investments')
     type = models.CharField(max_length=50)  # 'Stock', 'Bond', 'ETF'
     symbol = models.CharField(max_length=10)
     shares = models.DecimalField(max_digits=10, decimal_places=2)
@@ -137,6 +148,7 @@ class Investment(models.Model):
 
     class Meta:
         db_table = 'investment'
+
 
 #資產
 class Asset(models.Model):
@@ -147,6 +159,7 @@ class Asset(models.Model):
 
     class Meta:
         db_table = 'asset'
+
 
 #負債
 class Liability(models.Model):
@@ -167,6 +180,3 @@ class Budget(models.Model):
 
     class Meta:
         db_table = 'budget'
-
-
-

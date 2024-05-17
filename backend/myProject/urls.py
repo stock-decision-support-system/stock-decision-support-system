@@ -55,5 +55,13 @@ urlpatterns = [
     path('accounting/admin/', views.accounting_list_for_admin, name='accounting-list-admin'),
     path('consume-type/', views.consume_type_operations, name='consume_type_list'),
     path('consume-type/<int:pk>/', views.consume_type_operations, name='consume_type_detail'),
+
+    #銀行資料
+    path('bank-profile/', views.add_bank_profile, name='add-bank-profile'),
+    path('bank-profile/<int:id>/', views.update_bank_profile, name='update-bank-profile'),
+    path('bank-profile/<int:id>/', views.delete_bank_profile, name='delete-bank-profile'),
+    path('bank-profile/list/', views.get_bank_profile_list, name='get-bank-profile-list'),
+    path('bank-profile/list/<int:id>/', views.get_bank_profile, name='get-bank-profile'),
+
 ]
 

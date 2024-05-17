@@ -147,8 +147,8 @@ export class FetchUtil {
           if (object[index].hasOwnProperty(key)) {
             paramsStringArray.push(
               encodeURIComponent(key) +
-                "=" +
-                encodeURIComponent(object[index][key])
+              "=" +
+              encodeURIComponent(object[index][key])
             );
           }
         }

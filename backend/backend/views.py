@@ -21,6 +21,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import (
+    APICredentialsSerializer,
     CustomUserSerializer,
     AccountingSerializer,
     ConsumeTypeSerializer,
@@ -31,7 +32,9 @@ class UserList(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, format=None):
-        output = [{"users": output.username} for output in CustomUser.objects.all()]
+        output = [{
+            "users": output.username
+        } for output in CustomUser.objects.all()]
         return Response(output)
 
     def post(self, request, format=None):
@@ -55,7 +58,10 @@ def register(request):
         # 检查是否已存在相同的邮箱
         if CustomUser.objects.filter(email=email).exists():
             return Response(
-                {"status": "error", "message": "Email already exists."},
+                {
+                    "status": "error",
+                    "message": "Email already exists."
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -71,12 +77,18 @@ def register(request):
             return Response({"status": "success"})
         else:
             return Response(
-                {"status": "error", "message": "Unable to register user."},
+                {
+                    "status": "error",
+                    "message": "Unable to register user."
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
     else:
         return Response(
-            {"status": "error", "message": "Invalid request method."},
+            {
+                "status": "error",
+                "message": "Invalid request method."
+            },
             status=status.HTTP_405_METHOD_NOT_ALLOWED,
         )
 
@@ -90,7 +102,10 @@ def login_view(request):
         user = CustomUser.objects.get(username=login_credential)
     except CustomUser.DoesNotExist:
         return Response(
-            {"status": "error", "message": "User does not exist."},
+            {
+                "status": "error",
+                "message": "User does not exist."
+            },
             status=status.HTTP_404_NOT_FOUND,
         )
 
@@ -101,21 +116,19 @@ def login_view(request):
 
         # 生成 token
         refresh = RefreshToken.for_user(user)
-        return Response(
-            {
-                "status": "success",
-                "username": user.username,
-                "is_superuser": user.is_superuser,
-                "token": str(refresh.access_token),  # 发送访问令牌
-            }
-        )
+        return Response({
+            "status": "success",
+            "username": user.username,
+            "is_superuser": user.is_superuser,
+            "token": str(refresh.access_token),  # 发送访问令牌
+        })
     else:
-        return Response(
-            {
-                "status": "error",
-                "message": "Unable to log in with provided credentials.",
-            }
-        )
+        return Response({
+            "status":
+            "error",
+            "message":
+            "Unable to log in with provided credentials.",
+        })
 
 
 # 登出
@@ -123,7 +136,10 @@ def login_view(request):
 @permission_classes([IsAuthenticated])
 def logout_view(request):
     logout(request)
-    return Response({"status": "success", "message": "Logged out successfully"})
+    return Response({
+        "status": "success",
+        "message": "Logged out successfully"
+    })
 
 
 # 修改密碼
@@ -140,20 +156,26 @@ def change_password(request):
         if check_password(old_password, user.password):
             user.set_password(new_password)
             user.save()
-            return Response(
-                {
-                    "status": "success",
-                    "message": "Password has been changed successfully.",
-                }
-            )
+            return Response({
+                "status":
+                "success",
+                "message":
+                "Password has been changed successfully.",
+            })
         else:
             return Response(
-                {"status": "error", "message": "Old password is incorrect."},
+                {
+                    "status": "error",
+                    "message": "Old password is incorrect."
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
     return Response(
-        {"status": "error", "message": "Invalid request method."},
+        {
+            "status": "error",
+            "message": "Invalid request method."
+        },
         status=status.HTTP_405_METHOD_NOT_ALLOWED,
     )
 
@@ -172,7 +194,9 @@ def password_reset_request(request):
             token = token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             # 創建密碼重置郵件的鏈接
-            reset_link = request.build_absolute_uri(f"/reset-password/{uid}/{token}/")
+            # reset_link = request.build_absolute_uri(f"/reset-password/{uid}/{token}/")
+            reset_link = request.build_absolute_uri(
+                f"http://localhost:3000/reset-password/{uid}/{token}/")
             # 郵件內容
             message = render_to_string(
                 "password_reset_email.html",
@@ -199,16 +223,21 @@ def password_reset_request(request):
             )
         except CustomUser.DoesNotExist:
             return Response(
-                {"status": "error", "message": "No account with that email."},
+                {
+                    "status": "error",
+                    "message": "No account with that email."
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
     return Response(
-        {"status": "error", "message": "Invalid request method."},
+        {
+            "status": "error",
+            "message": "Invalid request method."
+        },
         status=status.HTTP_405_METHOD_NOT_ALLOWED,
     )
 
 
-# 根據連結（含有Token）導入到重設密碼網頁
 @api_view(["POST"])
 def password_reset_confirm(request, uidb64, token):
     if request.method == "POST":
@@ -223,22 +252,64 @@ def password_reset_confirm(request, uidb64, token):
                     {
                         "status": "success",
                         "message": "Password has been reset successfully.",
-                    }
-                )
+                    },
+                    status=status.HTTP_200_OK)
             else:
                 return Response(
-                    {"status": "error", "message": "Invalid token."},
+                    {
+                        "status": "error",
+                        "message": "Invalid token."
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
         except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
             return Response(
-                {"status": "error", "message": "Invalid request."},
+                {
+                    "status": "error",
+                    "message": "Invalid request."
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
     return Response(
-        {"status": "error", "message": "Invalid request method."},
+        {
+            "status": "error",
+            "message": "Invalid request method."
+        },
         status=status.HTTP_405_METHOD_NOT_ALLOWED,
     )
+
+
+# # 根據連結（含有Token）導入到重設密碼網頁
+# @api_view(["POST"])
+# def password_reset_confirm(request, uidb64, token):
+#     if request.method == "POST":
+#         password = request.data.get("password")
+#         try:
+#             uid = force_str(urlsafe_base64_decode(uidb64))
+#             user = CustomUser.objects.get(pk=uid)
+#             if token_generator.check_token(user, token):
+#                 user.set_password(password)
+#                 user.save()
+#                 return Response(
+#                     {
+#                         "status": "success",
+#                         "message": "Password has been reset successfully.",
+#                     }
+#                 )
+#             else:
+#                 return Response(
+#                     {"status": "error", "message": "Invalid token."},
+#                     status=status.HTTP_400_BAD_REQUEST,
+#                 )
+#         except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+#             return Response(
+#                 {"status": "error", "message": "Invalid request."},
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+#     return Response(
+#         {"status": "error", "message": "Invalid request method."},
+#         status=status.HTTP_405_METHOD_NOT_ALLOWED,
+#     )
 
 
 # （管理員）帳戶管理GET帳戶資訊的頁面 - 有根據username的關鍵字搜尋、根據is-superuser, is_staff和is_active狀態做篩選、依據date_joined做排序
@@ -284,7 +355,10 @@ def edit_user(request):
             user = CustomUser.objects.get(username=username)
         except CustomUser.DoesNotExist:
             return Response(
-                {"status": "error", "message": "User not found."},
+                {
+                    "status": "error",
+                    "message": "User not found."
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -316,9 +390,10 @@ def edit_user(request):
         # 保存更新后的用户信息
         user.save()
 
-        return Response(
-            {"status": "success", "message": "User information updated successfully."}
-        )
+        return Response({
+            "status": "success",
+            "message": "User information updated successfully."
+        })
 
 
 # 依據帳號顯示個人資料
@@ -331,19 +406,20 @@ def profile(request):
             user = CustomUser.objects.get(username=username)
         except CustomUser.DoesNotExist:
             return Response(
-                {"status": "error", "message": "User not found."},
+                {
+                    "status": "error",
+                    "message": "User not found."
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-    return Response(
-        {
-            "status": "success",
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "username": username,
-        }
-    )
+    return Response({
+        "status": "success",
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "username": username,
+    })
 
 
 # 修改個人帳戶資訊
@@ -356,7 +432,10 @@ def edit_profile(request):
             user = CustomUser.objects.get(username=username)
         except CustomUser.DoesNotExist:
             return Response(
-                {"status": "error", "message": "User not found."},
+                {
+                    "status": "error",
+                    "message": "User not found."
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -379,9 +458,10 @@ def edit_profile(request):
         # 保存更新后的用户信息
         user.save()
 
-        return Response(
-            {"status": "success", "message": "User information updated successfully."}
-        )
+        return Response({
+            "status": "success",
+            "message": "User information updated successfully."
+        })
 
 
 @api_view(["GET", "POST", "PUT", "DELETE"])
@@ -425,8 +505,7 @@ def accounting_list_for_admin(request):
         create_id = request.query_params.get("createId")
         available = request.query_params.get("available")
         sort_order = request.query_params.get(
-            "sort", "createDate"
-        )  # Use '-createDate' for descending order
+            "sort", "createDate")  # Use '-createDate' for descending order
 
         # Build the query
         query = Accounting.objects.all()
@@ -448,7 +527,9 @@ def accounting_list_for_admin(request):
     elif request.method == "PUT":
         pk = request.GET.get("accountingId")
         accounting = Accounting.objects.get(accountingId=pk)
-        serializer = AccountingSerializer(accounting, data=request.data, partial=True)
+        serializer = AccountingSerializer(accounting,
+                                          data=request.data,
+                                          partial=True)
         if serializer.is_valid():
             serializer.save()
             user.calculate_net_and_total_assets()
@@ -481,18 +562,20 @@ def consume_type_operations(request, pk=None):
     elif request.method == "POST":
         serializer = ConsumeTypeSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(createdId=request.user.username, createDate=timezone.now())
+            serializer.save(createdId=request.user.username,
+                            createDate=timezone.now())
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == "PUT":
         pk = request.GET.get("consumeTypeId")
         try:
             consume_type = ConsumeType.objects.get(consumeTypeId=pk)
-            serializer = ConsumeTypeSerializer(
-                consume_type, data=request.data, partial=True
-            )
+            serializer = ConsumeTypeSerializer(consume_type,
+                                               data=request.data,
+                                               partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
@@ -504,8 +587,7 @@ def consume_type_operations(request, pk=None):
         try:
             # Use .update() for QuerySets
             updated = ConsumeType.objects.filter(consumeTypeId=pk).update(
-                available=False
-            )
+                available=False)
             if updated:
                 return Response(
                     {"message": "ConsumeType record has been soft-deleted."},
@@ -523,58 +605,126 @@ def consume_type_operations(request, pk=None):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def bankProfileList(request):
+def get_bank_profile_list(request):
     if request.method == "GET":
-        username = request.GET.get("username")
+        #username = request.user.username
+        username = "11046029"
         list = APICredentials.objects.filter(username=username)
-        
+
         if not list.exists():
             return Response(
-                {"status": "error", "message": "用戶不存在銀行資料"},
+                {
+                    "status": "error",
+                    "message": "用戶不存在銀行資料"
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
-        
+
         bank_data = []
         for bank in list:
             bank_data.append({
                 "id": bank.id,
-                "secret_key":bank.secret_key,
-                "api_key":bank.api_key,
+                "secret_key": bank.secret_key,
+                "api_key": bank.api_key,
                 "bankName": bank.bank_name,
                 "region": bank.region,
                 "branch": bank.branch,
                 "account": bank.account,
             })
 
-        return Response(
-            {"status": "success", "users": bank_data}
-        )
+        return Response({"status": "success", "users": bank_data})
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def getbankProfile(request):
+def get_bank_profile(request):
     if request.method == "GET":
         id = request.GET.get("id")
         try:
             bank = APICredentials.objects.get(id=id)
         except APICredentials.DoesNotExist:
             return Response(
-                {"status": "error", "message": "查無此銀行資料"},
+                {
+                    "status": "error",
+                    "message": "查無此銀行資料"
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-    return Response(
-        {
-            "status": "success",
-            "id": bank.id,
-            "secret_key":bank.secret_key,
-            "api_key":bank.api_key,
-            "bankName": bank.bank_name,
-            "region": bank.region,
-            "branch": bank.branch,
-            "account": bank.account,
-        }
-    )
+    return Response({
+        "status": "success",
+        "id": bank.id,
+        "secret_key": bank.secret_key,
+        "api_key": bank.api_key,
+        "bankName": bank.bank_name,
+        "region": bank.region,
+        "branch": bank.branch,
+        "account": bank.account,
+        "ca_path": bank.ca_path,
+        "ca_passwd": bank.ca_passwd,
+        "person_id": bank.person_id,
+    })
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def add_bank_profile(request):
+    if request.method == "POST":
+        serializer = APICredentialsSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "status": "success",
+                "message": "銀行資料新增成功"
+            },
+                            status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def update_bank_profile(request, id):
+    if request.method == "PUT":
+        try:
+            bank = APICredentials.objects.get(id=id)
+        except APICredentials.DoesNotExist:
+            return Response(
+                {
+                    "status": "error",
+                    "message": "查無此銀行資料"
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = APICredentialsSerializer(bank,
+                                              data=request.data,
+                                              partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"status": "success", "message": "銀行資料更新成功"})
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_bank_profile(request, id):
+    if request.method == "DELETE":
+        try:
+            bank = APICredentials.objects.get(id=id)
+            bank.delete()
+            return Response({"status": "success", "message": "銀行資料刪除成功"})
+        except APICredentials.DoesNotExist:
+            return Response(
+                {
+                    "status": "error",
+                    "message": "查無此銀行資料"
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
