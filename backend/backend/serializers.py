@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import CustomUser, Accounting, ConsumeType, APICredentials, InvestmentPortfolio, Investment, Asset, \
-    Liability, Transaction, Budget
+    Liability, Budget
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -50,13 +50,6 @@ class LiabilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Liability
         fields = '__all__'
-
-
-class TransactionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Transaction
-        fields = '__all__'
-
 
 class BudgetSerializer(serializers.ModelSerializer):
     class Meta:
