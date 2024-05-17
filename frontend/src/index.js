@@ -27,7 +27,7 @@ root.render(
         <Navbar />
         <Routes>
           <Route exact path="/" element={<App />} />
-          <Route path="/test" element={<AddBankForm />} />
+          <Route path="/bnakForm" element={<AddBankForm />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signUp" element={<SignUp />} />
           <Route path="/test1" element={<Test />} />

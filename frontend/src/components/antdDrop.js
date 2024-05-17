@@ -19,7 +19,7 @@ const AntdDrop = ({ items }) => {
       }}
     >
       <a onClick={(e) => e.preventDefault()}>
-          <AiFillSetting style={{ fontSize: '20px' }}/>
+        <AiFillSetting style={{ fontSize: '20px' }} />
       </a>
     </Dropdown>
   );

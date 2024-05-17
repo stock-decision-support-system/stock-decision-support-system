@@ -1,6 +1,7 @@
 @import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
+
 * {
-  font-family: 'Poppins','Helvetica', 'Arial', 'Noto Sans TC', '黑體-繁','微軟正黑體', sans-serif !important;
+  font-family: 'Poppins', 'Helvetica', 'Arial', 'Noto Sans TC', '黑體-繁', '微軟正黑體', sans-serif !important;
 }
 
 .fixed-top {
@@ -8,29 +9,31 @@
   top: 0;
   right: 0;
   left: 0;
-  z-index: 1030; /* 高於一般元素，低於 modal 等元素 */
+  z-index: 1030;
+  /* 高於一般元素，低於 modal 等元素 */
 }
 
 body {
-  padding-top: 57.5px; /* 假設導航欄高度為 56px */
+  padding-top: 57.5px;
+  /* 假設導航欄高度為 56px */
 }
 
 
-.button2{
+.button2 {
   font-Weight: bolder;
-   color: #ffffff;
-   background:linear-gradient(to right, #BD4C7F, #d38a95);
-   border: 0px;
-   border-Radius:10px;
-   height: 3em;
+  color: #ffffff;
+  background: linear-gradient(to right, #BD4C7F, #d38a95);
+  border: 0px;
+  border-Radius: 10px;
+  height: 3em;
 }
 
-.button2:hover{
+.button2:hover {
   box-shadow: 3px 5px 5px #E8B4BC;
 
 }
 
-.kv{
+.kv {
   height: 88vh;
   background-image: url(../images/loginback.png);
   background-attachment: fixed;
@@ -38,45 +41,52 @@ body {
 }
 
 .larger-text {
-  font-size: 3em; /* 或者使用px, %, 等等來設置你想要的大小 */
+  font-size: 3em;
+  /* 或者使用px, %, 等等來設置你想要的大小 */
 }
 
-.User{
+.User {
   padding-top: 3%;
   color: #BD4C7F !important;
 }
 
 .input-group .form-control {
-  border-radius: 0; /* 移除輸入框的圓角 */
-  border-left: 0; /* 移除輸入框左側的邊框 */
+  border-radius: 0;
+  /* 移除輸入框的圓角 */
+  border-left: 0;
+  /* 移除輸入框左側的邊框 */
 }
 
 .input-group .input-group-text {
-  border-radius: 0; /* 移除圖標包裹span的圓角 */
-  border-right: 0; /* 移除圖標包裹span右側的邊框 */
+  border-radius: 0;
+  /* 移除圖標包裹span的圓角 */
+  border-right: 0;
+  /* 移除圖標包裹span右側的邊框 */
 }
 
 /* 這段代碼將移除input group裡面所有元素的圓角和邊框，讓它們看起來像是一個連續的元素。 */
-.input-group .form-control, .input-group .input-group-text {
-  border-color: #ced4da; /* 您可能需要根據實際情況調整這個顏色 */
+.input-group .form-control,
+.input-group .input-group-text {
+  border-color: #ced4da;
+  /* 您可能需要根據實際情況調整這個顏色 */
 }
 
 .input-group .input-group-text {
-  background-color: #ffffff; /* 設置為與input相同的背景顏色 */
+  background-color: #ffffff;
+  /* 設置為與input相同的背景顏色 */
 }
 
 /* 選擇性：如果您想要在focus時有相同的邊框顏色 */
 .input-group .form-control:focus {
-  box-shadow: inset 0 -1px 0 #ced4da; /* 適當的陰影來替代輪廓線 */
+  box-shadow: inset 0 -1px 0 #ced4da;
+  /* 適當的陰影來替代輪廓線 */
 }
 
-.linka{
+.linka {
   text-decoration: none;
   color: #BD4C7F !important;
 }
 
-.linka:hover{
+.linka:hover {
   color: white !important;
 }
-
-

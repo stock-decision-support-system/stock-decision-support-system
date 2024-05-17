@@ -1,4 +1,5 @@
 @import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
+
 * {
   font-family: 'Poppins', 'Helvetica', 'Arial', 'Noto Sans TC', '黑體-繁', '微軟正黑體', sans-serif !important;
 }
@@ -8,48 +9,53 @@
   top: 0;
   right: 0;
   left: 0;
-  z-index: 1030; /* 高于一般元素，低于 modal 等元素 */
+  z-index: 1030;
+  /* 高于一般元素，低于 modal 等元素 */
 }
 
 body {
-  padding-top: 57.5px; /* 假设导航栏高度为 56px */
+  padding-top: 57.5px;
+  /* 假设导航栏高度为 56px */
 }
 
-.nav-link, .link {
+.nav-link,
+.link {
   color: #D282A6 !important;
   font-size: 18px !important;
-  font-weight:normal;
+  font-weight: normal;
   margin-top: 15px;
 
-  
+
 }
 
-.nav-link:hover, .link:hover {
+.nav-link:hover,
+.link:hover {
   color: #E8B4BC !important;
 }
 
-.bbb{
+.bbb {
   color: #dd87a8 !important;
   font-weight: lighter;
   border: #ffffff 100px !important;
 }
 
-.bbb:hover{
+.bbb:hover {
   background-color: #f58e9d !important;
 }
 
-.aaa{
+.aaa {
   color: white !important;
 }
 
-.aaa:hover{
+.aaa:hover {
   background-color: #f58e9d !important;
 }
 
 #btnb {
   width: 100px;
   height: 37px;
-  background-color: transparent; /* 默认背景透明 */
+  background-color: transparent;
+  /* 默认背景透明 */
   border-radius: 10px;
 }
 
@@ -70,12 +76,16 @@ body {
   color: #fff;
 }
 
-.input-group .form-control, .input-group .input-group-text {
-  border-radius: 0; /* 移除输入框的圆角 */
+.input-group .form-control,
+.input-group .input-group-text {
+  border-radius: 0;
+  /* 移除输入框的圆角 */
   border-color: #ced4da;
 }
 
 .input-group .input-group-text {
-  background-color: #ffffff; /* 设置为与input相同的背景颜色 */
-  border-right: 0; /* 移除图标包裹span右侧的边框 */
+  background-color: #ffffff;
+  /* 设置为与input相同的背景颜色 */
+  border-right: 0;
+  /* 移除图标包裹span右侧的边框 */
 }

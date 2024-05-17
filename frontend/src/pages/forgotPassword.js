@@ -32,7 +32,7 @@ const ForgotPassword = () => {
   return (
     <div className="container-fluid">
       <div className="row justify-content-center align-items-center h-100 mt-4">
-        <div className="col-md-4 mt-5" style={{ backgroundColor: 'rgba(232, 180, 188, 0.65)', padding: '50px', color:'#BD4C7F' }}>
+        <div className="col-md-4 mt-5" style={{ backgroundColor: 'rgba(232, 180, 188, 0.65)', padding: '50px', color: '#BD4C7F' }}>
           <Form onFinish={handleSubmit}>
             <Row justify="center" style={{ marginBottom: '30px' }}>
               <Col>
@@ -43,14 +43,14 @@ const ForgotPassword = () => {
                 />
               </Col>
             </Row>
-            <Row justify="center" style={{marginBottom: '2px' }}>
+            <Row justify="center" style={{ marginBottom: '2px' }}>
               <Col>
-                <Title level={2} style={{color:'#BD4C7F', textAlign: 'center' }}>忘記密碼</Title>
+                <Title level={2} style={{ color: '#BD4C7F', textAlign: 'center' }}>忘記密碼</Title>
               </Col>
             </Row>
             <Row justify="center" style={{ marginBottom: '10px' }}>
               <Col>
-                <p style={{textAlign: 'center' }}>
+                <p style={{ textAlign: 'center' }}>
                   請輸入您的電子郵件地址以便接收重設密碼的鏈接。
                 </p>
               </Col>
@@ -66,17 +66,17 @@ const ForgotPassword = () => {
             </Form.Item>
             <Row justify="center">
               <Col>
-              <Button
-                type="primary"
-                htmlType="submit"
-                className="w-100 d-flex align-items-center fw-bolder loginBtn mt-3 button2"
-                style={{
-                  background: 'linear-gradient(to right, #BD4C7F, #d38a95)',
-                  borderColor: 'initial', // 重設邊框色
-                }}
-              >
-                <span>發送重設郵件</span>
-              </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  className="w-100 d-flex align-items-center fw-bolder loginBtn mt-3 button2"
+                  style={{
+                    background: 'linear-gradient(to right, #BD4C7F, #d38a95)',
+                    borderColor: 'initial', // 重設邊框色
+                  }}
+                >
+                  <span>發送重設郵件</span>
+                </Button>
               </Col>
             </Row>
           </Form>

@@ -16,16 +16,16 @@ const App = () => {
         <div className="text-content">
           <div className="text-start">
             <h1>
-            智投金紡
+              智投金紡
             </h1>
             <h6 className='mb-3'>
-            全面的財務管理，個性化的記帳策略
+              全面的財務管理，個性化的記帳策略
             </h6>
             <h6>
-            為您開啟一段輕鬆掌控財務的旅程
+              為您開啟一段輕鬆掌控財務的旅程
             </h6>
           </div>
-          <button className="mt-4 px-5 py-3 button" type="button"  onClick={handleClick}>
+          <button className="mt-4 px-5 py-3 button" type="button" onClick={handleClick}>
             GET STARTED
           </button>
         </div>
