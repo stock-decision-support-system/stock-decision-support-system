@@ -58,3 +58,4 @@ frontend/yarn-error.log*
 
 #system
 node_modules
+backend/myProject/settings.py

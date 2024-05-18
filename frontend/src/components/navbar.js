@@ -37,9 +37,7 @@ const Navbar = () => {
 
   const items = [
     { key: 'profile', label: <a href="/profile">個人資料</a> },
-    { key: 'settings', label: <a href="/settings">帳戶設置</a> },
-    { key: 'security', label: <a href="/security">安全中心</a> },
-    { key: 'messages', label: <a href="/messages">消息中心</a> },
+    { key: 'changePassword', label: <a href="/changePassword">修改密碼</a> },
     { key: 'support', label: <a href="/support">幫助與支持</a> },
     { key: 'feedback', label: <a href="/feedback">提交反饋</a> },
     { key: 'logout', label: <a onClick={handleLogout}>登出</a> }

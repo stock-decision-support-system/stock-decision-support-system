@@ -23,7 +23,7 @@ function ResetPasswordPage() {
             const url = `http://localhost:8000/reset-password/${uid}/${token}/`;  // 確保這裡的端口和路徑正確
             const response = await axios.post(url, { password });
             if (response.data.status === 'success') {
-                alert('Your password has been reset successfully.');
+                alert('密碼變更成功');
                 navigate('/login');
             } else {
                 alert(response.data.message);
