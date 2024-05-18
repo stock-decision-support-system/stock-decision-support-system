@@ -143,45 +143,77 @@ def logout_view(request):
 
 
 # 修改密碼
+# @api_view(["POST"])
+# @permission_classes([IsAuthenticated])
+# def change_password(request):
+
+#     if request.method == "POST":
+#         username = request.GET.get("username")
+#         old_password = request.data.get("old_password")
+#         new_password = request.data.get("new_password")
+#         user = CustomUser.objects.get(username=username)
+
+#         if check_password(old_password, user.password):
+#             user.set_password(new_password)
+#             user.save()
+#             return Response({
+#                 "status":
+#                 "success",
+#                 "message":
+#                 "Password has been changed successfully.",
+#             })
+#         else:
+#             return Response(
+#                 {
+#                     "status": "error",
+#                     "message": "Old password is incorrect."
+#                 },
+#                 status=status.HTTP_400_BAD_REQUEST,
+#             )
+
+#     return Response(
+#         {
+#             "status": "error",
+#             "message": "Invalid request method."
+#         },
+#         status=status.HTTP_405_METHOD_NOT_ALLOWED,
+#     )
+
+
+# token_generator = PasswordResetTokenGenerator()
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def change_password(request):
+    # 獲取當前認證用戶
+    user = request.user
 
-    if request.method == "POST":
-        username = request.GET.get("username")
-        old_password = request.data.get("old_password")
-        new_password = request.data.get("new_password")
-        user = CustomUser.objects.get(username=username)
+    old_password = request.data.get("old_password")
+    new_password = request.data.get("new_password")
 
-        if check_password(old_password, user.password):
-            user.set_password(new_password)
-            user.save()
-            return Response({
-                "status":
-                "success",
-                "message":
-                "Password has been changed successfully.",
-            })
-        else:
-            return Response(
-                {
-                    "status": "error",
-                    "message": "Old password is incorrect."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+    # 打印接收到的請求數據以便調試
+    print(f"Received request data: {request.data}")
 
-    return Response(
-        {
-            "status": "error",
-            "message": "Invalid request method."
-        },
-        status=status.HTTP_405_METHOD_NOT_ALLOWED,
-    )
-
+    if check_password(old_password, user.password):
+        user.set_password(new_password)
+        user.save()
+        return Response(
+            {
+                "status": "success",
+                "message": "密碼已成功更改"
+            },
+            status=status.HTTP_200_OK,
+        )
+    else:
+        return Response(
+            {
+                "status": "error",
+                "message": "舊密碼不正確"
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 token_generator = PasswordResetTokenGenerator()
-
 
 # 忘記密碼 - 會發送修改密碼連結到輸入的email
 @api_view(["POST"])
