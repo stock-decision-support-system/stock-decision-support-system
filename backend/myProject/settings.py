@@ -66,6 +66,8 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    "USER_ID_FIELD": "username",
+    "USER_ID_CLAIM": "username",
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
