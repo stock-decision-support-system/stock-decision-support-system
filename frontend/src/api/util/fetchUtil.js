@@ -166,7 +166,7 @@ export class FetchUtil {
   }
 
   static handleResponse(response) {
-    if (response.result) {
+    if (response.status) {
       return {
         message: response.message,
         data: response.data,

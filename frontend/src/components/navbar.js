@@ -75,8 +75,8 @@ const Navbar = () => {
         >
           <ul className="navbar-nav">
             <li className="nav-item">
-              <a className="nav-link me-5  justify-content-center d-flex align-items-center" aria-current="page" href="/test" style={{ height: '37px' }}>
-                測路由
+              <a className="nav-link me-5  justify-content-center d-flex align-items-center" aria-current="page" href="/bankForm" style={{ height: '37px' }}>
+                測銀行資料
               </a>
             </li>
             <li className="nav-item">

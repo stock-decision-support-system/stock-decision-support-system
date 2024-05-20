@@ -28,10 +28,9 @@ root.render(
         <Navbar />
         <Routes>
           <Route exact path="/" element={<App />} />
-          <Route path="/bnakForm" element={<AddBankForm />} />
+          <Route path="/bankForm" element={<AddBankForm />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signUp" element={<SignUp />} />
-          <Route path="/test1" element={<Test />} />
           <Route path="/forgotPassword" element={<ForgotPassword />} />
           <Route path="/changePassword" element={<ChangePassword />} />
           <Route path="/reset-password/:uid/:token" element={<ResetPasswordPage />} />
