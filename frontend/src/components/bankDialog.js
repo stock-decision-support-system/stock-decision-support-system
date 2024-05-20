@@ -6,7 +6,6 @@ const { Option } = Select;
 
 const BankDialog = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
 
   const [formData, setFormData] = useState({
     bankName: '',
@@ -42,6 +41,10 @@ const BankDialog = () => {
     setIsModalOpen(false);
   }
 
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
+
   return (
     <>
       <Button type="primary" onClick={showModal}>
@@ -50,6 +53,7 @@ const BankDialog = () => {
       <Modal
         title={<h2>使用者資料</h2>}
         visible={isModalOpen}
+        onCancel={handleCancel}
         footer={[
           <Button
             type="primary"

@@ -179,8 +179,8 @@ def logout_view(request):
 #         status=status.HTTP_405_METHOD_NOT_ALLOWED,
 #     )
 
-
 # token_generator = PasswordResetTokenGenerator()
+
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -213,7 +213,9 @@ def change_password(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+
 token_generator = PasswordResetTokenGenerator()
+
 
 # 忘記密碼 - 會發送修改密碼連結到輸入的email
 @api_view(["POST"])
@@ -501,7 +503,9 @@ def edit_profile(request):
 def accounting_list_for_user(request):
     user = request.user
     if request.method == "GET":
-        accountings = Accounting.objects.filter(createdId=user.username, available=True).select_related("consumeType_id")
+        accountings = Accounting.objects.filter(
+            createdId=user.username,
+            available=True).select_related("consumeType_id")
         serializer = AccountingSerializer(accountings, many=True)
         return Response(serializer.data)
     elif request.method == "POST":
@@ -511,18 +515,24 @@ def accounting_list_for_user(request):
             user.calculate_net_and_total_assets()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
     elif request.method == "PUT":
-        accounting = get_object_or_404(Accounting, pk=request.data.get('accountingId'))
-        serializer = AccountingSerializer(accounting, data=request.data, partial=True)
+        accounting = get_object_or_404(Accounting,
+                                       pk=request.data.get('accountingId'))
+        serializer = AccountingSerializer(accounting,
+                                          data=request.data,
+                                          partial=True)
         if serializer.is_valid():
             serializer.save()
             user.calculate_net_and_total_assets()
             return Response(serializer.data)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
     elif request.method == "DELETE":
-        accounting = get_object_or_404(Accounting, pk=request.data.get('accountingId'))
+        accounting = get_object_or_404(Accounting,
+                                       pk=request.data.get('accountingId'))
         accounting.available = False
         accounting.save()
         user.calculate_net_and_total_assets()
@@ -568,7 +578,8 @@ def accounting_list_for_admin(request):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     elif request.method == "DELETE":
-        accounting = get_object_or_404(Accounting, pk=request.data.get('accountingId'))
+        accounting = get_object_or_404(Accounting,
+                                       pk=request.data.get('accountingId'))
         accounting.available = False
         accounting.save()
         user.calculate_net_and_total_assets()
@@ -667,7 +678,11 @@ def get_bank_profile_list(request):
                 "account": bank.account,
             })
 
-        return Response({"status": "success", "users": bank_data})
+        return Response({
+            "status": "success",
+            "data": bank_data
+        },
+                        status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
@@ -686,26 +701,32 @@ def get_bank_profile(request):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-    return Response({
-        "status": "success",
-        "id": bank.id,
-        "secret_key": bank.secret_key,
-        "api_key": bank.api_key,
-        "bankName": bank.bank_name,
-        "region": bank.region,
-        "branch": bank.branch,
-        "account": bank.account,
-        "ca_path": bank.ca_path,
-        "ca_passwd": bank.ca_passwd,
-        "person_id": bank.person_id,
-    })
+    return Response(
+        {
+            "status": "success",
+            "id": bank.id,
+            "secret_key": bank.secret_key,
+            "api_key": bank.api_key,
+            "bankName": bank.bank_name,
+            "region": bank.region,
+            "branch": bank.branch,
+            "account": bank.account,
+            "ca_path": bank.ca_path,
+            "ca_passwd": bank.ca_passwd,
+            "person_id": bank.person_id,
+        },
+        status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def add_bank_profile(request):
     if request.method == "POST":
-        serializer = APICredentialsSerializer(data=request.data)
+        #username = request.user.username
+        username = "11046029"
+        #serializer = APICredentialsSerializer(data=request.data)
+        serializer = APICredentialsSerializer(data=request.data,
+                                              context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response({
@@ -738,7 +759,11 @@ def update_bank_profile(request, id):
                                               partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response({"status": "success", "message": "銀行資料更新成功"})
+            return Response({
+                "status": "success",
+                "message": "銀行資料更新成功"
+            },
+                            status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
@@ -751,7 +776,11 @@ def delete_bank_profile(request, id):
         try:
             bank = APICredentials.objects.get(id=id)
             bank.delete()
-            return Response({"status": "success", "message": "銀行資料刪除成功"})
+            return Response({
+                "status": "success",
+                "message": "銀行資料刪除成功"
+            },
+                            status=status.HTTP_200_OK)
         except APICredentials.DoesNotExist:
             return Response(
                 {
