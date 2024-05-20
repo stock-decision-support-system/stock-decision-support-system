@@ -22,11 +22,25 @@ const AddBankForm = () => {
     };
 
     const handleModify = (id) => {
-        // Handle modify logic
+        BankProfileRequest.updateBankProfile(id)
+            .then(response => {
+                alert(response.message);
+                window.location.reload();
+            })
+            .catch((error) => {
+                alert(error.message);
+            })
     };
 
     const handleDelete = (id) => {
-        // Handle delete logic
+        BankProfileRequest.deleteBankProfile(id)
+            .then(response => {
+                alert(response.message);
+                window.location.reload();
+            })
+            .catch((error) => {
+                alert(error.message);
+            })
     };
 
     return (

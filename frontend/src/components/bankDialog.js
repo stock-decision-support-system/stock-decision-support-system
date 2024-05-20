@@ -8,7 +8,7 @@ const BankDialog = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
-    bankName: '',
+    bank_name: '',
     region: '',
     branch: '',
     account: '',
@@ -68,8 +68,8 @@ const BankDialog = () => {
             <Input
               placeholder="銀行名稱"
               className="mt-1"
-              value={formData.bankName}
-              onChange={e => setFormData({ ...formData, bankName: e.target.value })}
+              value={formData.bank_name}
+              onChange={e => setFormData({ ...formData, bank_name: e.target.value })}
             />
             <div className="mt-2">城市</div>
             <Select

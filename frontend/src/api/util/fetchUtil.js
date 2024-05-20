@@ -14,7 +14,7 @@ export class FetchUtil {
     if (data && typeof data === "object") {
       url += `?${this.objectToRequestParams(data)}`;
     }
-    return await fetch(`${BASE_URL}${url}`, requestOptions)
+    return await fetch(`${BASE_URL}${url}/`, requestOptions)
       .then(this.responseToJSON)
       .then(this.handleResponse);
   }
