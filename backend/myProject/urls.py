@@ -57,13 +57,13 @@ urlpatterns = [
     path('consume-type/<int:pk>/', views.consume_type_operations, name='consume_type_detail'),
 
     #銀行資料
-    path('bank-profile/', views.add_bank_profile, name='add-bank-profile'),
-    path('bank-profile/<int:id>/', views.update_bank_profile, name='update-bank-profile'),
-    path('bank-profile/<int:id>/', views.delete_bank_profile, name='delete-bank-profile'),
+    path('bank-profile/add/', views.add_bank_profile, name='add-bank-profile'),
+    path('bank-profile/update/<int:id>/', views.update_bank_profile, name='update-bank-profile'),
+    path('bank-profile/delete/<int:id>/', views.delete_bank_profile, name='delete-bank-profile'),
     path('bank-profile/list/', views.get_bank_profile_list, name='get-bank-profile-list'),
-    path('bank-profile/list/<int:id>/', views.get_bank_profile, name='get-bank-profile'),
-
-    path('users/<username>/financial-summary/', views.financial_summary, name='financial_summary'),
-
+    path('bank-profile/get/<int:id>/', views.get_bank_profile, name='get-bank-profile'),
+    
+    #股票查詢
+    path('stock/get/<str:id>/', views.get_stock_detail, name='get-stock-detail'),
 ]
 

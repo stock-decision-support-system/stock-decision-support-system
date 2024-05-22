@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import BankDialog from '../components/bankDialog.js';
-import { Card } from 'antd';
-import BankItem from '../components/bankItem.js';
+import { Card, Button } from 'antd';
+import BankDialog from '../components/bankDialog';
+import BankItem from '../components/bankItem';
 import { BankProfileRequest } from '../api/request/bankProfileRequest.js';
 
 const AddBankForm = () => {
     const [banks, setBanks] = useState([]);
+    const [isEdit, setIsEdit] = useState(false);
+    const [initialData, setInitialData] = useState(null);
+    const [isDialogVisible, setIsDialogVisible] = useState(false);
 
     useEffect(() => {
-        convertStatus();
+        fetchBankProfiles();
     }, []);
 
-    const convertStatus = () => {
+    const fetchBankProfiles = () => {
         BankProfileRequest.getBankProfileList()
             .then(response => {
                 setBanks(response.data);
@@ -21,33 +24,65 @@ const AddBankForm = () => {
             });
     };
 
-    const handleModify = (id) => {
-        // Handle modify logic
+    const handleAddClick = () => {
+        setIsEdit(false);
+        setIsDialogVisible(true);
+    };
+
+    const handleModifyClick = (id) => {
+        setIsEdit(true);
+        BankProfileRequest.getBankProfile(id)
+            .then(response => {
+                setInitialData(response.data);
+            })
+            .catch((error) => {
+                alert(error.message);
+            });
+        setIsDialogVisible(true);
     };
 
     const handleDelete = (id) => {
-        // Handle delete logic
+        BankProfileRequest.deleteBankProfile(id)
+            .then(response => {
+                alert(response.message);
+                fetchBankProfiles();
+            })
+            .catch((error) => {
+                alert(error.message);
+            });
+    };
+
+    const handleDialogClose = () => {
+        setIsDialogVisible(false);
+        fetchBankProfiles();
     };
 
     return (
         <div className="position-absolute top-50 start-50 translate-middle kv w-75 h-50">
             <Card
                 title={<h1 className='pt-2'>銀行資料</h1>}
-                extra={<BankDialog>打開</BankDialog>}
+                extra={<Button type="primary" onClick={handleAddClick}>新增銀行資料</Button>}
                 className='h-100'
             >
                 {banks.map(bank => (
                     <BankItem
                         key={bank.id}
-                        bankName={bank.bankName}
+                        bankName={bank.bank_name}
                         region={bank.region}
                         branch={bank.branch}
                         account={bank.account}
-                        onModify={() => handleModify(bank.id)}
+                        onModify={() => handleModifyClick(bank.id)}
                         onDelete={() => handleDelete(bank.id)}
                     />
                 ))}
             </Card>
+            {isDialogVisible && (
+                <BankDialog
+                    isEdit={isEdit}
+                    initialData={initialData}
+                    onClose={handleDialogClose}
+                />
+            )}
         </div>
     );
 };

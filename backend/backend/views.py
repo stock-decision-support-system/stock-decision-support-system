@@ -8,7 +8,7 @@ from django.utils.dateparse import parse_date
 from .models import APICredentials, CustomUser, Accounting, ConsumeType
 
 # from .forms import RegistrationForm
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -27,6 +27,12 @@ from .serializers import (
     AccountingSerializer,
     ConsumeTypeSerializer,
 )
+import shioaji as sj
+import yaml
+import pandas as pd
+
+with open("config.yaml", "r") as file:
+    config = yaml.safe_load(file)
 
 
 class UserList(APIView):
@@ -180,9 +186,10 @@ def logout_view(request):
 #         status=status.HTTP_405_METHOD_NOT_ALLOWED,
 #     )
 
-
 # token_generator = PasswordResetTokenGenerator()
 
+
+# 修改密碼
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def change_password(request):
@@ -214,7 +221,9 @@ def change_password(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+
 token_generator = PasswordResetTokenGenerator()
+
 
 # 忘記密碼 - 會發送修改密碼連結到輸入的email
 @api_view(["POST"])
@@ -227,24 +236,25 @@ def password_reset_request(request):
             token = token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             # 創建密碼重置郵件的鏈接
-            # reset_link = request.build_absolute_uri(f"/reset-password/{uid}/{token}/")
             reset_link = request.build_absolute_uri(
                 f"http://localhost:3000/reset-password/{uid}/{token}/")
             # 郵件內容
-            message = render_to_string(
+            html_message = render_to_string(
                 "password_reset_email.html",
                 {
                     "reset_link": reset_link,
                 },
             )
-            # 發送郵件
-            send_mail(
-                "Password Reset Request",
-                message,
-                "allen9111054@gmail.com",
-                [email],
-                fail_silently=False,
-            )
+            subject = "Password Reset Request"
+            from_email = "allen9111054@gmail.com"
+            to_email = [email]
+
+            # 使用 EmailMultiAlternatives 發送 HTML 郵件
+            email_message = EmailMultiAlternatives(subject, "", from_email,
+                                                   to_email)
+            email_message.attach_alternative(html_message, "text/html")
+            email_message.send(fail_silently=False)
+
             return Response(
                 {
                     "status": "success",
@@ -271,6 +281,7 @@ def password_reset_request(request):
     )
 
 
+# 根據連結（含有Token）導入到重設密碼網頁
 @api_view(["POST"])
 def password_reset_confirm(request, uidb64, token):
     if request.method == "POST":
@@ -502,7 +513,9 @@ def edit_profile(request):
 def accounting_list_for_user(request):
     user = request.user
     if request.method == "GET":
-        accountings = Accounting.objects.filter(createdId=user.username, available=True).select_related("consumeType_id")
+        accountings = Accounting.objects.filter(
+            createdId=user.username,
+            available=True).select_related("consumeType_id")
         serializer = AccountingSerializer(accountings, many=True)
         return Response(serializer.data)
     elif request.method == "POST":
@@ -512,18 +525,24 @@ def accounting_list_for_user(request):
             user.calculate_net_and_total_assets()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
     elif request.method == "PUT":
-        accounting = get_object_or_404(Accounting, pk=request.data.get('accountingId'))
-        serializer = AccountingSerializer(accounting, data=request.data, partial=True)
+        accounting = get_object_or_404(Accounting,
+                                       pk=request.data.get('accountingId'))
+        serializer = AccountingSerializer(accounting,
+                                          data=request.data,
+                                          partial=True)
         if serializer.is_valid():
             serializer.save()
             user.calculate_net_and_total_assets()
             return Response(serializer.data)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
     elif request.method == "DELETE":
-        accounting = get_object_or_404(Accounting, pk=request.data.get('accountingId'))
+        accounting = get_object_or_404(Accounting,
+                                       pk=request.data.get('accountingId'))
         accounting.available = False
         accounting.save()
         user.calculate_net_and_total_assets()
@@ -569,7 +588,8 @@ def accounting_list_for_admin(request):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     elif request.method == "DELETE":
-        accounting = get_object_or_404(Accounting, pk=request.data.get('accountingId'))
+        accounting = get_object_or_404(Accounting,
+                                       pk=request.data.get('accountingId'))
         accounting.available = False
         accounting.save()
         user.calculate_net_and_total_assets()
@@ -662,8 +682,7 @@ def financial_summary(request, username):
 @permission_classes([IsAuthenticated])
 def get_bank_profile_list(request):
     if request.method == "GET":
-        #username = request.user.username
-        username = "11046029"
+        username = request.user.username
         list = APICredentials.objects.filter(username=username)
 
         if not list.exists():
@@ -681,20 +700,24 @@ def get_bank_profile_list(request):
                 "id": bank.id,
                 "secret_key": bank.secret_key,
                 "api_key": bank.api_key,
-                "bankName": bank.bank_name,
+                "bank_name": bank.bank_name,
                 "region": bank.region,
                 "branch": bank.branch,
                 "account": bank.account,
             })
 
-        return Response({"status": "success", "users": bank_data})
+        return Response({
+            "status": "success",
+            "data": bank_data
+        },
+                        status=status.HTTP_200_OK)
 
 
+# 銀行資料 個別查詢
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def get_bank_profile(request):
+def get_bank_profile(request, id):
     if request.method == "GET":
-        id = request.GET.get("id")
         try:
             bank = APICredentials.objects.get(id=id)
         except APICredentials.DoesNotExist:
@@ -706,26 +729,22 @@ def get_bank_profile(request):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+    serializer = APICredentialsSerializer(bank)
     return Response({
         "status": "success",
-        "id": bank.id,
-        "secret_key": bank.secret_key,
-        "api_key": bank.api_key,
-        "bankName": bank.bank_name,
-        "region": bank.region,
-        "branch": bank.branch,
-        "account": bank.account,
-        "ca_path": bank.ca_path,
-        "ca_passwd": bank.ca_passwd,
-        "person_id": bank.person_id,
-    })
+        "data": serializer.data
+    },
+                    status=status.HTTP_200_OK)
 
 
+# 銀行資料 新增
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def add_bank_profile(request):
     if request.method == "POST":
-        serializer = APICredentialsSerializer(data=request.data)
+        username = request.user.username
+        serializer = APICredentialsSerializer(data=request.data,
+                                              context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response({
@@ -738,6 +757,7 @@ def add_bank_profile(request):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
+# 銀行資料 修改
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def update_bank_profile(request, id):
@@ -758,12 +778,17 @@ def update_bank_profile(request, id):
                                               partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response({"status": "success", "message": "銀行資料更新成功"})
+            return Response({
+                "status": "success",
+                "message": "銀行資料更新成功"
+            },
+                            status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
 
+# 銀行資料 刪除
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_bank_profile(request, id):
@@ -771,7 +796,11 @@ def delete_bank_profile(request, id):
         try:
             bank = APICredentials.objects.get(id=id)
             bank.delete()
-            return Response({"status": "success", "message": "銀行資料刪除成功"})
+            return Response({
+                "status": "success",
+                "message": "銀行資料刪除成功"
+            },
+                            status=status.HTTP_200_OK)
         except APICredentials.DoesNotExist:
             return Response(
                 {
@@ -780,3 +809,33 @@ def delete_bank_profile(request, id):
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+# 股票資料 單獨查詢
+@api_view(["GET"])
+def get_stock_detail(request, id):
+    if request.method == "GET":
+        try:
+            api = sj.Shioaji(simulation=True)  # 模擬模式
+            api.login(
+                api_key=config["shioaji"]["api_key"],
+                secret_key=config["shioaji"]["secret_key"],
+            )
+            ticks = api.ticks(contract=api.Contracts.Stocks["2330"],
+                              date="2024-05-15")
+            df = pd.DataFrame({**ticks})
+            df.ts = pd.to_datetime(df.ts)
+        except:
+            return Response(
+                {
+                    "status": "error",
+                    "message": "查無此股票代碼"
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+    return Response({
+        "status": "success",
+        "data": df.T
+    },
+                    status=status.HTTP_200_OK)
