@@ -92,7 +92,12 @@ const Profile = () => {
             <Title level={2} style={{ color: '#BD4C7F' }}>個人資料</Title>
           </Col>
           <Col span={3}>
-            <Button onClick={handleEdit} disabled={isEditing} className='button2 w-100'>編輯</Button>
+            <Button onClick={handleEdit} disabled={isEditing} className='button2 w-100' style={{
+                    background: 'linear-gradient(to right, #BD4C7F, #d38a95)',
+                    borderColor: 'initial', // 重設邊框色
+                    color:'white'
+                  }}>
+                    編輯</Button>
           </Col>
         </Row>
         <Row gutter={16}>
@@ -120,7 +125,11 @@ const Profile = () => {
         <Row justify="center" style={{ marginTop: '20px' }}>
           <Col span={2}>
             {isEditing && (
-              <Button onClick={handleComplete} className='button2'>完成</Button>
+              <Button onClick={handleComplete} className='button2' style={{
+                background: 'linear-gradient(to right, #BD4C7F, #d38a95)',
+                borderColor: 'initial', // 重設邊框色
+                color:'white'
+              }}>完成</Button>
             )}
           </Col>
         </Row>

@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate, login, logout
 from .models import APICredentials, CustomUser, Accounting, ConsumeType
 
 # from .forms import RegistrationForm
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -181,7 +181,7 @@ def logout_view(request):
 
 # token_generator = PasswordResetTokenGenerator()
 
-
+# 修改密碼
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def change_password(request):
@@ -228,24 +228,25 @@ def password_reset_request(request):
             token = token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             # 創建密碼重置郵件的鏈接
-            # reset_link = request.build_absolute_uri(f"/reset-password/{uid}/{token}/")
             reset_link = request.build_absolute_uri(
-                f"http://localhost:3000/reset-password/{uid}/{token}/")
+                f"http://localhost:3000/reset-password/{uid}/{token}/"
+            )
             # 郵件內容
-            message = render_to_string(
+            html_message = render_to_string(
                 "password_reset_email.html",
                 {
                     "reset_link": reset_link,
                 },
             )
-            # 發送郵件
-            send_mail(
-                "Password Reset Request",
-                message,
-                "allen9111054@gmail.com",
-                [email],
-                fail_silently=False,
-            )
+            subject = "Password Reset Request"
+            from_email = "allen9111054@gmail.com"
+            to_email = [email]
+
+            # 使用 EmailMultiAlternatives 發送 HTML 郵件
+            email_message = EmailMultiAlternatives(subject, "", from_email, to_email)
+            email_message.attach_alternative(html_message, "text/html")
+            email_message.send(fail_silently=False)
+
             return Response(
                 {
                     "status": "success",
@@ -271,7 +272,7 @@ def password_reset_request(request):
         status=status.HTTP_405_METHOD_NOT_ALLOWED,
     )
 
-
+# 根據連結（含有Token）導入到重設密碼網頁
 @api_view(["POST"])
 def password_reset_confirm(request, uidb64, token):
     if request.method == "POST":
