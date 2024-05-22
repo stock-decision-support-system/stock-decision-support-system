@@ -30,7 +30,7 @@ class APICredentialsSerializer(serializers.ModelSerializer):
     class Meta:
         model = APICredentials
         fields = [
-            'id', 'api_key', 'secret_key', 'bank_name', 'region', 'branch', 'account'
+            'id', 'api_key', 'secret_key', 'bank_name', 'region', 'branch', 'account','ca_path','ca_passwd','person_id',
         ]
 
     def create(self, validated_data):
