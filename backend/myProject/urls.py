@@ -65,5 +65,8 @@ urlpatterns = [
     
     #股票查詢
     path('stock/get/<str:id>/', views.get_stock_detail, name='get-stock-detail'),
+
+    #資產負債查詢
+    path('users/<username>/financial-summary/', views.financial_summary, name='financial-summary'),
 ]
 
