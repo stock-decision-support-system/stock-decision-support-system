@@ -654,8 +654,7 @@ def consume_type_operations(request, pk=None):
 @permission_classes([IsAuthenticated])
 def get_bank_profile_list(request):
     if request.method == "GET":
-        #username = request.user.username
-        username = "11046029"
+        username = request.user.username
         list = APICredentials.objects.filter(username=username)
 
         if not list.exists():
@@ -673,7 +672,7 @@ def get_bank_profile_list(request):
                 "id": bank.id,
                 "secret_key": bank.secret_key,
                 "api_key": bank.api_key,
-                "bankName": bank.bank_name,
+                "bank_name": bank.bank_name,
                 "region": bank.region,
                 "branch": bank.branch,
                 "account": bank.account,
@@ -685,12 +684,10 @@ def get_bank_profile_list(request):
         },
                         status=status.HTTP_200_OK)
 
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def get_bank_profile(request):
+def get_bank_profile(request, id):
     if request.method == "GET":
-        id = request.GET.get("id")
         try:
             bank = APICredentials.objects.get(id=id)
         except APICredentials.DoesNotExist:
@@ -702,30 +699,19 @@ def get_bank_profile(request):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-    return Response(
-        {
-            "status": "success",
-            "id": bank.id,
-            "secret_key": bank.secret_key,
-            "api_key": bank.api_key,
-            "bankName": bank.bank_name,
-            "region": bank.region,
-            "branch": bank.branch,
-            "account": bank.account,
-            "ca_path": bank.ca_path,
-            "ca_passwd": bank.ca_passwd,
-            "person_id": bank.person_id,
-        },
-        status=status.HTTP_200_OK)
+    serializer = APICredentialsSerializer(bank)
+    return Response({
+        "status": "success",
+        "data": serializer.data
+    },
+                    status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def add_bank_profile(request):
     if request.method == "POST":
-        #username = request.user.username
-        username = "11046029"
-        #serializer = APICredentialsSerializer(data=request.data)
+        username = request.user.username
         serializer = APICredentialsSerializer(data=request.data,
                                               context={'request': request})
         if serializer.is_valid():

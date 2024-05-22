@@ -3,7 +3,7 @@ import { FetchUtil } from "../util/fetchUtil";
 const BASE_URL = "/bank-profile";
 const LIST_URL = "/list";
 const GET_URL = "/get";
-const PATCH_URL = "/patch";
+const PUT_URL = "/update";
 const DEL_URL = "/delete";
 const ADD_URL = "/add";
 
@@ -20,8 +20,8 @@ export class BankProfileRequest {
         return FetchUtil.postAPI(`${BASE_URL}${ADD_URL}`, data);
     }
 
-    static updateBankProfile(id, data) {
-        return FetchUtil.putAPI(`${BASE_URL}${PATCH_URL}/${id}`, data);
+    static updateBankProfile(data) {
+        return FetchUtil.putAPI(`${BASE_URL}${PUT_URL}/${data.id}`, data);
     }
 
     static deleteBankProfile(id) {

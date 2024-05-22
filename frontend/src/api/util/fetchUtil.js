@@ -5,7 +5,7 @@ const BASE_URL = config.API_URL;
 const GET = "GET";
 const POST = "POST";
 const DELETE = "DELETE";
-const PATCH = "PATCH";
+const PUT = "PUT";
 const APPLICATION_JSON = "application/json";
 const MUTIPLEFILE = "multipart/form-data"
 
@@ -64,9 +64,9 @@ export class FetchUtil {
     return await this.getPromise(url, requestOptions);
   }
 
-  static async patchAPI(url, data) {
+  static async putAPI(url, data) {
     const requestOptions = {
-      method: PATCH,
+      method: PUT,
       headers: {
         "Content-Type": APPLICATION_JSON,
         Authorization: "Bearer " + localStorage.getItem("token"),
