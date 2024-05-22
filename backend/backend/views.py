@@ -26,6 +26,12 @@ from .serializers import (
     AccountingSerializer,
     ConsumeTypeSerializer,
 )
+import shioaji as sj
+import yaml
+import pandas as pd
+
+with open("config.yaml", "r") as file:
+    config = yaml.safe_load(file)
 
 
 class UserList(APIView):
@@ -181,6 +187,7 @@ def logout_view(request):
 
 # token_generator = PasswordResetTokenGenerator()
 
+
 # 修改密碼
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -229,8 +236,7 @@ def password_reset_request(request):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             # 創建密碼重置郵件的鏈接
             reset_link = request.build_absolute_uri(
-                f"http://localhost:3000/reset-password/{uid}/{token}/"
-            )
+                f"http://localhost:3000/reset-password/{uid}/{token}/")
             # 郵件內容
             html_message = render_to_string(
                 "password_reset_email.html",
@@ -243,7 +249,8 @@ def password_reset_request(request):
             to_email = [email]
 
             # 使用 EmailMultiAlternatives 發送 HTML 郵件
-            email_message = EmailMultiAlternatives(subject, "", from_email, to_email)
+            email_message = EmailMultiAlternatives(subject, "", from_email,
+                                                   to_email)
             email_message.attach_alternative(html_message, "text/html")
             email_message.send(fail_silently=False)
 
@@ -271,6 +278,7 @@ def password_reset_request(request):
         },
         status=status.HTTP_405_METHOD_NOT_ALLOWED,
     )
+
 
 # 根據連結（含有Token）導入到重設密碼網頁
 @api_view(["POST"])
@@ -650,6 +658,7 @@ def consume_type_operations(request, pk=None):
             )
 
 
+# 銀行資料 列表查詢
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_bank_profile_list(request):
@@ -684,6 +693,8 @@ def get_bank_profile_list(request):
         },
                         status=status.HTTP_200_OK)
 
+
+# 銀行資料 個別查詢
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_bank_profile(request, id):
@@ -707,6 +718,7 @@ def get_bank_profile(request, id):
                     status=status.HTTP_200_OK)
 
 
+# 銀行資料 新增
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def add_bank_profile(request):
@@ -726,6 +738,7 @@ def add_bank_profile(request):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
+# 銀行資料 修改
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def update_bank_profile(request, id):
@@ -756,6 +769,7 @@ def update_bank_profile(request, id):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
+# 銀行資料 刪除
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_bank_profile(request, id):
@@ -776,3 +790,33 @@ def delete_bank_profile(request, id):
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+# 股票資料 單獨查詢
+@api_view(["GET"])
+def get_stock_detail(request, id):
+    if request.method == "GET":
+        try:
+            api = sj.Shioaji(simulation=True)  # 模擬模式
+            api.login(
+                api_key=config["shioaji"]["api_key"],
+                secret_key=config["shioaji"]["secret_key"],
+            )
+            ticks = api.ticks(contract=api.Contracts.Stocks["2330"],
+                              date="2024-05-15")
+            df = pd.DataFrame({**ticks})
+            df.ts = pd.to_datetime(df.ts)
+        except:
+            return Response(
+                {
+                    "status": "error",
+                    "message": "查無此股票代碼"
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+    return Response({
+        "status": "success",
+        "data": df.T
+    },
+                    status=status.HTTP_200_OK)

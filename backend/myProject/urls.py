@@ -62,6 +62,8 @@ urlpatterns = [
     path('bank-profile/delete/<int:id>/', views.delete_bank_profile, name='delete-bank-profile'),
     path('bank-profile/list/', views.get_bank_profile_list, name='get-bank-profile-list'),
     path('bank-profile/get/<int:id>/', views.get_bank_profile, name='get-bank-profile'),
-
+    
+    #股票查詢
+    path('stock/get/<str:id>/', views.get_stock_detail, name='get-stock-detail'),
 ]
 
