@@ -1,6 +1,12 @@
+from datetime import timezone, date
+
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from decimal import Decimal
+
+from django.db.models import Sum
+from django.db.models.functions import TruncMonth, TruncYear
+
 
 class CustomUserManager(BaseUserManager):
 
@@ -53,6 +59,36 @@ class CustomUser(AbstractBaseUser):
         self.net_assets = self.total_assets - sum(liability.amount for liability in self.liabilities.all())
         self.save(update_fields=['total_assets', 'net_assets'])
 
+    def aggregate_financials(self, model_type, asset_type=None, start_date=None, end_date=None, aggregate_by=None):
+        """
+        General method for aggregating financial data.
+        :param model_type: 'assets' or 'liabilities' to select the correct model
+        :param asset_type: Type of asset ('Cash', 'Bank', 'Credit Card', etc.)
+        :param start_date: The start date for filtering
+        :param end_date: The end date for filtering
+        :param aggregate_by: 'month' or 'year' for time-based aggregation
+        :return: Aggregated data based on the provided parameters
+        """
+        # Choose the correct model based on the type
+        model = getattr(self, model_type)
+        query = model.filter(type=asset_type) if asset_type else model.all()
+
+        # Filter by date if specified
+        if start_date:
+            query = query.filter(date_added__gte=start_date)
+        if end_date:
+            query = query.filter(date_added__lte=end_date)
+
+        # Aggregate by month or year if specified
+        if aggregate_by == 'month':
+            return query.annotate(period=TruncMonth('date_added')).values('period').annotate(
+                total=Sum('balance')).order_by('period')
+        elif aggregate_by == 'year':
+            return query.annotate(period=TruncYear('date_added')).values('period').annotate(
+                total=Sum('balance')).order_by('period')
+        else:
+            return query.aggregate(total=Sum('balance'))['total'] or 0
+
     class Meta:
         db_table = 'auth_user'
 
@@ -86,21 +122,48 @@ class Accounting(models.Model):
 
     def save(self, *args, **kwargs):
         user = CustomUser.objects.get(username=self.createdId)
-        asset, created = Asset.objects.get_or_create(user=user, type=self.assetType, defaults={'balance': 0})
+        today = date.today()
+        current_month_start = date(today.year, today.month, 1)  # First day of the current month
 
-        if self.consumeType_id.name == "Income":
-            asset.balance += self.amount  # 增加資產
-        elif self.consumeType_id.name == "Expense":
-            asset.balance -= self.amount  # 減少資產
-        elif self.consumeType_id.name == "Transfer" and 'out' in self.content.lower():
-            total_amount = self.amount + (self.fee if self.fee else 0)
-            bank_assets = Asset.objects.filter(user=user, type='Bank')
-            for bank_asset in bank_assets:
-                bank_asset.balance -= total_amount  # 使用總額更新餘額
-                bank_asset.save()
-        asset.save()
+        if self.assetType == "Credit Card":
+            # Handle credit card liabilities
+            liability, created = Liability.objects.get_or_create(
+                user=user,
+                type=self.assetType,
+                defaults={'amount': 0, 'date_added': today}
+            )
+            if liability.date_added < current_month_start:
+                liability = Liability.objects.create(user=user, type=self.assetType, amount=0, date_added=today)
+
+            if self.consumeType_id.name == "Expense":
+                liability.amount += self.amount  # Increase liability
+            elif self.consumeType_id.name == "Payment":
+                liability.amount -= self.amount  # Decrease liability
+            liability.save()
+
+        else:
+            # Handle assets like Bank or Cash
+            asset, created = Asset.objects.get_or_create(
+                user=user,
+                type=self.assetType,
+                defaults={'balance': 0, 'date_added': today}
+            )
+            if asset.date_added < current_month_start:
+                asset = Asset.objects.create(user=user, type=self.assetType, balance=0, date_added=today)
+
+            if self.consumeType_id.name == "Income":
+                asset.balance += self.amount  # Increase asset
+            elif self.consumeType_id.name == "Expense":
+                asset.balance -= self.amount  # Decrease asset
+            elif self.consumeType_id.name == "Transfer":
+                total_amount = self.amount + (self.fee if self.fee else 0)
+                asset.balance -= total_amount  # Update balance for transfers
+            asset.save()
+
         super(Accounting, self).save(*args, **kwargs)
         user.calculate_net_and_total_assets()
+
+
 
     class Meta:
         db_table = 'accounting'
@@ -122,6 +185,7 @@ class APICredentials(models.Model):
         max_length=100)  # ID associated with the CA certificate
 
 
+
     class Meta:
         db_table = 'api_credentials'
 
@@ -134,7 +198,6 @@ class InvestmentPortfolio(models.Model):
 
     class Meta:
         db_table = 'investment_portfolio'
-
 
 #投資
 class Investment(models.Model):
@@ -153,20 +216,21 @@ class Investment(models.Model):
 #資產
 class Asset(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='assets', to_field='username')
-    type = models.CharField(max_length=50)  # Types like 'Cash', 'Bank', 'Credit Card'
+    type = models.CharField(max_length=50)  # 如 'Cash', 'Bank', 'Credit Card'
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     name = models.CharField(max_length=100)
+    date_added = models.DateField(auto_now_add=True)  # 添加日期字段
 
     class Meta:
         db_table = 'asset'
 
-
 #負債
 class Liability(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='liabilities', to_field='username')
-    type = models.CharField(max_length=50)  # Types might include 'Loan', 'Credit Card'
+    type = models.CharField(max_length=50)  # 如 'Loan', 'Credit Card'
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     name = models.CharField(max_length=100)
+    date_added = models.DateField(auto_now_add=True)  # 添加日期字段
 
     class Meta:
         db_table = 'liability'
