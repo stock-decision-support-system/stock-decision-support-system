@@ -63,5 +63,7 @@ urlpatterns = [
     path('bank-profile/list/', views.get_bank_profile_list, name='get-bank-profile-list'),
     path('bank-profile/list/<int:id>/', views.get_bank_profile, name='get-bank-profile'),
 
+    path('users/<username>/financial-summary/', views.financial_summary, name='financial_summary'),
+
 ]
 

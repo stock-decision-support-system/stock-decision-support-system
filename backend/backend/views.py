@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth import login as django_login
 from django.contrib.auth import authenticate, login, logout
+from django.utils.dateparse import parse_date
 
 from .models import APICredentials, CustomUser, Accounting, ConsumeType
 
@@ -636,6 +637,25 @@ def consume_type_operations(request, pk=None):
                 {"error": "ConsumeType record not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+@api_view(['GET'])
+def financial_summary(request, username):
+    user = get_object_or_404(CustomUser, username=username)
+
+    # Retrieve query parameters
+    asset_type = request.query_params.get('asset_type', None)
+    start_date = request.query_params.get('start_date', None)
+    end_date = request.query_params.get('end_date', None)
+    aggregate_by = request.query_params.get('aggregate_by', None)
+    model_type = request.query_params.get('model_type', 'assets')  # Default to 'assets' if not specified
+
+    if model_type not in ['assets', 'liabilities']:
+        return Response({"error": "Invalid model type specified. Choose 'assets' or 'liabilities'."}, status=400)
+
+    data = user.aggregate_financials(model_type, asset_type, start_date, end_date, aggregate_by)
+
+    return Response({model_type: data})
 
 
 @api_view(["GET"])
