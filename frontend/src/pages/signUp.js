@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'; // 假設你使用 react-router-
 import 'bootstrap/dist/css/bootstrap.min.css'; // 假設你通過 npm 或 yarn 安裝了 bootstrap
 import '../assets/css/signUp.css' // SignUp.css 的路徑
 import axios from 'axios'
+import { config } from "../../config";  
+
+const BASE_URL = config.API_URL;
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -45,7 +48,7 @@ const SignUp = () => {
 
     try {
       // 使用 axios 發送數據到註冊 API
-      const response = await axios.post('http://localhost:8000/register/', dataToSend, {
+      const response = await axios.post(`http://${BASE_URL}/register/`, dataToSend, {
         headers: {
           'Content-Type': 'application/json',
         }

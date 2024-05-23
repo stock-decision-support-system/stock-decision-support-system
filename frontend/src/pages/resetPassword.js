@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { config } from "../../config";  
+
+const BASE_URL = config.API_URL;
 
 function ResetPasswordPage() {
     const { uid, token } = useParams();
@@ -20,7 +23,7 @@ function ResetPasswordPage() {
         }
 
         try {
-            const url = `http://localhost:8000/reset-password/${uid}/${token}/`;  // 確保這裡的端口和路徑正確
+            const url = `http://${BASE_URL}/reset-password/${uid}/${token}/`;  // 確保這裡的端口和路徑正確
             const response = await axios.post(url, { password });
             if (response.data.status === 'success') {
                 alert('密碼變更成功');

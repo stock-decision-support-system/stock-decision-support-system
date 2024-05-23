@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Row, Col, Typography } from 'antd';
 import ForgotPasswordIcon from '../assets/images/forgot-password.png'; // 確保這個路徑是正確的
 import axios from 'axios';
+import { config } from "../../config";  
 
+const BASE_URL = config.API_URL;
 const { Title } = Typography;
 
 const ForgotPassword = () => {
@@ -14,7 +16,9 @@ const ForgotPassword = () => {
     console.log('Received values of form: ', values);
     const email = values.email; // 從表單數據中獲取 email
     // 使用 Axios 發送 POST 請求
-    axios.post('http://localhost:8000/password-reset/', { email })
+    axios.post(
+      `http://${BASE_URL}/password-reset/`,
+     { email })
       .then(response => {
         if (response.data.status === 'success') {
           alert('重設鏈接已發送至您的郵箱');

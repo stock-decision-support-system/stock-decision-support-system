@@ -6,6 +6,9 @@ import padlockIcon from '../assets/images/padlock.png';
 import '../assets/css/login.css';
 import { useUser } from '../userContext';
 import axios from 'axios';
+import { config } from "../../config";  
+
+const BASE_URL = config.API_URL;
 
 const Login = () => {
   const navigate = useNavigate();
@@ -29,7 +32,9 @@ const Login = () => {
 
     try {
       // 使用 axios 發送數據
-      const response = await axios.post('http://localhost:8000/login/', loginData, {
+      const response = await axios.post(
+        `http://${BASE_URL}/login/`,
+       loginData, {
         headers: {
           'Content-Type': 'application/json',
         }

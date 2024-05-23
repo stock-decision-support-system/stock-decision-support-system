@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Form, Input, Button, message } from "antd";
 import axios from "axios";
 import {useNavigate } from 'react-router-dom';
+import { config } from "../../config";  
+
+const BASE_URL = config.API_URL;
 
 const ChangePassword = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
 
   const onFinish = async (values) => {
     setLoading(true);
@@ -15,7 +17,7 @@ const ChangePassword = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "http://localhost:8000/change-password/",
+        `http://${BASE_URL}/change-password/`,
         {
           old_password: values.oldPassword,
           new_password: values.newPassword,
