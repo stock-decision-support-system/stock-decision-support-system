@@ -77,19 +77,19 @@ const SignUp = () => {
                 <div className="row">
                   <div className="col-md-6">
                     <div className="input-group flex-nowrap mb-4">
-                      <input type="text" className="form-control" placeholder="FirstName" aria-label="FirstName" value={formData.firstName} onChange={handleChange} name="firstName" />
+                      <input type="text" className="form-control" placeholder="姓" aria-label="FirstName" value={formData.firstName} onChange={handleChange} name="firstName" />
                     </div>
                   </div>
                   <div className="col-md-6">
                     <div className="input-group flex-nowrap mb-4">
-                      <input type="text" className="form-control" placeholder="LastName" aria-label="LastName" value={formData.lastName} onChange={handleChange} name="lastName" />
+                      <input type="text" className="form-control" placeholder="名" aria-label="LastName" value={formData.lastName} onChange={handleChange} name="lastName" />
                     </div>
                   </div>
                 </div>
                 <div className="row">
                   <div className="col-md-6">
                     <div className="input-group flex-nowrap mb-4">
-                      <input type="text" className="form-control" placeholder="Username" aria-label="Username" value={formData.username} onChange={handleChange} name="username" />
+                      <input type="text" className="form-control" placeholder="帳號" aria-label="Username" value={formData.username} onChange={handleChange} name="username" />
                     </div>
                   </div>
                   <div className="col-md-6">
@@ -101,12 +101,12 @@ const SignUp = () => {
                 <div className="row">
                   <div className="col-md-6">
                     <div className="input-group flex-nowrap mb-4">
-                      <input type="password" id="password" className="form-control" placeholder="Password" aria-label="Password" value={formData.password} onChange={handleChange} name="password" />
+                      <input type="password" id="password" className="form-control" placeholder="密碼" aria-label="Password" value={formData.password} onChange={handleChange} name="password" />
                     </div>
                   </div>
                   <div className="col-md-6">
                     <div className="input-group flex-nowrap mb-4">
-                      <input type="password" id="confirm_password" className="form-control" placeholder="Repeat password" aria-label="Repeat password" value={formData.confirmPassword} onChange={handleChange} name="confirmPassword" />
+                      <input type="password" id="confirm_password" className="form-control" placeholder="再次輸入密碼" aria-label="Repeat password" value={formData.confirmPassword} onChange={handleChange} name="confirmPassword" />
                     </div>
                   </div>
                 </div>

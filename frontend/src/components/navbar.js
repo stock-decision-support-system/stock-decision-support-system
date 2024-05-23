@@ -38,8 +38,7 @@ const Navbar = () => {
   const items = [
     { key: 'profile', label: <a href="/profile">個人資料</a> },
     { key: 'changePassword', label: <a href="/changePassword">修改密碼</a> },
-    { key: 'support', label: <a href="/support">幫助與支持</a> },
-    { key: 'feedback', label: <a href="/feedback">提交反饋</a> },
+    { key: 'bankForm', label: <a href="/bankForm">金流設定</a> },
     { key: 'logout', label: <a onClick={handleLogout}>登出</a> }
   ];
 
@@ -74,11 +73,6 @@ const Navbar = () => {
           id="navbarNavDropdown"
         >
           <ul className="navbar-nav">
-            <li className="nav-item">
-              <a className="nav-link me-5  justify-content-center d-flex align-items-center" aria-current="page" href="/bankForm" style={{ height: '37px' }}>
-                測銀行資料
-              </a>
-            </li>
             <li className="nav-item">
               <a className="nav-link me-5  justify-content-center d-flex align-items-center" aria-current="page" href="#" style={{ height: '37px' }}>
                 記帳
