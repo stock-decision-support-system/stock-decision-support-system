@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // 假設你使用 react-router-dom 進行導航
-import AntdDrop from './antdDrop.js';
 import iconImage from '../assets/images/logo.png';
 import '../assets/css/navbar.css';
 import { Button, Dropdown, Space } from 'antd';
@@ -74,7 +73,7 @@ const Navbar = () => {
         >
           <ul className="navbar-nav">
             <li className="nav-item">
-              <a className="nav-link me-5  justify-content-center d-flex align-items-center" aria-current="page" href="#" style={{ height: '37px' }}>
+              <a className="nav-link me-5  justify-content-center d-flex align-items-center" aria-current="page" href="/accounting" style={{ height: '37px' }}>
                 記帳
               </a>
             </li>
