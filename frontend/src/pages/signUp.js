@@ -106,7 +106,7 @@ const SignUp = () => {
                   </div>
                   <div className="col-md-6">
                     <div className="input-group flex-nowrap mb-4">
-                      <input type="password" id="confirm_password" className="form-control" placeholder="再次輸入密碼" aria-label="Repeat password" value={formData.confirmPassword} onChange={handleChange} name="confirmPassword" />
+                      <input type="password" id="confirm_password" className="form-control" placeholder="確認密碼" aria-label="Repeat password" value={formData.confirmPassword} onChange={handleChange} name="confirmPassword" />
                     </div>
                   </div>
                 </div>
