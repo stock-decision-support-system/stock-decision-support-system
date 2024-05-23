@@ -17,7 +17,7 @@ const ForgotPassword = () => {
     const email = values.email; // 從表單數據中獲取 email
     // 使用 Axios 發送 POST 請求
     axios.post(
-      `http://${BASE_URL}/password-reset/`,
+      `${BASE_URL}/password-reset/`,
      { email })
       .then(response => {
         if (response.data.status === 'success') {

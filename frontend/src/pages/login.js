@@ -33,7 +33,7 @@ const Login = () => {
     try {
       // 使用 axios 發送數據
       const response = await axios.post(
-        `http://${BASE_URL}/login/`,
+        `${BASE_URL}/login/`,
        loginData, {
         headers: {
           'Content-Type': 'application/json',

@@ -23,7 +23,7 @@ function ResetPasswordPage() {
         }
 
         try {
-            const url = `http://${BASE_URL}/reset-password/${uid}/${token}/`;  // 確保這裡的端口和路徑正確
+            const url = `${BASE_URL}/reset-password/${uid}/${token}/`;  // 確保這裡的端口和路徑正確
             const response = await axios.post(url, { password });
             if (response.data.status === 'success') {
                 alert('密碼變更成功');

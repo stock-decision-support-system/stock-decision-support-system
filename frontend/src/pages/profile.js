@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Typography, Card, Avatar, Form, Input, Row, Col, Button, message } from 'antd';
 import axios from 'axios';
 import { UserOutlined } from '@ant-design/icons';
+import { config } from "../config";
 
+const BASE_URL = config.API_URL;
 const { Title } = Typography;
 
 const Profile = () => {
@@ -23,7 +25,7 @@ const Profile = () => {
 
   const fetchUserProfile = (username) => {
     const token = localStorage.getItem('token');
-    axios.get(`http://localhost:8000/profile/?username=${username}`, {
+    axios.get(`${BASE_URL}/profile/?username=${username}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -59,7 +61,7 @@ const Profile = () => {
 
   const handleComplete = () => {
     const token = localStorage.getItem('token');
-    axios.post(`http://localhost:8000/edit-profile/`, {
+    axios.post(`${BASE_URL}/edit-profile/`, {
       username: user.username,
       first_name: formData.firstName,
       last_name: formData.lastName,
@@ -107,13 +109,13 @@ const Profile = () => {
           </Col>
           <Col span={15}>
             <Form layout="vertical">
-              <Form.Item label="Username:">
+              <Form.Item label="帳號:">
                 <Input value={user.username} readOnly />
               </Form.Item>
-              <Form.Item label="First Name:">
+              <Form.Item label="姓:">
                 <Input name="firstName" value={formData.firstName} onChange={handleInputChange} readOnly={!isEditing} />
               </Form.Item>
-              <Form.Item label="Last Name:">
+              <Form.Item label="名:">
                 <Input name="lastName" value={formData.lastName} onChange={handleInputChange} readOnly={!isEditing} />
               </Form.Item>
               <Form.Item label="Email:">

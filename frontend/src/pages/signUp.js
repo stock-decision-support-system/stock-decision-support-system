@@ -48,7 +48,7 @@ const SignUp = () => {
 
     try {
       // 使用 axios 發送數據到註冊 API
-      const response = await axios.post(`http://${BASE_URL}/register/`, dataToSend, {
+      const response = await axios.post(`${BASE_URL}/register/`, dataToSend, {
         headers: {
           'Content-Type': 'application/json',
         }
