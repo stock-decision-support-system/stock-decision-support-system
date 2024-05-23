@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { config } from "../../config";  
+import { config } from "../config";  
 
 const BASE_URL = config.API_URL;
 

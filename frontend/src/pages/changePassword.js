@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Form, Input, Button, message } from "antd";
 import axios from "axios";
 import {useNavigate } from 'react-router-dom';
-import { config } from "../../config";  
+import { config } from "../config";  
 
 const BASE_URL = config.API_URL;
 

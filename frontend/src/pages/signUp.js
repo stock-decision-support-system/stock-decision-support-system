@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'; // 假設你使用 react-router-
 import 'bootstrap/dist/css/bootstrap.min.css'; // 假設你通過 npm 或 yarn 安裝了 bootstrap
 import '../assets/css/signUp.css' // SignUp.css 的路徑
 import axios from 'axios'
-import { config } from "../../config";  
+import { config } from "../config";  
 
 const BASE_URL = config.API_URL;
 

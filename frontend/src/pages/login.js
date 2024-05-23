@@ -6,7 +6,7 @@ import padlockIcon from '../assets/images/padlock.png';
 import '../assets/css/login.css';
 import { useUser } from '../userContext';
 import axios from 'axios';
-import { config } from "../../config";  
+import { config } from "../config";  
 
 const BASE_URL = config.API_URL;
 

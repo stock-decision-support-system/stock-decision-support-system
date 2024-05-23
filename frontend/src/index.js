@@ -10,7 +10,6 @@ import Login from './pages/login';
 import SignUp from './pages/signUp.js';
 import ForgotPassword from './pages/forgotPassword.js';
 import AddBankForm from './pages/addBankForm.js';
-import Test from './pages/test.js';
 import Profile from './pages/profile.js';
 import ResetPasswordPage from './pages/resetPassword.js';
 import ChangePassword from './pages/changePassword.js';

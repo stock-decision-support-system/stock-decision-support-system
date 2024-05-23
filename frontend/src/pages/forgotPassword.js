@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Row, Col, Typography } from 'antd';
 import ForgotPasswordIcon from '../assets/images/forgot-password.png'; // 確保這個路徑是正確的
 import axios from 'axios';
-import { config } from "../../config";  
+import { config } from "../config";  
 
 const BASE_URL = config.API_URL;
 const { Title } = Typography;
