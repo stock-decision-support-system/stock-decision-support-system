@@ -1,0 +1,281 @@
+@import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Poppins', 'Helvetica', 'Arial', 'Noto Sans TC', '黑體-繁', '微軟正黑體', sans-serif !important;
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.nav-link {
+  color: #C0C2C6;
+  font-size: 15px;
+}
+
+.nav-link:hover {
+  color: #ffffff;
+}
+
+#btnb:hover {
+  background-color: rgba(1, 198, 183, 80%);
+}
+
+.kv {
+  height: 100vh;
+}
+
+.larger-text {
+  font-size: 3em;
+}
+
+.container-all {
+  display: flex;
+  align-items: stretch;
+  height: calc(100% - 56px); /* 減去 navbar 的高度 */
+}
+
+/* 以下是側拉式選單 */
+#sliderbar {
+  width: 250px;
+  height: 100%;
+  background-color: #464e68;
+  color: white;
+  transition: margin-left 0.3s;
+}
+
+.collapse-btn {
+  position: relative;
+  top: 1%;
+  left: 195px;
+  background-color: #464e68;
+  color: white;
+  border: none;
+  font-size: 30px;
+}
+
+.collapse-btn:hover {
+  background-color: antiquewhite;
+  transition: 0.4s;
+}
+
+#sliderbar ul li a {
+  margin-left: -20px;
+  padding: 10px;
+  font-size: 20px;
+  display: block;
+  text-decoration: none;
+  color: white;
+}
+
+#sliderbar ul li a:hover {
+  color: antiquewhite;
+  background: skyblue;
+}
+
+#sliderbar.active {
+  margin-left: -200px;
+}
+
+.list-unstyled {
+  padding: 30px;
+}
+
+.container-right {
+  background-image: url(../images/loginback.png);
+  background-size: cover;
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.container-right.collapsed {
+  padding-left: 50px;
+}
+
+.account-form {
+  flex: 2;
+}
+
+.account-form-container {
+  margin: 20px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex: 1;
+}
+
+.side-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.totalamounttitle {
+  margin-top: 0;
+  margin-left: -20px;
+  font-size: 24px;
+  color: #ffffff;
+}
+
+.totalamount {
+  background-color: #f8f9fa;
+  width: 180px;
+  height: 100px;
+  margin-top: 10px;
+  margin-left: -20px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  color: #333;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-container {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 500px;
+  height: 100px;
+  margin: 20px auto;
+}
+
+.progress-bar {
+  height: 30px;
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: transparent;
+  transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
+}
+
+.progress-button {
+  display: block;
+  margin-bottom: 15px;
+}
+
+.progress-label {
+  font-size: 15px;
+  padding-top: 10px;
+}
+
+#currentTotal {
+  float: left;
+}
+
+#limitAmount {
+  float: right;
+}
+
+.outertradehistory {
+  width: 100%;
+  max-width: 500px;
+  height: 100%;
+  max-height: 500px;
+  margin: 20px auto;
+  /* margin-top: 30px; */
+  border: 2px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.tradehistory-header {
+  font-size: 25px;
+  padding: 10px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  border-bottom: 2px solid #ccc;
+}
+
+.table th, .table td {
+  border: none;
+  text-align: center;
+  vertical-align: middle;
+  background-color: transparent;
+}
+
+.table th {
+  border-bottom: 2px solid #ccc;
+}
+
+#accountForm label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #333333;
+}
+
+#accountForm input[type="text"],
+#accountForm input[type="number"],
+#accountForm select,
+#accountForm textarea {
+  width: 100%;
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+}
+
+#accountForm input[type="text"]:focus,
+#accountForm input[type="number"]:focus,
+#accountForm select:focus,
+#accountForm textarea:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+#accountForm button[type="submit"] {
+  background-color: #3498db;
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#accountForm button[type="submit"]:hover {
+  background-color: #2980b9;
+}
+
+.category-wrapper, .payment-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.form-select {
+  flex: 1;
+  max-width: 150px !important;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.type-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.type-wrapper input[type="radio"] {
+  margin-right: 5px;
+}
+
+.type-wrapper label {
+  margin-right: 20px;
+}

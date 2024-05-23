@@ -17,6 +17,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'jquery/dist/jquery.min.js';
 import 'bootstrap/dist/js/bootstrap.min.js';
 import { UserProvider } from './userContext.js';
+import AccountingForm from './pages/accounting.js';
 
 const root = createRoot(document.getElementById('root'));
 
@@ -34,6 +35,7 @@ root.render(
           <Route path="/changePassword" element={<ChangePassword />} />
           <Route path="/reset-password/:uid/:token" element={<ResetPasswordPage />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/accounting" element={<AccountingForm />} />
         </Routes>
       </React.StrictMode>
     </Router>,
