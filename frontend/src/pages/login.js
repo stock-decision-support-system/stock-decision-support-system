@@ -23,48 +23,80 @@ const Login = () => {
       alert('請填寫所有欄位');
       return;
     }
+    if (window.grecaptcha) {
+      window.grecaptcha.ready(async () => {
+        const token = await window.grecaptcha.execute('6LdmwcgpAAAAAChdggC5Z37c_r09EmUk1stanjTj', { action: 'login' });
 
-    // 準備要發送的數據
-    const loginData = {
-      username: values.username,
-      password: values.password,
-    };
+        // 準備要發送的數據，包括 reCAPTCHA token
+        const loginData = {
+          username: values.username,
+          password: values.password,
+          'g-recaptcha-response': token  // 將 token 添加到發送的數據中
+        };
 
-    try {
-      // 使用 axios 發送數據
-      const response = await axios.post(
-        `${BASE_URL}/login/`,
-       loginData, {
-        headers: {
-          'Content-Type': 'application/json',
+        try {
+          const response = await axios.post(`${BASE_URL}/login/`, loginData, {
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          if (response.data.status === 'success') {
+            login(values.username);
+            localStorage.setItem('token', response.data.token);
+            alert('登入成功');
+            navigate('/#');
+          } else {
+            alert('帳號或密碼錯誤，請再試一次');
+          }
+        } catch (error) {
+          console.error('登入失敗:', error);
+          alert('登入請求出錯');
         }
       });
-
-      if (response.data.status === 'success') {
-        login(values.username);  // 使用 login 方法設置用戶
-        localStorage.setItem('token', response.data.token);
-        alert('登入成功');
-        navigate('/#')
-      } else {
-        alert('帳號或密碼錯誤，請再試一次')
-      }
-    } catch (error) {
-      // 處理錯誤情況
-      console.error('登入失敗:', error);
-      alert('登入請求出錯');
     }
-  };
+};
 
-  const executeRecaptcha = useCallback(() => {
-    if (window.grecaptcha) {
-      window.grecaptcha.ready(() => {
-        window.grecaptcha.execute('6LdmwcgpAAAAAChdggC5Z37c_r09EmUk1stanjTj', { action: 'login' })
-          .then((token) => {
-            console.log('reCAPTCHA token:', token);
-          });
-      });
-    }
-  }, []);
+  //   // 準備要發送的數據
+  //   const loginData = {
+  //     username: values.username,
+  //     password: values.password,
+  //   };
+    
+
+  //   try {
+  //     // 使用 axios 發送數據
+  //     const response = await axios.post(
+  //       `${BASE_URL}/login/`,
+  //      loginData, {
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       }
+  //     });
+
+  //     if (response.data.status === 'success') {
+  //       login(values.username);  // 使用 login 方法設置用戶
+  //       localStorage.setItem('token', response.data.token);
+  //       alert('登入成功');
+  //       navigate('/#')
+  //     } else {
+  //       alert('帳號或密碼錯誤，請再試一次')
+  //     }
+  //   } catch (error) {
+  //     // 處理錯誤情況
+  //     console.error('登入失敗:', error);
+  //     alert('登入請求出錯');
+  //   }
+  // };
+
+  // const executeRecaptcha = useCallback(() => {
+  //   if (window.grecaptcha) {
+  //     window.grecaptcha.ready(() => {
+  //       window.grecaptcha.execute('6LdmwcgpAAAAAChdggC5Z37c_r09EmUk1stanjTj', { action: 'login' })
+  //         .then((token) => {
+  //           console.log('reCAPTCHA token:', token);
+  //         });
+  //     });
+  //   }
+  // }, []);
 
   return (
     <div className="kv w-100">

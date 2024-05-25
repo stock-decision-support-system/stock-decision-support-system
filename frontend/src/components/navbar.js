@@ -6,8 +6,10 @@ import { Button, Dropdown, Space } from 'antd';
 import headIcon from '../assets/images/account.png'
 import axios from 'axios';
 import { useUser } from '../userContext'; // 确保正确导入 useUser
+import { config } from "../config";
 
 
+const BASE_URL = config.API_URL;
 
 const Navbar = () => {
   const [username, setUsername] = useState(localStorage.getItem('username') || '');
@@ -22,16 +24,29 @@ const Navbar = () => {
   }, [user]);
 
   const handleLogout = async () => {
-    try {
-      await axios.post('/logout/');
-      console.log('成功登出');
-    } catch (error) {
-      console.error('登出失敗', error);
+    const token = localStorage.getItem('token'); // 从 localStorage 获取 token
+    if (!token) {
+      console.error('登出失败：无法获取 token');
+      return; // 如果没有 token，直接返回
     }
+  
+    try {
+      await axios.get(`${BASE_URL}/logout/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`  // 使用获取到的 token
+        }
+      });
+      console.log('成功登出');
+      logout(); // 调用从 context 或其他地方传入的 logout 方法，如果有的话
+    } catch (error) {
+      console.error('登出失败', error);
+    }
+  
+    // 清除 localStorage 中的信息
     localStorage.removeItem('token');
     localStorage.removeItem('username');
-    setUsername(null);
-    navigate('/login');
+    setUsername(''); // 重置用户名状态为 ''
+    navigate('/login'); // 重定向到登录页面
   };
 
   const items = [
@@ -111,6 +126,7 @@ const Navbar = () => {
                 // 如果用戶未登入，顯示登入和註冊連結
                 <>
                   <li className="nav-item">
+                    <div className='justify-content-center d-flex align-items-center'>
                     <a
                       className="nav-link me-3 justify-content-center d-flex align-items-center bbb"
                       href="/login" // 使用路由路徑，確保已 '/' 開頭
@@ -119,8 +135,10 @@ const Navbar = () => {
                     >
                       登入
                     </a>
+                    </div>
                   </li>
                   <li className="nav-item">
+                  <div className='justify-content-center d-flex align-items-center'>
                     <a
                       className="nav-link  justify-content-center d-flex align-items-center ms-3 aaa"
                       href="/signUp" // 使用路由路徑，確保已 '/' 開頭
@@ -129,7 +147,9 @@ const Navbar = () => {
                     >
                       建立帳號
                     </a>
+                    </div>
                   </li>
+                  
                 </>
               )}
             </Dropdown>

@@ -30,6 +30,14 @@ from .serializers import (
 import shioaji as sj
 import yaml
 import pandas as pd
+from flask import Flask, request, jsonify
+import requests
+
+
+import logging
+from google.cloud import recaptchaenterprise_v1
+from google.cloud.recaptchaenterprise_v1 import Assessment
+
 
 with open("config.yaml", "r") as file:
     config = yaml.safe_load(file)
@@ -759,3 +767,94 @@ def get_stock_detail(request, id):
             )
 
     return Response({"status": "success", "data": df.T}, status=status.HTTP_200_OK)
+
+app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+@app.route('/submit', methods=['POST'])
+def validate_recaptcha():
+    logging.debug("Function called")  # 新增日誌輸出
+    recaptcha_response = request.form['g-recaptcha-response']
+    secret_key = '6LdmwcgpAAAAAFkprWdUSzzAZ8dE-1obmzqLK3Nf'
+    
+    logging.debug(f"Received reCAPTCHA response: {recaptcha_response}")
+    
+    data = {
+        'secret': secret_key,
+        'response': recaptcha_response
+    }
+    verify_url = 'https://www.google.com/recaptcha/api/siteverify'
+    response = requests.post(verify_url, data=data)
+    verification_result = response.json()
+
+    logging.debug(f"Google verification result: {verification_result}")
+    
+    if verification_result.get('success'):
+        logging.info('CAPTCHA verification succeeded')
+        return jsonify({'status': 'success', 'msg': 'CAPTCHA驗證成功'})
+    else:
+        logging.warning('CAPTCHA verification failed')
+        return jsonify({'status': 'error', 'msg': 'CAPTCHA驗證失敗'})
+
+logger = logging.getLogger(__name__)
+
+def create_assessment(
+    project_id: str, recaptcha_key: str, token: str, recaptcha_action: str
+) -> Assessment:
+    """建立評估作業，分析 UI 動作的風險。
+    Args:
+        project_id: 您的 Google Cloud 專案 ID。
+        recaptcha_key: 與網站/應用程式相關聯的 reCAPTCHA 金鑰
+        token: 系統產生的權杖 (從用戶端取得)。
+        recaptcha_action: 權杖對應的動作名稱。
+    """
+
+    client = recaptchaenterprise_v1.RecaptchaEnterpriseServiceClient()
+
+    # 設定要追蹤的事件屬性。
+    event = recaptchaenterprise_v1.Event()
+    event.site_key = recaptcha_key
+    event.token = token
+
+    assessment = recaptchaenterprise_v1.Assessment()
+    assessment.event = event
+
+    project_name = f"projects/{project_id}"
+
+    # 建立評估要求。
+    request = recaptchaenterprise_v1.CreateAssessmentRequest()
+    request.assessment = assessment
+    request.parent = project_name
+
+    response = client.create_assessment(request)
+
+    # 確認權杖是否有效。
+    if not response.token_properties.valid:
+        print(
+            "The CreateAssessment call failed because the token was "
+            + "invalid for the following reasons: "
+            + str(response.token_properties.invalid_reason)
+        )
+        return
+
+    # 確認是否已執行預期的動作。
+    if response.token_properties.action != recaptcha_action:
+        print(
+            "The action attribute in your reCAPTCHA tag does"
+            + "not match the action you are expecting to score"
+        )
+        return
+    else:
+        # 取得風險分數和原因。
+        # 如要進一步瞭解如何解讀評估結果，請參閱：
+        # https://cloud.google.com/recaptcha-enterprise/docs/interpret-assessment
+        for reason in response.risk_analysis.reasons:
+            print(reason)
+        print(
+            "The reCAPTCHA score for this token is: "
+            + str(response.risk_analysis.score)
+        )
+        # 取得評估作業名稱 (ID)，然後使用該名稱為評估作業加註。
+        assessment_name = client.parse_assessment_path(response.name).get("assessment")
+        print(f"Assessment name: {assessment_name}")
+    return response
