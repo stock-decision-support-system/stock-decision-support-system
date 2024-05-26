@@ -183,6 +183,8 @@ class APICredentials(models.Model):
     ca_passwd = models.CharField(max_length=255)  # CA certificate password
     person_id = models.CharField(
         max_length=100)  # ID associated with the CA certificate
+    available = models.BooleanField(default=True)
+
 
 
 
@@ -195,6 +197,8 @@ class InvestmentPortfolio(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='portfolios', to_field='username')
     name = models.CharField(max_length=100)
     description = models.TextField()
+    available = models.BooleanField(default=True)
+
 
     class Meta:
         db_table = 'investment_portfolio'
@@ -208,6 +212,8 @@ class Investment(models.Model):
     symbol = models.CharField(max_length=10)
     shares = models.DecimalField(max_digits=10, decimal_places=2)
     buy_price = models.DecimalField(max_digits=10, decimal_places=2)
+    available = models.BooleanField(default=True)
+
 
     class Meta:
         db_table = 'investment'
@@ -220,6 +226,8 @@ class Asset(models.Model):
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     name = models.CharField(max_length=100)
     date_added = models.DateField(auto_now_add=True)  # 添加日期字段
+    available = models.BooleanField(default=True)
+
 
     class Meta:
         db_table = 'asset'
@@ -231,6 +239,8 @@ class Liability(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     name = models.CharField(max_length=100)
     date_added = models.DateField(auto_now_add=True)  # 添加日期字段
+    available = models.BooleanField(default=True)
+
 
     class Meta:
         db_table = 'liability'
@@ -241,6 +251,8 @@ class Budget(models.Model):
     month = models.DateField()
     income_target = models.DecimalField(max_digits=10, decimal_places=2)
     expense_target = models.DecimalField(max_digits=10, decimal_places=2)
+    available = models.BooleanField(default=True)
+
 
     class Meta:
         db_table = 'budget'
