@@ -478,30 +478,42 @@ def accounting_list_for_user(request):
             createdId=user.username, available=True
         ).select_related("consumeType_id")
         serializer = AccountingSerializer(accountings, many=True)
-        return Response(serializer.data)
+        return Response(
+            {"status": "success", "data": serializer.data}, status=status.HTTP_200_OK
+        )
     elif request.method == "POST":
         serializer = AccountingSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(createdId=user.username, createDate=timezone.now())
             user.calculate_net_and_total_assets()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(
+                {"status": "success", "message": "新增成功"},
+                status=status.HTTP_201_CREATED,
+            )
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"status": "error", "message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     elif request.method == "PUT":
         accounting = get_object_or_404(Accounting, pk=request.data.get("accountingId"))
         serializer = AccountingSerializer(accounting, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             user.calculate_net_and_total_assets()
-            return Response(serializer.data)
+            return Response(
+                    {"status": "success", "message": "更新成功"}, status=status.HTTP_200_OK
+                )
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"status": "error", "message": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
     elif request.method == "DELETE":
         accounting = get_object_or_404(Accounting, pk=request.data.get("accountingId"))
         accounting.available = False
         accounting.save()
         user.calculate_net_and_total_assets()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+                    {"status": "success", "message": "紀錄已被刪除"}, status=status.HTTP_200_OK
+                )
 
 
 @api_view(["GET", "PUT", "DELETE"])
@@ -525,13 +537,14 @@ def accounting_list_for_admin(request):
         # Execute the query
         if not query.exists():
             return Response(
-                {"error": "紀錄不存在"},
-                status=status.HTTP_404_NOT_FOUND,
+                {"status": "error", "message": "紀錄不存在"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-
         # Serialize the queryset
         serializer = AccountingSerializer(query, many=True)
-        return Response(serializer.data)
+        return Response(
+            {"status": "success", "data": serializer.data}, status=status.HTTP_200_OK
+        )
     elif request.method == "PUT":
         pk = request.GET.get("accountingId")
         accounting = Accounting.objects.get(accountingId=pk)
@@ -539,14 +552,21 @@ def accounting_list_for_admin(request):
         if serializer.is_valid():
             serializer.save()
             user.calculate_net_and_total_assets()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                    {"status": "success", "message": "更新成功"}, status=status.HTTP_200_OK
+                )
+        return Response(
+            {"status": "error", "message": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     elif request.method == "DELETE":
         accounting = get_object_or_404(Accounting, pk=request.data.get("accountingId"))
         accounting.available = False
         accounting.save()
         user.calculate_net_and_total_assets()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+                    {"status": "success", "message": "紀錄已被刪除"}, status=status.HTTP_200_OK
+                )
 
 
 # ConsumeType Views
@@ -559,19 +579,30 @@ def consume_type_operations(request, pk=None):
                 consume_type = ConsumeType.objects.get(pk=pk)
                 serializer = ConsumeTypeSerializer(consume_type)
             except ConsumeType.DoesNotExist:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                {"status": "error", "message": "紀錄不存在"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         else:
             consume_types = ConsumeType.objects.all()
             serializer = ConsumeTypeSerializer(consume_types, many=True)
-        return Response(serializer.data)
+        return Response(
+            {"status": "success", "data": serializer.data}, status=status.HTTP_200_OK
+        )
 
     elif request.method == "POST":
         serializer = ConsumeTypeSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(createdId=request.user.username, createDate=timezone.now())
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(
+                {"status": "success", "message": "新增成功"},
+                status=status.HTTP_201_CREATED,
+            )
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return  Response(
+                {"status": "error", "message": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     elif request.method == "PUT":
         pk = request.GET.get("consumeTypeId")
@@ -582,9 +613,14 @@ def consume_type_operations(request, pk=None):
             )
             if serializer.is_valid():
                 serializer.save()
-                return Response(serializer.data)
+                return Response(
+                    {"status": "success", "message": "更新成功"}, status=status.HTTP_200_OK
+                )
         except ConsumeType.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"status": "error", "message": "紀錄不存在"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
     elif request.method == "DELETE":
         pk = request.GET.get("consumeTypeId")
@@ -595,18 +631,17 @@ def consume_type_operations(request, pk=None):
             )
             if updated:
                 return Response(
-                    {"message": "紀錄已被刪除"},
-                    status=status.HTTP_204_NO_CONTENT,
+                    {"status": "success", "message": "紀錄已被刪除"}, status=status.HTTP_200_OK
                 )
             else:
                 # If nothing was updated, then the accounting record doesn't exist
                 return Response(
-                    {"error": "紀錄不存在"},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
+                {"status": "error", "message": "紀錄不存在"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         except ConsumeType.DoesNotExist:
             return Response(
-                {"error": "紀錄不存在"},
+                {"status": "error", "message": "紀錄不存在"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -625,14 +660,19 @@ def financial_summary(request, username):
     )  # Default to 'assets' if not specified
 
     if model_type not in ["assets", "liabilities"]:
-        return Response({"error": "指定的模型類型無效。選擇“資產”或“負債”"}, status=400)
+        return Response(
+                {"status": "error", "message": "指定的模型類型無效。選擇“資產”或“負債”"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     data = user.aggregate_financials(
         model_type, asset_type, start_date, end_date, aggregate_by
     )
 
-    return Response({model_type: data})
-
+    return Response(
+                {"status": "error", "data": data},
+                status=status.HTTP_200_OK,
+            )
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -701,7 +741,10 @@ def add_bank_profile(request):
                 status=status.HTTP_201_CREATED,
             )
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"status": "error", "message": serializer.errors},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 # 銀行資料 修改
@@ -791,10 +834,16 @@ def validate_recaptcha():
     
     if verification_result.get('success'):
         logging.info('CAPTCHA verification succeeded')
-        return jsonify({'status': 'success', 'msg': 'CAPTCHA驗證成功'})
+        return Response(
+                {"status": "success", "message": "CAPTCHA驗證成功"},
+                status=status.HTTP_200_OK,
+            )
     else:
         logging.warning('CAPTCHA verification failed')
-        return jsonify({'status': 'error', 'msg': 'CAPTCHA驗證失敗'})
+        return Response(
+                {"status": "error", "message": "CAPTCHA驗證失敗"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 logger = logging.getLogger(__name__)
 
