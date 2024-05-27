@@ -142,47 +142,6 @@ def logout_view(request):
     logout(request)
     return Response({"status": "success", "message": "登出成功"})
 
-
-# 修改密碼
-# @api_view(["POST"])
-# @permission_classes([IsAuthenticated])
-# def change_password(request):
-
-#     if request.method == "POST":
-#         username = request.GET.get("username")
-#         old_password = request.data.get("old_password")
-#         new_password = request.data.get("new_password")
-#         user = CustomUser.objects.get(username=username)
-
-#         if check_password(old_password, user.password):
-#             user.set_password(new_password)
-#             user.save()
-#             return Response({
-#                 "status":
-#                 "success",
-#                 "message":
-#                 "密碼更改成功",
-#             })
-#         else:
-#             return Response(
-#                 {
-#                     "status": "error",
-#                     "message": "舊密碼錯誤"
-#                 },
-#                 status=status.HTTP_400_BAD_REQUEST,
-#             )
-
-#     return Response(
-#         {
-#             "status": "error",
-#             "message": "請求方法無效"
-#         },
-#         status=status.HTTP_405_METHOD_NOT_ALLOWED,
-#     )
-
-# token_generator = PasswordResetTokenGenerator()
-
-
 # 修改密碼
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -295,40 +254,6 @@ def password_reset_confirm(request, uidb64, token):
         {"status": "error", "message": "請求方法無效"},
         status=status.HTTP_405_METHOD_NOT_ALLOWED,
     )
-
-
-# # 根據連結（含有Token）導入到重設密碼網頁
-# @api_view(["POST"])
-# def password_reset_confirm(request, uidb64, token):
-#     if request.method == "POST":
-#         password = request.data.get("password")
-#         try:
-#             uid = force_str(urlsafe_base64_decode(uidb64))
-#             user = CustomUser.objects.get(pk=uid)
-#             if token_generator.check_token(user, token):
-#                 user.set_password(password)
-#                 user.save()
-#                 return Response(
-#                     {
-#                         "status": "success",
-#                         "message": "密碼修改成功",
-#                     }
-#                 )
-#             else:
-#                 return Response(
-#                     {"status": "error", "message": "無效的token"},
-#                     status=status.HTTP_400_BAD_REQUEST,
-#                 )
-#         except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
-#             return Response(
-#                 {"status": "error", "message": "請求無效"},
-#                 status=status.HTTP_400_BAD_REQUEST,
-#             )
-#     return Response(
-#         {"status": "error", "message": "請求方法無效"},
-#         status=status.HTTP_405_METHOD_NOT_ALLOWED,
-#     )
-
 
 # （管理員）帳戶管理GET帳戶資訊的頁面 - 有根據username的關鍵字搜尋、根據is-superuser, is_staff和is_active狀態做篩選、依據date_joined做排序
 @api_view(["GET"])
@@ -645,7 +570,7 @@ def consume_type_operations(request, pk=None):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-
+#取得資產和負債資訊
 @api_view(["GET"])
 def financial_summary(request, username):
     user = get_object_or_404(CustomUser, username=username)
