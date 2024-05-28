@@ -4,22 +4,53 @@ import 'flatpickr/dist/flatpickr.min.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'font-awesome/css/font-awesome.min.css';
 import '../assets/css/Accounting.css';
+import listIcon from '../assets/images/list.webp';
+import { config } from "../config";
+import { AccountingRequest } from '../api/request/accountingRequest.js';
+
+const BASE_URL = config.API_URL;
 
 const AccountingForm = () => {
-  const [date, setDate] = useState('');
+  const [transactionDate, setTransactionDate] = useState('');
   const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('飲食');
-  const [payment, setPayment] = useState('現金');
-  const [description, setDescription] = useState('');
-  const [type, setType] = useState('income');
+  const [assetType, setAssetType] = useState('Cash');
+  const [accountingName, setAccountingName] = useState('現金');
+  const [content, setContent] = useState('');
+  const [consumeTypeId, setConsumeTypeId] = useState('1');
   const [totalAmount, setTotalAmount] = useState(0);
   const [limit, setLimit] = useState(3000);
   const [tradeHistory, setTradeHistory] = useState([]);
+  const [isSidebarActive, setIsSidebarActive] = useState(false);
   const maxTrades = 5;
+
+  useEffect(() => {
+    fetchTradeHistory();
+    fetchTotalAmount();
+  }, []);
+
+  const fetchTradeHistory = () => {
+    AccountingRequest.getAccountingList()
+      .then(response => {
+        setTradeHistory(response.data);
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  };
+
+  const fetchTotalAmount = () => {
+    AccountingRequest.getFinancialSummary()
+      .then(response => {
+        setTotalAmount(response.data);
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (!date) {
+    if (!transactionDate) {
       alert('請選擇日期');
       return;
     }
@@ -27,17 +58,19 @@ const AccountingForm = () => {
       alert('金額欄位請輸入正數');
       return;
     }
-    const newAmount = parseFloat(amount);
-    const newTotalAmount = type === 'income' ? totalAmount + newAmount : totalAmount - newAmount;
-    setTotalAmount(newTotalAmount);
 
-    const newTrade = { type, date, category, payment, amount: newAmount };
-    setTradeHistory([newTrade, ...tradeHistory.slice(0, maxTrades - 1)]);
-    setDate('');
-    setAmount('');
-    setDescription('');
-    setCategory('飲食');
-    setPayment('現金');
+    const newTrade = {
+      consumeType_id: consumeTypeId, transactionDate, accountingName,
+      assetType, amount: parseFloat(amount), content, createdId: localStorage.getItem('username')
+    };
+    AccountingRequest.addAccountingData(newTrade)
+      .then(response => {
+        alert(response.message)
+        window.location.reload();
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
   };
 
   const handleSetLimit = () => {
@@ -49,17 +82,17 @@ const AccountingForm = () => {
     }
   };
 
-  const handleAddCategory = () => {
-    const newCategory = prompt('請輸入新的類別');
-    if (newCategory && newCategory.trim() !== '') {
-      setCategory(newCategory);
+  const handleAddAssetType = () => {
+    const newAssetType = prompt('請輸入新的類別');
+    if (newAssetType && newAssetType.trim() !== '') {
+      setAssetType(newAssetType);
     }
   };
 
   const handleAddPayment = () => {
     const newPayment = prompt('請輸入新的支付方式');
     if (newPayment && newPayment.trim() !== '') {
-      setPayment(newPayment);
+      setAccountingName(newPayment);
     }
   };
 
@@ -68,13 +101,17 @@ const AccountingForm = () => {
     return progress;
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarActive(!isSidebarActive);
+  };
+
   return (
     <div className="kv w-100">
       <div className="container-all">
-        <div className="container-left">
-          <nav id="sliderbar">
-            <button type="button" id="collapse" className="collapse-btn">
-              <img src="images/list.webp" alt="" width="40px" />
+        <div className={`container-left ${isSidebarActive ? 'active' : ''}`}>
+          <nav id="sliderbar" className={isSidebarActive ? 'active' : ''}>
+            <button type="button" id="collapse" className="collapse-btn" onClick={toggleSidebar}>
+              <img src={listIcon} alt="" width="40px" />
             </button>
             <ul className="list-unstyled">
               <h2 className="totalamounttitle">您的總資產</h2>
@@ -98,16 +135,16 @@ const AccountingForm = () => {
             </ul>
           </nav>
         </div>
-        <div className="container-right">
+        <div className={`container-right ${isSidebarActive ? 'collapsed' : ''}`}>
           <div className="account-form">
             <div className="account-form-container">
               <h2>記帳表格</h2>
               <form onSubmit={handleSubmit} id="accountForm">
-                <label htmlFor="date">日期：</label>
+                <label htmlFor="transactionDate">日期：</label>
                 <Flatpickr
-                  id="date"
-                  value={date}
-                  onChange={(selectedDates) => setDate(selectedDates[0])}
+                  id="transactionDate"
+                  value={transactionDate}
+                  onChange={(selectedDates) => setTransactionDate(selectedDates[0])}
                   options={{
                     dateFormat: 'Y-m-d',
                   }}
@@ -115,41 +152,36 @@ const AccountingForm = () => {
                 <br /><br />
                 <label htmlFor="amount">金額：</label>
                 <input type="number" id="amount" value={amount} onChange={(e) => setAmount(e.target.value)} pattern="[0-9]*" title="請輸入數字" required /><br /><br />
-                <label htmlFor="category">類別：</label>
-                <div className="category-wrapper">
-                  <select id="category" value={category} onChange={(e) => setCategory(e.target.value)} className="form-select">
-                    <option value="飲食">飲食</option>
-                    <option value="交通">交通</option>
-                    <option value="娛樂">娛樂</option>
-                    <option value="日常用品">日常用品</option>
-                    <option value="水電瓦斯">水電瓦斯</option>
-                    <option value="電話網路">電話網路</option>
-                    <option value="服飾">服飾</option>
-                    <option value="汽機車">汽機車</option>
-                    <option value="醫療保險">醫療保險</option>
-                  </select>
-                  <button type="button" onClick={handleAddCategory} className="btn btn-primary">新增類別</button>
-                  <button type="button" className="btn btn-danger">刪除類別</button>
-                </div><br />
-                <label htmlFor="payment">支付方式：</label>
+                <label htmlFor="accountingName">支付方式：</label>
                 <div className="payment-wrapper">
-                  <select id="payment" value={payment} onChange={(e) => setPayment(e.target.value)} className="form-select">
+                  <select id="accountingName" value={accountingName} onChange={(e) => setAccountingName(e.target.value)} className="form-select">
                     <option value="現金">現金</option>
                     <option value="信用卡">信用卡</option>
-                    <option value="電子支付">電子支付</option>
-                    <option value="金融卡">金融卡</option>
+                    <option value="銀行">銀行</option>
+                    <option value="轉帳">轉帳</option>
                   </select>
                   <button type="button" onClick={handleAddPayment} className="btn btn-primary">新增支付方式</button>
                   <button type="button" className="btn btn-danger">刪除支付方式</button>
                 </div><br />
-                <label htmlFor="description">描述/備註：</label><br />
-                <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows="4" cols="50"></textarea><br /><br />
+                <label htmlFor="assetType">資產類型：</label>
+                <div className="category-wrapper">
+                  <select id="assetType" value={assetType} onChange={(e) => setAssetType(e.target.value)} className="form-select">
+                    <option value="Cash">Cash</option>
+                    <option value="Bank">Bank</option>
+                    <option value="Credit Card">Credit Card</option>
+                  </select>
+                  <button type="button" onClick={handleAddAssetType} className="btn btn-primary">新增資產類型</button>
+                  <button type="button" className="btn btn-danger">刪除資產類型</button>
+                </div>
+                <br />
+                <label htmlFor="content">描述/備註：</label><br />
+                <textarea id="content" value={content} onChange={(e) => setContent(e.target.value)} rows="4" cols="50"></textarea><br /><br />
                 <div className="type-wrapper">
-                  <label htmlFor="type">類型：</label>
-                  <input type="radio" id="income" name="type" value="income" checked={type === 'income'} onChange={() => setType('income')} />
-                  <label htmlFor="income">收入</label>
-                  <input type="radio" id="expense" name="type" value="expense" checked={type === 'expense'} onChange={() => setType('expense')} />
-                  <label htmlFor="expense">支出</label>
+                  <label htmlFor="consumeTypeId">類型：</label>
+                  <input type="radio" id="income" name="consumeTypeId" value="1" checked={consumeTypeId === '1'} onChange={() => setConsumeTypeId('1')} />
+                  <label htmlFor="1">收入</label>
+                  <input type="radio" id="expense" name="consumeTypeId" value="2" checked={consumeTypeId === '2'} onChange={() => setConsumeTypeId('2')} />
+                  <label htmlFor="2">支出</label>
                 </div>
                 <br /><br />
                 <button type="submit">提交</button>
@@ -172,18 +204,18 @@ const AccountingForm = () => {
                   <tr>
                     <th scope="col">類型</th>
                     <th scope="col">日期</th>
-                    <th scope="col">類別</th>
                     <th scope="col">支付方式</th>
+                    <th scope="col">資產類型</th>
                     <th scope="col">金額</th>
                   </tr>
                 </thead>
                 <tbody id="tradeHistoryBody">
-                  {tradeHistory.map((trade, index) => (
-                    <tr key={index}>
-                      <td>{trade.type === 'income' ? '收入' : '支出'}</td>
-                      <td>{trade.date}</td>
-                      <td>{trade.category}</td>
-                      <td>{trade.payment}</td>
+                  {tradeHistory.map(trade => (
+                    <tr key={trade.accountingId}>
+                      <td>{trade.consumeType_id === '1' ? '收入' : '支出'}</td>
+                      <td>{new Date(trade.transactionDate).toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })}</td>
+                      <td>{trade.accountingName}</td>
+                      <td>{trade.assetType}</td>
                       <td>{trade.amount}</td>
                     </tr>
                   ))}

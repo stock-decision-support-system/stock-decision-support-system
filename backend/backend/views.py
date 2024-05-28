@@ -595,7 +595,7 @@ def financial_summary(request, username):
     )
 
     return Response(
-                {"status": "error", "data": data},
+                {"status": "success", "data": data},
                 status=status.HTTP_200_OK,
             )
 
