@@ -14,6 +14,8 @@ const BASE_URL = config.API_URL;
 const Navbar = () => {
   const [username, setUsername] = useState(localStorage.getItem('username') || '');
   const { user, logout } = useUser();
+  const [isSuperuser, setIsSuperuser] = useState(localStorage.getItem('is_superuser') === 'true');
+  const [isStaff, setIsStaff] = useState(localStorage.getItem('is_staff') === 'true');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,6 +47,8 @@ const Navbar = () => {
     // 清除 localStorage 中的信息
     localStorage.removeItem('token');
     localStorage.removeItem('username');
+    localStorage.removeItem('is_superuser');
+    localStorage.removeItem('is_staff');
     setUsername(''); // 重置用户名状态为 ''
     navigate('/login'); // 重定向到登录页面
   };
@@ -55,6 +59,11 @@ const Navbar = () => {
     { key: 'bankForm', label: <a href="/bankForm">金流設定</a> },
     { key: 'logout', label: <a onClick={handleLogout}>登出</a> }
   ];
+
+  // 添加管理者專區選項
+  if (isSuperuser && isStaff) {
+    items.unshift({ key: 'admin', label: <a href="/manageUsers">管理者專區</a> });
+  }
 
   return (
 

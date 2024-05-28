@@ -1,0 +1,38 @@
+.manage-users-header {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #bd4c7f;
+}
+
+.search-filters {
+  display: flex;
+  justify-content: flex-end; /* 將內容靠右對齊 */
+  align-items: center; /* 垂直居中對齊 */
+  gap: 8px; /* 添加間距 */
+  margin-bottom: 20px;
+}
+
+.search-filters .ant-input,
+.search-filters .ant-select {
+  width: 200px;
+}
+
+/* .search-filters .ant-btn {
+  background-color: #bd4c7f;
+  border: none;
+  color: #fff;
+  width: 100px;
+}*/
+
+.search-filters .ant-btn:hover {
+  background-color: #a63d6f !important;
+  color: #fff;
+}
+
+.ant-table-thead > tr > th {
+  background-color: #f5f5f5;
+}
+
+.ant-table-tbody > tr > td {
+  background-color: #fff5f7;
+}

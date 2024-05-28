@@ -33,6 +33,7 @@ const Login = () => {
           password: values.password,
           'g-recaptcha-response': token  // 將 token 添加到發送的數據中
         };
+        
 
         try {
           const response = await axios.post(`${BASE_URL}/login/`, loginData, {
@@ -40,8 +41,12 @@ const Login = () => {
           });
 
           if (response.data.status === 'success') {
+            const { token, is_superuser, is_staff } = response.data;
             login(values.username);
             localStorage.setItem('token', response.data.token);
+            localStorage.setItem('is_superuser', is_superuser);
+            localStorage.setItem('is_staff', is_staff);
+            setUser({ username: values.username, is_superuser, is_staff });
             alert('登入成功');
             navigate('/#');
           } else {
@@ -54,49 +59,6 @@ const Login = () => {
       });
     }
 };
-
-  //   // 準備要發送的數據
-  //   const loginData = {
-  //     username: values.username,
-  //     password: values.password,
-  //   };
-    
-
-  //   try {
-  //     // 使用 axios 發送數據
-  //     const response = await axios.post(
-  //       `${BASE_URL}/login/`,
-  //      loginData, {
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       }
-  //     });
-
-  //     if (response.data.status === 'success') {
-  //       login(values.username);  // 使用 login 方法設置用戶
-  //       localStorage.setItem('token', response.data.token);
-  //       alert('登入成功');
-  //       navigate('/#')
-  //     } else {
-  //       alert('帳號或密碼錯誤，請再試一次')
-  //     }
-  //   } catch (error) {
-  //     // 處理錯誤情況
-  //     console.error('登入失敗:', error);
-  //     alert('登入請求出錯');
-  //   }
-  // };
-
-  // const executeRecaptcha = useCallback(() => {
-  //   if (window.grecaptcha) {
-  //     window.grecaptcha.ready(() => {
-  //       window.grecaptcha.execute('6LdmwcgpAAAAAChdggC5Z37c_r09EmUk1stanjTj', { action: 'login' })
-  //         .then((token) => {
-  //           console.log('reCAPTCHA token:', token);
-  //         });
-  //     });
-  //   }
-  // }, []);
 
   return (
     <div className="kv w-100">
