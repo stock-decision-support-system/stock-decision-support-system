@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import Flatpickr from 'react-flatpickr';
-import axios from 'axios';
 import 'flatpickr/dist/flatpickr.min.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'font-awesome/css/font-awesome.min.css';
@@ -26,6 +25,7 @@ const AccountingForm = () => {
 
   useEffect(() => {
     fetchTradeHistory();
+    fetchTotalAmount();
   }, []);
 
   const fetchTradeHistory = () => {
@@ -38,6 +38,15 @@ const AccountingForm = () => {
       });
   };
 
+  const fetchTotalAmount = () => {
+    AccountingRequest.getFinancialSummary()
+      .then(response => {
+        setTotalAmount(response.data);
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
