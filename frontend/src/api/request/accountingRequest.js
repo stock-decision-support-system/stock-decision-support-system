@@ -7,4 +7,8 @@ export class AccountingRequest {
     static getAccountingList() {
         return FetchUtil.getAPI(`${BASE_URL}${USER_URL}`);
     }
+
+    static addAccountingData(data) {
+        return FetchUtil.postAPI(`${BASE_URL}${USER_URL}`,data);
+    }
 }
