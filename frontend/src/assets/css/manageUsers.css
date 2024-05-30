@@ -1,3 +1,16 @@
+body, html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+   /* 確保網頁可以滾動 */
+}
+
+
+.table-container {
+  margin-bottom: 5rem; /* 添加底部空間，以防止分頁被遮擋 */
+  overflow: auto !important;
+}
+
 .manage-users-header {
   text-align: center;
   margin-bottom: 20px;
@@ -6,9 +19,9 @@
 
 .search-filters {
   display: flex;
-  justify-content: flex-end; /* 將內容靠右對齊 */
-  align-items: center; /* 垂直居中對齊 */
-  gap: 8px; /* 添加間距 */
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 20px;
 }
 
@@ -16,13 +29,6 @@
 .search-filters .ant-select {
   width: 200px;
 }
-
-/* .search-filters .ant-btn {
-  background-color: #bd4c7f;
-  border: none;
-  color: #fff;
-  width: 100px;
-}*/
 
 .search-filters .ant-btn:hover {
   background-color: #a63d6f !important;

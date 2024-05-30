@@ -23,6 +23,7 @@ const Login = () => {
       alert('請填寫所有欄位');
       return;
     }
+
     if (window.grecaptcha) {
       window.grecaptcha.ready(async () => {
         const token = await window.grecaptcha.execute('6LdmwcgpAAAAAChdggC5Z37c_r09EmUk1stanjTj', { action: 'login' });
@@ -41,7 +42,11 @@ const Login = () => {
           });
 
           if (response.data.status === 'success') {
-            const { token, is_superuser, is_staff } = response.data;
+            const { token, is_superuser, is_staff, is_active } = response.data;
+            if (!is_active){
+              alert('帳號已被停用')
+            }
+            else{
             login(values.username);
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('is_superuser', is_superuser);
@@ -49,6 +54,7 @@ const Login = () => {
             setUser({ username: values.username, is_superuser, is_staff });
             alert('登入成功');
             navigate('/#');
+          }
           } else {
             alert('帳號或密碼錯誤，請再試一次');
           }

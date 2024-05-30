@@ -10,6 +10,7 @@
   right: 0;
   left: 0;
   z-index: 1030;
+  background: linear-gradient(to right, rgba(255, 214, 204, 1), rgba(255, 241, 235, 1));
   /* 高于一般元素，低于 modal 等元素 */
 }
 

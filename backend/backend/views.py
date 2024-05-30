@@ -122,6 +122,7 @@ def login_view(request):
             {
                 "status": "success",
                 "username": user.username,
+                "is_active":user.is_active,
                 "is_superuser": user.is_superuser,
                 "is_staff": user.is_staff,
                 "token": str(refresh.access_token),  # 发送访问令牌

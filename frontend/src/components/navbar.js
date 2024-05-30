@@ -25,6 +25,11 @@ const Navbar = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    setIsSuperuser(localStorage.getItem('is_superuser') === 'true');
+    setIsStaff(localStorage.getItem('is_staff') === 'true');
+  }, [user]);
+
   const handleLogout = async () => {
     const token = localStorage.getItem('token'); // 从 localStorage 获取 token
     if (!token) {

@@ -5,8 +5,8 @@ const UserContext = createContext(null);
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  const login = (username, is_superuser, is_staff) => {
-    setUser({ username, is_superuser, is_staff });
+  const login = (username, is_superuser, is_staff, is_active) => {
+    setUser({ username, is_superuser, is_staff, is_active });
     localStorage.setItem('username', username);
     localStorage.setItem('is_superuser', is_superuser);
     localStorage.setItem('is_staff', is_staff);
