@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智投金紡</title>
+    <link rel="stylesheet" href="stock.css">
+</head>
+<body>
+    <header>
+        <div class="header-right">
+            <nav>
+                <ul>
+                    <li><a href="#">個股</a></li>
+                    <li><a href="#">台灣五十股</a></li>
+                    <li><a href="#">我的產品組合</a></li>
+                    <li><a href="#">記帳</a></li>
+                </ul>
+            </nav>
+            <div class="user">
+                <span id="usernameButton">username</span>
+                <div class="dropdown">
+                    <div class="dropdown-content">
+                        <a href="#">個人資料</a>
+                        <a href="#">修改密碼</a>
+                        <a href="#">金流設定</a>
+                        <a href="#">登出</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main>
+        <div class="search-container">
+            <input type="text" id="stockSymbol" placeholder="輸入股票代號">
+            <button id="searchButton">🔍</button>
+            <button id="filterButton">股類篩選</button>
+        </div>
+        <div class="stock-info">
+            <h2>台積電 2330</h2>
+            <div class="stock-price">
+                <span class="price">867</span>
+                <span class="change">▼ 8.00 (0.91%)</span>
+            </div>
+            <div class="stock-details">
+                <p>成交量: 34,094</p>
+                <p>本益比: 26.24 (81.80)</p>
+                <p>2023/12/07 開17.85 高17.9 低17.75 收17.8 量6748 漲跌0</p>
+            </div>
+            <div class="stock-chart">
+                <img src="chart.png" alt="Stock Chart">
+            </div>
+        </div>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
