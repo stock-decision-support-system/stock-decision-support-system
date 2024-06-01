@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom'; // 假設你使用 react-router-
 import iconImage from '../assets/images/logo.png';
 import '../assets/css/navbar.css';
 import { Button, Dropdown, Space } from 'antd';
-import headIcon from '../assets/images/account.png'
+import headIcon from '../assets/images/account.png';
 import axios from 'axios';
-import { useUser } from '../userContext'; // 确保正确导入 useUser
+import { useUser } from '../userContext'; // 確保正確導入 useUser
 import { config } from "../config";
-
 
 const BASE_URL = config.API_URL;
 
@@ -31,31 +30,31 @@ const Navbar = () => {
   }, [user]);
 
   const handleLogout = async () => {
-    const token = localStorage.getItem('token'); // 从 localStorage 获取 token
+    const token = localStorage.getItem('token'); // 從 localStorage 獲取 token
     if (!token) {
-      console.error('登出失败：无法获取 token');
-      return; // 如果没有 token，直接返回
+      console.error('登出失敗：無法獲取 token');
+      return; // 如果沒有 token，直接返回
     }
-  
+
     try {
       await axios.get(`${BASE_URL}/logout/`, {
         headers: {
-          'Authorization': `Bearer ${token}`  // 使用获取到的 token
+          'Authorization': `Bearer ${token}` // 使用獲取到的 token
         }
       });
       console.log('成功登出');
-      logout(); // 调用从 context 或其他地方传入的 logout 方法，如果有的话
+      logout(); // 調用從 context 或其他地方傳入的 logout 方法，如果有的話
     } catch (error) {
-      console.error('登出失败', error);
+      console.error('登出失敗', error);
     }
-  
+
     // 清除 localStorage 中的信息
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     localStorage.removeItem('is_superuser');
     localStorage.removeItem('is_staff');
-    setUsername(''); // 重置用户名状态为 ''
-    navigate('/login'); // 重定向到登录页面
+    setUsername(''); // 重置用戶名狀態為 ''
+    navigate('/login'); // 重定向到登錄頁面
   };
 
   const items = [
@@ -70,12 +69,17 @@ const Navbar = () => {
     items.unshift({ key: 'admin', label: <a href="/manageUsers">管理者專區</a> });
   }
 
-  return (
+  const handleNavigation = (path) => {
+    if (!username) {
+      alert('請先登入以繼續訪問該頁面。');
+      navigate('/login');
+    } else {
+      navigate(path);
+    }
+  };
 
-    <nav
-      className="navbar navbar-expand-lg fixed-top"
-      style={{}}
-    >
+  return (
+    <nav className="navbar navbar-expand-lg fixed-top" style={{}}>
       <div className="container">
         <a className="navbar-brand d-flex " href="/#">
           <img
@@ -96,27 +100,36 @@ const Navbar = () => {
         >
           <span className="navbar-toggler-icon" />
         </button>
-        <div
-          className="collapse navbar-collapse justify-content-end"
-          id="navbarNavDropdown"
-        >
+        <div className="collapse navbar-collapse justify-content-end" id="navbarNavDropdown">
           <ul className="navbar-nav">
             <li className="nav-item">
-              <a className="nav-link me-5  justify-content-center d-flex align-items-center" aria-current="page" href="/accounting" style={{ height: '37px' }}>
+              <a
+                className="nav-link me-5 justify-content-center d-flex align-items-center"
+                aria-current="page"
+                onClick={() => handleNavigation('/accounting')}
+                style={{ height: '37px', cursor: 'pointer' }}
+              >
                 記帳
               </a>
             </li>
             <li className="nav-item">
-              <a className="nav-link me-5  justify-content-center d-flex align-items-center" href="#" style={{ height: '37px' }}>
+              <a
+                className="nav-link me-5 justify-content-center d-flex align-items-center"
+                onClick={() => handleNavigation('/reports')}
+                style={{ height: '37px', cursor: 'pointer' }}
+              >
                 報表
               </a>
             </li>
             <li className="nav-item">
-              <a className="nav-link justify-content-center d-flex align-items-center" href="#" style={{ height: '37px', marginRight: '25px' }}>
+              <a
+                className="nav-link justify-content-center d-flex align-items-center"
+                onClick={() => handleNavigation('/investmentList')}
+                style={{ height: '37px', marginRight: '25px', cursor: 'pointer' }}
+              >
                 投資績效
               </a>
             </li>
-
             <Dropdown
               menu={{
                 items,
@@ -141,29 +154,28 @@ const Navbar = () => {
                 <>
                   <li className="nav-item">
                     <div className='justify-content-center d-flex align-items-center'>
-                    <a
-                      className="nav-link me-3 justify-content-center d-flex align-items-center bbb"
-                      href="/login" // 使用路由路徑，確保已 '/' 開頭
-                      id="btnb"
-                      style={{ width: 100, height: 37 }}
-                    >
-                      登入
-                    </a>
+                      <a
+                        className="nav-link me-3 justify-content-center d-flex align-items-center bbb"
+                        href="/login" // 使用路由路徑，確保已 '/' 開頭
+                        id="btnb"
+                        style={{ width: 100, height: 37 }}
+                      >
+                        登入
+                      </a>
                     </div>
                   </li>
                   <li className="nav-item">
-                  <div className='justify-content-center d-flex align-items-center'>
-                    <a
-                      className="nav-link  justify-content-center d-flex align-items-center ms-3 aaa"
-                      href="/signUp" // 使用路由路徑，確保已 '/' 開頭
-                      id="btnb"
-                      style={{ backgroundColor: "#E8B4BC", width: 200, height: 38 }}
-                    >
-                      建立帳號
-                    </a>
+                    <div className='justify-content-center d-flex align-items-center'>
+                      <a
+                        className="nav-link justify-content-center d-flex align-items-center ms-3 aaa"
+                        href="/signUp" // 使用路由路徑，確保已 '/' 開頭
+                        id="btnb"
+                        style={{ backgroundColor: "#E8B4BC", width: 200, height: 38 }}
+                      >
+                        建立帳號
+                      </a>
                     </div>
                   </li>
-                  
                 </>
               )}
             </Dropdown>

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input, Button, Checkbox, Form } from 'antd';
 import accountIcon from '../assets/images/account.png';
@@ -14,8 +14,16 @@ const Login = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const { setUser } = useUser(); // 獲取 setUser 函數
+  const { setUser, user } = useUser(); // 獲取 setUser 函數
   const { login } = useUser();  // 使用 Context 中的 login 函數
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      alert('帳號已登入，請登出後再試一次')
+      navigate('/#', { replace: true });
+    }
+  }, [navigate]);
 
   const handleSubmit = async (values) => {
     // 確保所有input都已填寫
@@ -72,9 +80,9 @@ const Login = () => {
         <div className="container-fluid">
           <div className="row justify-content-center align-items-center h-100 pt-5">
             <div className="col-md-4" style={{ backgroundColor: 'rgba(232, 180, 188, 0.65)' }}>
-              <h2 className="fw-bold d-flex justify-content-center pt-4">USER LOGIN</h2>
+              <h2 className="fw-bold d-flex justify-content-center pt-4">登入</h2>
               <h4 className="d-flex justify-content-center mb-4" style={{ fontSize: '16px' }}>
-                Welcome to the website
+                歡迎來到智投金紡
               </h4>
               <Form className="px-5" onFinish={handleSubmit}>
                 {/* 用戶名輸入 */}
@@ -84,7 +92,7 @@ const Login = () => {
                 >
                   <Input
                     prefix={<img alt="" className="img-fluid" src={accountIcon} style={{ width: '20px' }} />}
-                    placeholder="Username"
+                    placeholder="帳號"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                   />
@@ -96,7 +104,7 @@ const Login = () => {
                 >
                   <Input.Password
                     prefix={<img alt="" className="img-fluid" src={padlockIcon} style={{ width: '20px' }} />}
-                    placeholder="Password"
+                    placeholder="密碼"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
