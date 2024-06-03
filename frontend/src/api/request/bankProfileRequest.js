@@ -17,11 +17,11 @@ export class BankProfileRequest {
     }
 
     static addBankProfile(data) {
-        return FetchUtil.postAPI(`${BASE_URL}${ADD_URL}`, data);
+        return FetchUtil.postFileFormDataAPI(`${BASE_URL}${ADD_URL}`, data);
     }
 
     static updateBankProfile(data) {
-        return FetchUtil.putAPI(`${BASE_URL}${PUT_URL}/${data.id}`, data);
+        return FetchUtil.putFileFormDataAPI(`${BASE_URL}${PUT_URL}/${data.get('id')}`, data);
     }
 
     static deleteBankProfile(id) {

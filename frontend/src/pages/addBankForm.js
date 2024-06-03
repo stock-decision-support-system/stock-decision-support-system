@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button } from 'antd';
+import { Card, Button, Empty } from 'antd';
 import BankDialog from '../components/bankDialog';
 import BankItem from '../components/bankItem';
 import { BankProfileRequest } from '../api/request/bankProfileRequest.js';
@@ -64,7 +64,9 @@ const AddBankForm = () => {
                 extra={<Button type="primary" onClick={handleAddClick}>新增銀行資料</Button>}
                 className='h-100'
             >
-                {banks.map(bank => (
+                {(!banks || banks.length === 0) ? (
+                    <Empty description="沒有銀行資料" />
+                ) : (banks.map(bank => (
                     <BankItem
                         key={bank.id}
                         bankName={bank.bank_name}
@@ -74,7 +76,8 @@ const AddBankForm = () => {
                         onModify={() => handleModifyClick(bank.id)}
                         onDelete={() => handleDelete(bank.id)}
                     />
-                ))}
+                ))
+                )}
             </Card>
             {isDialogVisible && (
                 <BankDialog
