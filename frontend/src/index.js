@@ -20,11 +20,12 @@ import 'bootstrap/dist/js/bootstrap.min.js';
 import { UserProvider } from './userContext.js';
 import AccountingForm from './pages/accounting.js';
 import Stock from './pages/stock.js';
+import GeneralReport from './pages/generalreport.js';
 
 const root = createRoot(document.getElementById('root'));
 
 root.render(
-  <UserProvider> {/* 使用 UserProvider 包裹應用 */}
+  <UserProvider>
     <Router>
       <React.StrictMode>
         <Navbar />
@@ -40,6 +41,7 @@ root.render(
           <Route path="/profile" element={<Profile />} />
           <Route path="/accounting" element={<AccountingForm />} />
           <Route path="/stock" element={<Stock />} />
+          <Route path="/generalreport" element={<GeneralReport />} />
         </Routes>
       </React.StrictMode>
     </Router>,
