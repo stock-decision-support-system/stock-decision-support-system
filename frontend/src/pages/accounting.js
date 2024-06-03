@@ -125,7 +125,7 @@ const AccountingForm = () => {
                 <a href="#sublist" data-bs-toggle="collapse" id="dropdown">報表查詢</a>
                 <ul id="sublist" className="list-unstyled collapse">
                   <li>
-                    <a href="#">總資產</a>
+                    <a href='/generalreport'>總資產</a>
                   </li>
                   <li>
                     <a href="#">當日資產</a>
