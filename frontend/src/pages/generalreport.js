@@ -185,7 +185,7 @@ const GeneralReport = () => {
                                 $ <span id="totalAmountDisplay">{totalAmount.toFixed(2)}</span>
                             </div>
                             <li>
-                                <a href="#">記帳</a>
+                                <a href="/accounting">記帳</a>
                             </li>
                             <li>
                                 <a href="#sublist" data-bs-toggle="collapse" id="dropdown">報表查詢</a>
