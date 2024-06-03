@@ -179,14 +179,11 @@ class APICredentials(models.Model):
     account = models.CharField(max_length=20)
     region = models.CharField(max_length=10)
     branch = models.CharField(max_length=20)
-    ca_path = models.CharField(max_length=255)  # Path to the CA certificate
+    ca_path = models.FileField(upload_to="ca_file/",max_length=250,null=True,default=None)
     ca_passwd = models.CharField(max_length=255)  # CA certificate password
     person_id = models.CharField(
         max_length=100)  # ID associated with the CA certificate
     available = models.BooleanField(default=True)
-
-
-
 
     class Meta:
         db_table = 'api_credentials'

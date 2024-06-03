@@ -33,7 +33,6 @@ import pandas as pd
 from flask import Flask, request, jsonify
 import requests
 
-
 import logging
 from google.cloud import recaptchaenterprise_v1
 from google.cloud.recaptchaenterprise_v1 import Assessment
@@ -619,12 +618,10 @@ def get_bank_profile_list(request):
             bank_data.append(
                 {
                     "id": bank.id,
-                    "secret_key": bank.secret_key,
-                    "api_key": bank.api_key,
                     "bank_name": bank.bank_name,
                     "region": bank.region,
                     "branch": bank.branch,
-                    "account": bank.account,
+                    "account": bank.account[-4:],
                 }
             )
 
@@ -662,6 +659,15 @@ def add_bank_profile(request):
             data=request.data, context={"request": request}
         )
         if serializer.is_valid():
+            ca_file = request.data.get('ca_file', None)
+            if not ca_file:
+                return Response(
+                    {"status": "error", "message": "未上傳文件"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
+            serializer.validated_data['ca_path'] = ca_file
+
             serializer.save()
             return Response(
                 {"status": "success", "message": "銀行資料新增成功"},
@@ -674,7 +680,6 @@ def add_bank_profile(request):
             )
 
 
-# 銀行資料 修改
 @api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def update_bank_profile(request, id):
@@ -687,15 +692,39 @@ def update_bank_profile(request, id):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        serializer = APICredentialsSerializer(bank, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
-                {"status": "success", "message": "銀行資料更新成功"},
-                status=status.HTTP_200_OK,
-            )
+        ca_file = request.FILES.get('ca_file', None)
+        if ca_file:
+            request.data['ca_path'] = ca_file
+            serializer = APICredentialsSerializer(bank, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                storage, path = bank.ca_path.storage, bank.ca_path.path
+                storage.delete(path)
+                return Response(
+                    {"status": "success", "message": "銀行資料更新成功"},
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            ca_path = request.data.get('ca_path', None)
+            if isinstance(ca_path, str):
+                bank.ca_path = ca_path
+                bank.save()
+                return Response(
+                    {"status": "success", "message": "銀行資料更新成功"},
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                serializer = APICredentialsSerializer(bank, data=request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.update()
+                    return Response(
+                        {"status": "success", "message": "銀行資料更新成功"},
+                        status=status.HTTP_200_OK,
+                    )
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # 銀行資料 刪除

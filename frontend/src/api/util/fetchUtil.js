@@ -51,12 +51,23 @@ export class FetchUtil {
     };
     return await this.getPromise(url, requestOptions);
   }
+  
+  static async postFileFormDataAPI(url, data) {
+    const requestOptions = {
+      method: POST,
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: data,
+    };
+    return await this.getPromise(url, requestOptions);
+  }
 
   static async postFileAPI(url, data) {
     const requestOptions = {
       method: POST,
       headers: {
-        "Authorization": localStorage.getItem("token"),
+        Authorization: "Bearer " + localStorage.getItem("token"),
         "Content-Type": MUTIPLEFILE
       },
       body: JSON.stringify(data)
@@ -72,6 +83,17 @@ export class FetchUtil {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
       body: JSON.stringify(this.clearObject(data)),
+    };
+    return await this.getPromise(url, requestOptions);
+  }
+  
+  static async putFileFormDataAPI(url, data) {
+    const requestOptions = {
+      method: PUT,
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: data,
     };
     return await this.getPromise(url, requestOptions);
   }
@@ -195,6 +217,9 @@ export class FetchUtil {
         ValueCheckerUtil.isUndefinedOrNull(value) ||
         ValueCheckerUtil.isEmpty(value)
       ) {
+        if (value instanceof File) {
+          continue;
+        }
         formData.delete(key);
       }
     }
