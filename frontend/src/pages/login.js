@@ -18,8 +18,8 @@ const Login = () => {
   const { login } = useUser();  // 使用 Context 中的 login 函數
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
+    const is_login = localStorage.getItem('is_login');
+    if (is_login) {
       alert('帳號已登入，請登出後再試一次')
       navigate('/#', { replace: true });
     }
@@ -35,6 +35,7 @@ const Login = () => {
     if (window.grecaptcha) {
       window.grecaptcha.ready(async () => {
         const token = await window.grecaptcha.execute('6LdmwcgpAAAAAChdggC5Z37c_r09EmUk1stanjTj', { action: 'login' });
+        document.getElementById('recaptchaToken').value = token;
 
         // 準備要發送的數據，包括 reCAPTCHA token
         const loginData = {
@@ -84,6 +85,7 @@ const Login = () => {
               <h4 className="d-flex justify-content-center mb-4" style={{ fontSize: '16px' }}>
                 歡迎來到智投金紡
               </h4>
+              <input type="hidden" id="recaptchaToken" name="g-recaptcha-response" />
               <Form className="px-5" onFinish={handleSubmit}>
                 {/* 用戶名輸入 */}
                 <Form.Item

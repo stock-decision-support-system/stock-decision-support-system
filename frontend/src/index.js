@@ -14,6 +14,8 @@ import Profile from './pages/profile.js';
 import ResetPasswordPage from './pages/resetPassword.js';
 import ChangePassword from './pages/changePassword.js';
 import ManageUsers from './pages/manageUsers.js';
+import InvestmentPerformance from './pages/investmentPerformance.js';
+import InvestmentList from './pages/investmentList.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'jquery/dist/jquery.min.js';
 import 'bootstrap/dist/js/bootstrap.min.js';
@@ -37,6 +39,8 @@ root.render(
           <Route path="/changePassword" element={<ChangePassword />} />
           <Route path="/manageUsers" element={<ManageUsers />} />
           <Route path="/reset-password/:uid/:token" element={<ResetPasswordPage />} />
+          <Route path='/investmentPerformance' element={<InvestmentPerformance/>}/>
+          <Route path='/investmentList' element={<InvestmentList/>}/>
           <Route path="/profile" element={<Profile />} />
           <Route path="/accounting" element={<AccountingForm />} />
           <Route path="/stock" element={<Stock />} />

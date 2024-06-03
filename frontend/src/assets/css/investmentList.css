@@ -1,0 +1,18 @@
+
+.title {
+  text-align: center;
+  color: #BD4C7F;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.positive-row {
+  background-color: #fafff4; /* light green background for positive rows */
+}
+
+.negative-row {
+  background-color: #fff0f0; /* light red background for negative rows */
+}
+.invback {
+  background-color: #ffefe9;
+}
