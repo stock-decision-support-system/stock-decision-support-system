@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'font-awesome/css/font-awesome.min.css';
-// import '../assets/css/generalreport.css';
+import '../assets/css/generalreport.css';
 //import Chart from 'chart.js/auto';
 import $ from 'jquery';
 import fakeChart from '../assets/images/generalreport.png';
@@ -153,43 +153,42 @@ const GeneralReport = () => {
         };
     }, [category]); */
 
-// 這裡是原先為了RWD做的側邊欄樣式，只不過因為CSS衝突好像壞了
-//    useEffect(() => {
-//        $("#collapse").on("click", function () {
-//            if ($(window).width() < 768) {
-//                $("#sidebar ul").slideToggle();
-//                $("#sublist").hide();
-//            } else {
-//                $("#sidebar").toggleClass("active");
-//                $(".container-right").toggleClass("collapsed");
-//            }
-//        });
+   useEffect(() => {
+       $("#generalreport-collapse").on("click", function () {
+           if ($(window).width() < 768) {
+               $("#generalreport-sidebar ul").slideToggle();
+               $("#generalreport-sublist").hide();
+           } else {
+               $("#generalreport-sidebar").toggleClass("active");
+               $(".generalreport-container-right").toggleClass("collapsed");
+           }
+       });
 
-//        $("#dropdown").on("click", function () {
-//            $("#sublist").slideToggle();
-//        });
-//    }, []);
+       $("#generalreport-dropdown").on("click", function () {
+           $("#generalreport-sublist").slideToggle();
+       });
+   }, []);
    
 
     return (
-        <div className="kv w-100">
-            <div className="container-all">
-                <div className={`container-left ${isSidebarActive ? 'active' : ''}`}>
-                    <nav id="sliderbar" className={isSidebarActive ? 'active' : ''}>
-                        <button type="button" id="collapse" className="collapse-btn" onClick={toggleSidebar}>
+        <div className="generalreport-kv w-100">
+            <div className="generalreport-container-all">
+                <div className={`generalreport-container-left ${isSidebarActive ? 'active' : ''}`}>
+                    <nav id="generalreport-sidebar" className={isSidebarActive ? 'active' : ''}>
+                        <button type="button" id="collapse" className="generalreport-collapse-btn" onClick={toggleSidebar}>
                             <img src={listIcon} alt="" width="40px" />
                         </button>
-                        <ul className="list-unstyled">
-                            <h2 className="totalamounttitle">您的總資產</h2>
-                            <div className="totalamount">
+                        <ul className="generalreport-list-unstyled">
+                            <h2 className="generalreport-totalamounttitle">您的總資產</h2>
+                            <div className="generalreport-totalamount">
                                 $ <span id="totalAmountDisplay">{totalAmount.toFixed(2)}</span>
                             </div>
                             <li>
                                 <a href="/accounting">記帳</a>
                             </li>
                             <li>
-                                <a href="#sublist" data-bs-toggle="collapse" id="dropdown">報表查詢</a>
-                                <ul id="sublist" className="list-unstyled collapse">
+                                <a href="#generalreport-sublist" data-bs-toggle="collapse" id="generalreport-dropdown">報表查詢</a>
+                                <ul id="generalreport-sublist" className="list-unstyled collapse">
                                     <li>
                                         <a href='/generalreport'>總資產</a>
                                     </li>
@@ -202,9 +201,9 @@ const GeneralReport = () => {
                     </nav>
                 </div>
 
-                <div className="container-right">
-                    <div className="account-form">
-                        <div className="dropdown-container">
+                <div className="generalreport-container-right">
+                    <div className="generalreport-account-form">
+                        <div className="generalreport-dropdown-container">
                             <select id="category" name="category" className="form-select" value={category} onChange={(e) => setCategory(e.target.value)}>
                                 <option value="全年">全年</option>
                                 <option value="前半年">前半年</option>
@@ -212,7 +211,7 @@ const GeneralReport = () => {
                                 <option value="近三個月">近三個月</option>
                             </select>
                         </div>
-                        <div className="report-container">
+                        <div className="generalreport-report-container">
                             {/* <p>報表(折線圖最佳)</p> */}
                             {/* <canvas id="lineChart" ref={lineChartRef}></canvas> */}
                             <img src={fakeChart} alt="K線圖報表" style={{ width: "100%", maxWidth: "100%" }} />
