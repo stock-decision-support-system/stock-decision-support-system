@@ -573,6 +573,7 @@ def consume_type_operations(request, pk=None):
 
 #取得資產和負債資訊
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def financial_summary(request, username):
     user = get_object_or_404(CustomUser, username=username)
 
