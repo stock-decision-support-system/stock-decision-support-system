@@ -11,24 +11,7 @@ html, body {
   box-sizing: border-box;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-.nav-link {
-  color: #C0C2C6;
-  font-size: 15px;
-}
-
-.nav-link:hover {
-  color: #ffffff;
-}
-
-#btnb:hover {
-  background-color: rgba(1, 198, 183, 80%);
-}
-
-.kv {
+.accounting-kv {
   height: 100vh;
 }
 
@@ -36,14 +19,14 @@ html, body {
   font-size: 3em;
 }
 
-.container-all {
+.accounting-container-all {
   display: flex;
   align-items: stretch;
   height: calc(100% - 56px); /* 減去 navbar 的高度 */
 }
 
 /* 以下是側拉式選單 */
-#sliderbar {
+#accounting-sliderbar {
   width: 250px;
   height: 100%;
   background-color: #464e68;
@@ -51,7 +34,7 @@ html, body {
   transition: margin-left 0.3s;
 }
 
-.collapse-btn {
+.accounting-collapse-btn {
   position: relative;
   top: 1%;
   left: 195px;
@@ -61,12 +44,12 @@ html, body {
   font-size: 30px;
 }
 
-.collapse-btn:hover {
+.accounting-collapse-btn:hover {
   background-color: antiquewhite;
   transition: 0.4s;
 }
 
-#sliderbar ul li a {
+#accounting-sliderbar ul li a {
   white-space: nowrap;  /* 防止文字換行 */
   width: 100%;          /* 確保佔滿整個父元素的寬度 */
   margin-left: -20px;
@@ -77,22 +60,35 @@ html, body {
   color: white;
 }
 
-#sliderbar ul li a:hover {
+#accounting-sliderbar ul li a:hover {
   color: antiquewhite;
   background: skyblue;
 }
 
-#sliderbar.active {
+#accounting-sliderbar ul ul {
+  display: flex;
+  flex-direction: column;
+}
+
+.collapse.show {
+  display: block !important;
+}
+
+.collapse {
+  display: none !important;
+}
+
+#accounting-sliderbar.active {
   margin-left: -200px;
 }
 
-.list-unstyled {
+.accounting-list-unstyled {
   padding: 30px;
   display: flex;
   flex-direction: column;
 }
 
-.container-right {
+.accounting-container-right {
   background-image: url(../images/loginback.png);
   background-size: cover;
   flex: 1;
@@ -102,15 +98,15 @@ html, body {
   overflow-y: auto;
 }
 
-.container-right.collapsed {
+.accounting-container-right.accounting-collapsed {
   padding-left: 50px;
 }
 
-.account-form {
+.accounting-account-form {
   flex: 2;
 }
 
-.account-form-container {
+.accounting-account-form-container {
   margin: 20px;
   padding: 20px;
   background-color: #fff;
@@ -119,20 +115,20 @@ html, body {
   flex: 1;
 }
 
-.side-content {
+.accounting-side-content {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-.totalamounttitle {
+.accounting-totalamounttitle {
   margin-top: 0;
   margin-left: -20px;
   font-size: 24px;
   color: #ffffff;
 }
 
-.totalamount {
+.accounting-totalamount {
   background-color: #f8f9fa;
   width: 180px;
   height: 100px;
@@ -148,7 +144,7 @@ html, body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.progress-container {
+.accounting-progress-container {
   margin-top: 20px;
   width: 100%;
   max-width: 500px;
@@ -156,38 +152,38 @@ html, body {
   margin: 20px auto;
 }
 
-.progress-bar {
+.accounting-progress-bar {
   height: 30px;
   background-color: white;
   border-radius: 10px;
   overflow: hidden;
 }
 
-.progress-fill {
+.accounting-progress-fill {
   height: 100%;
   background-color: transparent;
   transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
 }
 
-.progress-button {
+.accounting-progress-button {
   display: block;
   margin-bottom: 15px;
 }
 
-.progress-label {
+.accounting-progress-label {
   font-size: 15px;
   padding-top: 10px;
 }
 
-#currentTotal {
+#accounting-currentTotal {
   float: left;
 }
 
-#limitAmount {
+#accounting-limitAmount {
   float: right;
 }
 
-.outertradehistory {
+.accounting-outertradehistory {
   width: 100%;
   max-width: 500px;
   height: 100%;
@@ -200,7 +196,7 @@ html, body {
   overflow-y: auto;
 }
 
-.tradehistory-header {
+.accounting-tradehistory-header {
   font-size: 25px;
   padding: 10px;
   font-weight: bold;
@@ -283,36 +279,4 @@ html, body {
 
 .type-wrapper label {
   margin-right: 20px;
-}
-
-@media (max-width: 768px) {
-  .container-all {
-      flex-direction: column;
-      overflow-y: auto;
-  }
-
-  #slidebar {
-      width: 100%;
-      height: auto;
-  }
-
-  .collapse-btn {
-      position: static;
-      width: 100%;
-      text-align: center;
-      display: block;
-  }
-
-  #slidebar.active {
-      margin-top: -200px;
-  }
-
-  .container-right {
-      padding: 10px;
-      overflow-y: auto;
-  }
-
-  .dropdown-container {
-      width: 25%;
-  }
 }
