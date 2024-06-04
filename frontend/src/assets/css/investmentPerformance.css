@@ -1,0 +1,80 @@
+.invback {
+  background: linear-gradient(to right, #fcefe9, #f5f7fa);
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 2%;
+}
+.title {
+  font-size: 24px;
+  color: #d16b8f;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.selected-button {
+  background-color: #d16b8f !important;
+  color: white !important;
+  border: none;
+  font-weight: bold;
+}
+
+.unselected-button {
+  background-color: #e2e2e2 !important;
+  color: #d16b8f !important;
+  border: none;
+  font-weight: bold;
+}
+
+.selected-button:hover,
+.unselected-button:hover {
+  background-color: #d16b8f !important;
+  color: white !important;
+}
+
+.stats-card {
+  background-color: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+button-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.back-button {
+  color: #d16b8f;
+}
+
+.details-button {
+  background-color: #d16b8f;
+  border-color: #d16b8f;
+}
+
+.details-button:hover {
+  background-color: #c6557e;
+  border-color: #c6557e;
+}
+
+.gain {
+  color: red;
+  font-weight: bold;
+}
+
+.loss {
+  color: green;
+  font-weight: bold;
+}
+
+.arrow-up {
+  color: red;
+  font-size: 16px;
+  vertical-align: middle;
+}
+
+.arrow-down {
+  color: green;
+  font-size: 16px;
+  vertical-align: middle;
+}

@@ -36,6 +36,11 @@ import requests
 import logging
 from google.cloud import recaptchaenterprise_v1
 from google.cloud.recaptchaenterprise_v1 import Assessment
+import os
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:\\github\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
+from django.http import JsonResponse
+
+
 
 
 with open("config.yaml", "r") as file:
@@ -94,46 +99,66 @@ def register(request):
             {"status": "error", "message": "請求方法無效"},
             status=status.HTTP_405_METHOD_NOT_ALLOWED,
         )
+    
+logger = logging.getLogger(__name__)
 
+def verify_recaptcha(token):
+    """用于验证前端传递的 reCAPTCHA token 的函数"""
+    secret_key = "6LdmwcgpAAAAAFkprWdUSzzAZ8dE-1obmzqLK3Nf"
+    data = {
+        'secret': secret_key,
+        'response': token
+    }
+    r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=data)
+    result = r.json()
+    logger.debug(f"reCAPTCHA verification result: {result}")
+    return result
 
-# 登入
 @api_view(["POST"])
 def login_view(request):
     login_credential = request.data.get("username")
     password = request.data.get("password")
+    recaptcha_response = request.data.get('g-recaptcha-response')
 
+    logger.debug(f"Recaptcha Response: {recaptcha_response}")
+
+    # 验证 reCAPTCHA 响应
+    verification_result = verify_recaptcha(recaptcha_response)
+    assessment_result = create_assessment(
+        "my-project-8423-1685343098922",
+        "6LdmwcgpAAAAAChdggC5Z37c_r09EmUk1stanjTj",
+        recaptcha_response,
+        "login"
+    )
+    
+    logger.debug(f"Assessment Result: {assessment_result}")
+
+    # 判断 reCAPTCHA 验证结果
+    if not verification_result.get('success'):
+        return JsonResponse({'status': 'error', 'message': 'reCAPTCHA 验证失败'}, status=400)
+
+    # reCAPTCHA 验证通过后处理用户登录
     try:
         user = CustomUser.objects.get(username=login_credential)
-    except CustomUser.DoesNotExist:
-        return Response(
-            {"status": "error", "message": "帳號不存在"},
-            status=status.HTTP_404_NOT_FOUND,
-        )
+        if user and user.check_password(password):
+            django_login(request, user)
+            user.last_login = timezone.now()
+            user.save(update_fields=["last_login"])
 
-    if user and check_password(password, user.password):
-        user.last_login = timezone.now()
-        user.save(update_fields=["last_login"])
-        django_login(request, user)
-
-        # 生成 token
-        refresh = RefreshToken.for_user(user)
-        return Response(
-            {
+            # 生成 token
+            refresh = RefreshToken.for_user(user)
+            return JsonResponse({
                 "status": "success",
                 "username": user.username,
-                "is_active":user.is_active,
+                "is_active": user.is_active,
                 "is_superuser": user.is_superuser,
                 "is_staff": user.is_staff,
-                "token": str(refresh.access_token),  # 发送访问令牌
-            }
-        )
-    else:
-        return Response(
-            {
-                "status": "error",
-                "message": "無法使用提供的token登入",
-            }
-        )
+                "token": str(refresh.access_token),
+            })
+        else:
+            return JsonResponse({"status": "error", "message": "密码错误"}, status=400)
+    except CustomUser.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "账号不存在"}, status=404)
 
 
 # 登出
@@ -802,65 +827,55 @@ def validate_recaptcha():
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('my_logger')
 
-def create_assessment(
-    project_id: str, recaptcha_key: str, token: str, recaptcha_action: str
-) -> Assessment:
-    """建立評估作業，分析 UI 動作的風險。
-    Args:
-        project_id: 您的 Google Cloud 專案 ID。
-        recaptcha_key: 與網站/應用程式相關聯的 reCAPTCHA 金鑰
-        token: 系統產生的權杖 (從用戶端取得)。
-        recaptcha_action: 權杖對應的動作名稱。
-    """
-
+def create_assessment(project_id: str, recaptcha_key: str, token: str, recaptcha_action: str):
+    logger.debug(f"Project ID: {project_id}")
+    logger.debug(f"Recaptcha Key: {recaptcha_key}")
+    logger.debug(f"Token: {token}")
+    logger.debug(f"Recaptcha Action: {recaptcha_action}")
     client = recaptchaenterprise_v1.RecaptchaEnterpriseServiceClient()
 
-    # 設定要追蹤的事件屬性。
+    # 设定要追踪的事件属性。
     event = recaptchaenterprise_v1.Event()
     event.site_key = recaptcha_key
-    event.token = token
+    event.token = token  # 使用从参数传递进来的 token
 
     assessment = recaptchaenterprise_v1.Assessment()
     assessment.event = event
 
     project_name = f"projects/{project_id}"
 
-    # 建立評估要求。
+    # 建立评估请求。
     request = recaptchaenterprise_v1.CreateAssessmentRequest()
     request.assessment = assessment
     request.parent = project_name
 
     response = client.create_assessment(request)
 
-    # 確認權杖是否有效。
+    # 确认 token 是否有效。
     if not response.token_properties.valid:
         print(
-            "The CreateAssessment call failed because the token was "
-            + "invalid for the following reasons: "
+            "The CreateAssessment call failed because the token was invalid for the following reasons: "
             + str(response.token_properties.invalid_reason)
         )
         return
 
-    # 確認是否已執行預期的動作。
+    # 确认是否已执行预期的动作。
     if response.token_properties.action != recaptcha_action:
         print(
-            "The action attribute in your reCAPTCHA tag does"
-            + "not match the action you are expecting to score"
+            "The action attribute in your reCAPTCHA tag does not match the action you are expecting to score"
         )
         return
     else:
-        # 取得風險分數和原因。
-        # 如要進一步瞭解如何解讀評估結果，請參閱：
-        # https://cloud.google.com/recaptcha-enterprise/docs/interpret-assessment
+        # 获取风险分数和原因。
         for reason in response.risk_analysis.reasons:
             print(reason)
         print(
-            "The reCAPTCHA score for this token is: "
-            + str(response.risk_analysis.score)
+            "The reCAPTCHA score for this token is: " + str(response.risk_analysis.score)
         )
-        # 取得評估作業名稱 (ID)，然後使用該名稱為評估作業加註。
+        # 获取评估作业名称 (ID)，然后使用该名称为评估作业加注。
         assessment_name = client.parse_assessment_path(response.name).get("assessment")
         print(f"Assessment name: {assessment_name}")
+    
     return response

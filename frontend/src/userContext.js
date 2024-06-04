@@ -10,6 +10,7 @@ export const UserProvider = ({ children }) => {
     localStorage.setItem('username', username);
     localStorage.setItem('is_superuser', is_superuser);
     localStorage.setItem('is_staff', is_staff);
+    localStorage.setItem('is_login', true);
     // 可以同時儲存 token
   };
 
@@ -19,6 +20,7 @@ export const UserProvider = ({ children }) => {
     localStorage.removeItem('is_superuser');
     localStorage.removeItem('is_staff');
     localStorage.removeItem('token');
+    localStorage.removeItem('is_login');
   };
 
   return (
