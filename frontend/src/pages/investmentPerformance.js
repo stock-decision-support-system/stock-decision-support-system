@@ -189,6 +189,22 @@ const InvestmentPerformance = () => {
         </Button>
         </div>
       </Card>
+      <Card title="投資組合項目" className="stats-card" style={{ marginTop: 20 }}>
+        <Descriptions bordered column={1}>
+          <Descriptions.Item
+            label={<span>台積電 2330</span>}
+            contentStyle={{ textAlign: 'right' }}
+          >
+            總價值: 100,000.00 <span style={{ color: 'red' }}>▲ 2000.00 (2.37%)</span>
+          </Descriptions.Item>
+          <Descriptions.Item
+            label={<span>永豐金 2890</span>}
+            contentStyle={{ textAlign: 'right' }}
+          >
+            總價值: 5,000.00 <span style={{ color: 'green' }}>▼ 4.00 (0.21%)</span>
+          </Descriptions.Item>
+        </Descriptions>
+      </Card>
       <div className="button-container" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3%' }}>
   <Button type="link" className="back-button" onClick={() => navigate(-1)}>
     返回上頁
