@@ -4,7 +4,7 @@ import { Select, Button, Row, Col, Card, Descriptions, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import '../assets/css/investmentPerformance.css';
-import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import { ArrowUpOutlined, ArrowDownOutlined, RightOutlined } from '@ant-design/icons';
 
 
 const { Option } = Select;
@@ -183,13 +183,18 @@ const InvestmentPerformance = () => {
             {stats[selectedCategory].volatility}%
           </Descriptions.Item>
         </Descriptions>
+        <div className='' style={{display: 'flex', justifyContent: 'end'}}>
+        <Button type="primary" className="details-button" style={{marginTop:'2.5%'}}>
+          查看詳細數據
+        </Button>
+        </div>
       </Card>
       <div className="button-container" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3%' }}>
   <Button type="link" className="back-button" onClick={() => navigate(-1)}>
     返回上頁
   </Button>
-  <Button type="primary" className="details-button">
-    查看詳細數據
+  <Button type="link" className="back-button">
+      新增至自選投資組合 <RightOutlined className='icon-right' />
   </Button>
 </div>
     </div>

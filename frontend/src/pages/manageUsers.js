@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ConfigProvider, Table, Input, Button, Select, Modal, Form, Switch } from 'antd';
+import { ConfigProvider, Table, Input, Button, Select, Modal, Form, Switch,Row,Col } from 'antd';
 import axios from 'axios';
 import { config } from "../config";
 import '../assets/css/manageUsers.css'; // 引入CSS文件
@@ -184,12 +184,18 @@ const ManageUsers = () => {
           />
         </div>
         <Modal
-          title="編輯用戶"
-          visible={isModalVisible}
-          onCancel={() => setIsModalVisible(false)}
-          onOk={handleUpdate}
-        >
-          <Form form={form} layout="vertical">
+        title="編輯用戶"
+        visible={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        onOk={handleUpdate}
+        centered
+        bodyStyle={{ padding: '20px' }}
+        okText="確認"
+        cancelText="取消"
+    >
+      <Form form={form} layout="vertical">
+        <Row gutter={16}>
+          <Col span={8}>
             <Form.Item
               name="is_superuser"
               label="管理者"
@@ -197,6 +203,8 @@ const ManageUsers = () => {
             >
               <Switch />
             </Form.Item>
+          </Col>
+          <Col span={8}>
             <Form.Item
               name="is_staff"
               label="員工"
@@ -204,6 +212,8 @@ const ManageUsers = () => {
             >
               <Switch />
             </Form.Item>
+          </Col>
+          <Col span={8}>
             <Form.Item
               name="is_active"
               label="是否啟用"
@@ -211,8 +221,10 @@ const ManageUsers = () => {
             >
               <Switch />
             </Form.Item>
-          </Form>
-        </Modal>
+          </Col>
+        </Row>
+      </Form>
+    </Modal>
       </div>
     </ConfigProvider>
   );
