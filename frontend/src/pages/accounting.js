@@ -158,13 +158,13 @@ const AccountingForm = () => {
                 <br /><br />
                 <label htmlFor="amount">金額：</label>
                 <input type="number" id="amount" value={amount} onChange={(e) => setAmount(e.target.value)} pattern="[0-9]*" title="請輸入數字" required /><br /><br />
-                <label htmlFor="accountingName">支付方式：</label>
+                <label htmlFor="accountingName">消費類別：</label>
                 <div className="payment-wrapper">
                   <select id="accountingName" value={accountingName} onChange={(e) => setAccountingName(e.target.value)} className="form-select">
-                    <option value="現金">現金</option>
-                    <option value="信用卡">信用卡</option>
-                    <option value="銀行">銀行</option>
-                    <option value="轉帳">轉帳</option>
+                    <option value="飲食">飲食</option>
+                    <option value="交通">交通</option>
+                    <option value="日常用品">日常用品</option>
+                    <option value="娛樂">娛樂</option>
                   </select>
                   <button type="button" onClick={handleAddPayment} className="btn btn-primary">新增支付方式</button>
                   <button type="button" className="btn btn-danger">刪除支付方式</button>
@@ -210,7 +210,7 @@ const AccountingForm = () => {
                   <tr>
                     <th scope="col">類型</th>
                     <th scope="col">日期</th>
-                    <th scope="col">支付方式</th>
+                    <th scope="col">消費類別</th>
                     <th scope="col">資產類型</th>
                     <th scope="col">金額</th>
                   </tr>
