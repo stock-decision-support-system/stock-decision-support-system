@@ -1,0 +1,12 @@
+.stock-table .ant-table-cell {
+    font-size: 1.2rem;
+  }
+  
+  .stock-table .ant-table-thead > tr > th {
+    font-size: 1.3rem;
+  }
+  
+  .stock-table .ant-table-tbody > tr > td {
+    font-size: 1.2rem;
+  }
+  

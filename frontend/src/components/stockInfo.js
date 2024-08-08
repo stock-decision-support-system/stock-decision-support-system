@@ -4,7 +4,7 @@ import fakeChart from '../assets/images/chart.png';
 
 const { Option } = Select;
 
-const StockInfo = () => {
+const StockInfo = ({ stockCode }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isAddPortfolioModalVisible, setIsAddPortfolioModalVisible] = useState(false);
   const [selectedOption, setSelectedOption] = useState('buyAndHold');
@@ -13,8 +13,8 @@ const StockInfo = () => {
   const [portfolioName, setPortfolioName] = useState('');
 
   const stockPrice = 841.00;
-  const buyAndHoldAmount = 100; // 假设的股数
-  const naiveAmount = 200; // 假设的股数
+  const buyAndHoldAmount = 100;
+  const naiveAmount = 200;
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -30,7 +30,6 @@ const StockInfo = () => {
 
   const handleOptionChange = e => {
     setSelectedOption(e.target.value);
-    // 选择 buyAndHold 或 naive 时更新总花费
     if (e.target.value === 'buyAndHold') {
       setTotalPrice(buyAndHoldAmount * stockPrice);
     } else if (e.target.value === 'naive') {
@@ -61,7 +60,7 @@ const StockInfo = () => {
   return (
     <div className="stock-info">
       <h2>
-        台積電 2330
+        台積電 {stockCode}
         <Button
           type="primary"
           onClick={showModal}
