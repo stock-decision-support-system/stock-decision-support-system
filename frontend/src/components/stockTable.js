@@ -1,5 +1,7 @@
 import React from 'react';
 import { Table, Checkbox } from 'antd';
+import { Link } from 'react-router-dom';
+import '../assets/css/stockTable.css';
 
 const StockTable = ({ data, onCheckboxChange }) => {
   const columns = [
@@ -18,8 +20,8 @@ const StockTable = ({ data, onCheckboxChange }) => {
       key: 'name',
       render: (text, record) => (
         <>
-          <div>{record.name}</div>
-          <div style={{ color: '#888' }}>{record.code}</div>
+          <div><Link to={`/stock/${record.code}`}>{record.name}</Link></div>
+          <div style={{ color: '#888' }}><Link to={`/stock/${record.code}`}>{record.code}</Link></div>
         </>
       ),
     },
@@ -83,7 +85,7 @@ const StockTable = ({ data, onCheckboxChange }) => {
     },
   ];
 
-  return <Table columns={columns} dataSource={data} pagination={false} />;
+  return <Table className="stock-table" columns={columns} dataSource={data} pagination={false} />;
 };
 
 export default StockTable;
