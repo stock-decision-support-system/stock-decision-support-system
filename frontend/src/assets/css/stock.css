@@ -108,7 +108,6 @@ main {
     margin-right: 10px;
 }
 
-
 .stock-info {
     text-align: left;
     width: 500px;
@@ -124,13 +123,11 @@ main {
 }
 
 .stock-price .price {
-    color: #09CF41;
     font-size: 48px;
 }
 
 .stock-price .change {
     margin-left: 10px;
-    color: #09CF41;
 }
 
 .stock-details {
