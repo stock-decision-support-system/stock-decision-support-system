@@ -17,7 +17,7 @@ const Stock = () => {
                     </div>}
                 className='h-100'
             >
-                <StockInfo stockCode={code} />
+                <StockInfo/>
             </Card>
         </div>
     );
