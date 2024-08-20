@@ -176,3 +176,6 @@ EMAIL_HOST_USER = 'allen9111054@gmail.com'
 
 # 發送郵件的郵箱密碼
 EMAIL_HOST_PASSWORD = 'qesr hpzy anid oytr'
+
+#recaptcha密鑰
+RECAPTCHA_SECRET_KEY = '6LdmwcgpAAAAAFkprWdUSzzAZ8dE-1obmzqLK3Nf'

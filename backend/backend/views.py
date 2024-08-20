@@ -39,9 +39,20 @@ from google.cloud import recaptchaenterprise_v1
 from google.cloud.recaptchaenterprise_v1 import Assessment
 import os
 
-os.environ[
-    "GOOGLE_APPLICATION_CREDENTIALS"] = "C:\\Users\\11046029\\Desktop\\專題\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
+#朱崇銘
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:\\github\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
 from django.http import JsonResponse
+
+#彭軍翔
+#os.environ[
+#    "GOOGLE_APPLICATION_CREDENTIALS"] = "C:\\Users\\11046029\\Desktop\\專題\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
+
+
+import random
+import string
+from django.template.loader import render_to_string
+from datetime import timedelta
+
 
 with open("config.yaml", "r") as file:
     config = yaml.safe_load(file)
@@ -125,7 +136,7 @@ def verify_recaptcha(token):
     logger.debug(f"reCAPTCHA verification result: {result}")
     return result
 
-
+#登入
 @api_view(["POST"])
 def login_view(request):
     login_credential = request.data.get("username")
@@ -145,11 +156,7 @@ def login_view(request):
 
     # 判断 reCAPTCHA 验证结果
     if not verification_result.get('success'):
-        return JsonResponse({
-            'status': 'error',
-            'message': 'reCAPTCHA 验证失败'
-        },
-                            status=400)
+        return JsonResponse({'status': 'error', 'message': 'reCAPTCHA 驗證失敗'}, status=400)
 
     # reCAPTCHA 验证通过后处理用户登录
     try:
@@ -168,19 +175,13 @@ def login_view(request):
                 "is_superuser": user.is_superuser,
                 "is_staff": user.is_staff,
                 "token": str(refresh.access_token),
+                "email": user.email
+
             })
         else:
-            return JsonResponse({
-                "status": "error",
-                "message": "密码错误"
-            },
-                                status=400)
+            return JsonResponse({"status": "error", "message": "密碼錯誤"}, status=400)
     except CustomUser.DoesNotExist:
-        return JsonResponse({
-            "status": "error",
-            "message": "账号不存在"
-        },
-                            status=404)
+        return JsonResponse({"status": "error", "message": "帳號不存在"}, status=404)
 
 
 # 登出
@@ -226,6 +227,57 @@ def change_password(request):
 
 token_generator = PasswordResetTokenGenerator()
 
+#兩段式驗證
+@api_view(["POST"])
+def send_verification_code(request):
+    print(f"Request data: {request.data}")  # 调试时打印接收到的数据
+    email = request.data.get("email")
+    try:
+        user = CustomUser.objects.get(email=email)
+        verification_code = ''.join(random.choices(string.digits, k=6))  # 生成六位數字的驗證碼
+
+        # 設置驗證碼及其過期時間
+        user.verification_code = verification_code
+        user.verification_code_expiry = timezone.now() + timedelta(minutes=10)  # 設置10分鐘的有效期
+        user.save()
+
+        # 構建郵件內容
+        html_message = render_to_string(
+            "verification_code_email.html",
+            {
+                "verification_code": verification_code,
+            },
+        )
+        subject = "Your Verification Code"
+        from_email = "your_email@example.com"
+        to_email = [email]
+
+        # 發送郵件
+        email_message = EmailMultiAlternatives(subject, "", from_email, to_email)
+        email_message.attach_alternative(html_message, "text/html")
+        email_message.send(fail_silently=False)
+
+        return Response({"status": "success", "message": "驗證碼已發送"}, status=status.HTTP_200_OK)
+    except CustomUser.DoesNotExist:
+        return Response({"status": "error", "message": "該E-mail對應的帳號不存在"}, status=status.HTTP_400_BAD_REQUEST)
+
+#驗證驗證碼
+@api_view(["POST"])
+def verify_code(request):
+    print(f"Request data: {request.data}")  # 打印请求数据以进行调试
+    email = request.data.get("email")
+    input_code = request.data.get("code")
+    try:
+        user = CustomUser.objects.get(email=email)
+        if user.verification_code == input_code:
+            # 验证码有效，继续后续逻辑
+            return Response({"status": "success", "message": "驗證成功"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"status": "error", "message": "驗證碼不正確"}, status=status.HTTP_400_BAD_REQUEST)
+    except CustomUser.DoesNotExist:
+        return Response({"status": "error", "message": "該E-mail對應的帳號不存在"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 # 忘記密碼 - 會發送修改密碼連結到輸入的email
 @api_view(["POST"])
@@ -239,7 +291,9 @@ def password_reset_request(request):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             # 創建密碼重置郵件的鏈接
             reset_link = request.build_absolute_uri(
-                f"http://localhost:3000/reset-password/{uid}/{token}/")
+                f"http://localhost:3000/reset-password/{uid}/{token}/"
+                # f"http://140.131.114.159:3000/reset-password/{uid}/{token}/"
+            )
             # 郵件內容
             html_message = render_to_string(
                 "password_reset_email.html",
@@ -252,8 +306,7 @@ def password_reset_request(request):
             to_email = [email]
 
             # 使用 EmailMultiAlternatives 發送 HTML 郵件
-            email_message = EmailMultiAlternatives(subject, "", from_email,
-                                                   to_email)
+            email_message = EmailMultiAlternatives(subject, "", from_email,to_email)
             email_message.attach_alternative(html_message, "text/html")
             email_message.send(fail_silently=False)
 

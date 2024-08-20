@@ -24,6 +24,7 @@ import AccountingForm from './pages/accounting';
 import Stock from './pages/stock';
 import GeneralReport from './pages/generalreport';
 import StockList from './pages/stockList';
+import TwoFactorAuthPage from './pages/TwoFactorAuthPage';
 
 const root = createRoot(document.getElementById('root'));
 
@@ -36,6 +37,7 @@ root.render(
           <Route path="/" element={<App />} />
           <Route path="/bankForm" element={<AddBankForm />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/two-factor-auth" element={<TwoFactorAuthPage />} />
           <Route path="/signUp" element={<SignUp />} />
           <Route path="/forgotPassword" element={<ForgotPassword />} />
           <Route path="/changePassword" element={<ChangePassword />} />
@@ -45,6 +47,7 @@ root.render(
           <Route path='/investmentList' element={<InvestmentList />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/accounting" element={<AccountingForm />} />
+          <Route path="/two-factor-auth" element={<TwoFactorAuthPage />} />
           <Route path="/stock/:code" element={<Stock />} />
           <Route path="/generalreport" element={<GeneralReport />} />
           <Route path="/stockList" element={<StockList />} />

@@ -8,8 +8,6 @@ export const UserProvider = ({ children }) => {
   const login = (username, is_superuser, is_staff, is_active) => {
     setUser({ username, is_superuser, is_staff, is_active });
     localStorage.setItem('username', username);
-    localStorage.setItem('is_superuser', is_superuser);
-    localStorage.setItem('is_staff', is_staff);
     localStorage.setItem('is_login', true);
     // 可以同時儲存 token
   };

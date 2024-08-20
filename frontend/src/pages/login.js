@@ -16,7 +16,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const { setUser, user } = useUser(); // 獲取 setUser 函數
   const { login } = useUser();  // 使用 Context 中的 login 函數
-
+  
   useEffect(() => {
     const is_login = localStorage.getItem('is_login');
     if (is_login) {
@@ -25,45 +25,44 @@ const Login = () => {
     }
   }, [navigate]);
 
-  const handleSubmit = async (values) => {
-    // 確保所有input都已填寫
-    if (!values.username || !values.password) {
+  const handleSubmit = async () => {
+    if (!username || !password) {
       alert('請填寫所有欄位');
       return;
     }
-
+  
     if (window.grecaptcha) {
       window.grecaptcha.ready(async () => {
         const token = await window.grecaptcha.execute('6LdmwcgpAAAAAChdggC5Z37c_r09EmUk1stanjTj', { action: 'login' });
         document.getElementById('recaptchaToken').value = token;
-
-        // 準備要發送的數據，包括 reCAPTCHA token
+  
         const loginData = {
-          username: values.username,
-          password: values.password,
-          'g-recaptcha-response': token  // 將 token 添加到發送的數據中
+          username: username,
+          password: password,
+          'g-recaptcha-response': token
         };
-        
-
+  
         try {
           const response = await axios.post(`${BASE_URL}/login/`, loginData, {
             headers: { 'Content-Type': 'application/json' }
           });
-
+  
           if (response.data.status === 'success') {
-            const { token, is_superuser, is_staff, is_active } = response.data;
-            if (!is_active){
-              alert('帳號已被停用')
+            const { is_active, username, email, token, is_superuser, is_staff } = response.data;
+            if (!is_active) {
+              alert('帳號已被停用');
+            } else {
+              // 將 email 和 token 暫存
+              localStorage.setItem('pending_username',username);
+              localStorage.setItem('pending_token', token);
+              localStorage.setItem('is_superuser', is_superuser);
+              localStorage.setItem('is_staff', is_staff);
+  
+              // 發送驗證碼
+              await sendVerificationCode(email);
+              // 導向二次驗證頁面
+              navigate('/two-factor-auth', { state: { email } });
             }
-            else{
-            login(values.username);
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('is_superuser', is_superuser);
-            localStorage.setItem('is_staff', is_staff);
-            setUser({ username: values.username, is_superuser, is_staff });
-            alert('登入成功');
-            navigate('/#');
-          }
           } else {
             alert('帳號或密碼錯誤，請再試一次');
           }
@@ -73,7 +72,28 @@ const Login = () => {
         }
       });
     }
-};
+  };
+  
+  
+
+  const sendVerificationCode = async (email) => {
+    const tast = "tast"
+    try {
+      const response = await axios.post(`${BASE_URL}/send_verification_code/`, 
+        { email, tast },
+        { headers: { 'Content-Type': 'application/json' } }  // 确保内容类型为 JSON
+      );
+      if (response.data.status === 'success') {
+        alert('驗證碼已發送到您的電子郵件');
+      } else {
+        alert('無法發送驗證碼，請稍後再試');
+      }
+    } catch (error) {
+      console.error('發送驗證碼失敗:', error);
+      alert('發送驗證碼請求出錯');
+    }
+  };
+  
 
   return (
     <div className="kv w-100">
