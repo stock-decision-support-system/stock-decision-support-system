@@ -2,7 +2,7 @@
   background: linear-gradient(to right, #fcefe9, #f5f7fa);
   border-radius: 15px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  margin-top: 2%;
+  margin-top: 5.5%;
 }
 .title {
   font-size: 24px;
@@ -53,8 +53,23 @@ button-container {
 }
 
 .details-button:hover {
-  background-color: #c6557e;
+  background-color: #c6557e !important;
   border-color: #c6557e;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+}
+
+.icon-right {
+  margin-left: 1px; /* 調整文字和圖標之間的間距 */
+  font-size: 18px;  /* 調整圖標大小，使其與文字匹配 */
+  line-height: 0;   /* 確保圖標與文字垂直對齊 */
+}
+
+.back-button:hover {
+  color: #c6557e !important;
 }
 
 .gain {

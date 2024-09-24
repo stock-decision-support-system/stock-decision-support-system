@@ -40,6 +40,8 @@ class CustomUser(AbstractBaseUser):
     last_login = models.DateTimeField(null=True, blank=True)
     total_assets = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     net_assets = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    verification_code = models.CharField(max_length=6, blank=True, null=True)
+    verification_code_expiry = models.DateTimeField(blank=True, null=True)
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'

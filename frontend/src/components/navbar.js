@@ -106,6 +106,16 @@ const Navbar = () => {
               <a
                 className="nav-link me-5 justify-content-center d-flex align-items-center"
                 aria-current="page"
+                onClick={() => handleNavigation('/stockList')}
+                style={{ height: '37px', cursor: 'pointer' }}
+              >
+                股市
+              </a>
+            </li>
+            <li className="nav-item">
+              <a
+                className="nav-link me-5 justify-content-center d-flex align-items-center"
+                aria-current="page"
                 onClick={() => handleNavigation('/accounting')}
                 style={{ height: '37px', cursor: 'pointer' }}
               >

@@ -33,6 +33,11 @@ urlpatterns = [
     # 登入 URL
     path('login/', views.login_view, name='login'),
 
+    # 二段式驗證
+    path('send_verification_code/', views.send_verification_code, name='send_verification_code'),
+    path('verify_code/', views.verify_code, name='verify_code'),
+
+
     # 登出 URL
     path('logout/', views.logout_view, name='logout'),
 
