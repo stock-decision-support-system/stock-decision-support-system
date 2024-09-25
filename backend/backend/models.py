@@ -198,24 +198,39 @@ class InvestmentPortfolio(models.Model):
     description = models.TextField()
     available = models.BooleanField(default=True)
 
+    # 计算投资组合的当前总市值（使用买入价格）
+    def calculate_portfolio_value(self):
+        total_value = sum(
+            investment.shares * investment.buy_price for investment in self.investments.filter(available=True)
+        )
+        return total_value
+
+    # 计算投资组合的表现
+    def calculate_portfolio_performance(self):
+        total_invested = sum(
+            investment.shares * investment.buy_price for investment in self.investments.filter(available=True)
+        )
+        current_value = self.calculate_portfolio_value()
+        # 如果总投资为 0，避免除以 0 的错误
+        return (current_value - total_invested) / total_invested * 100 if total_invested else 0
 
     class Meta:
         db_table = 'investment_portfolio'
 
-#投資
+# 投資
 class Investment(models.Model):
-    portfolio = models.ForeignKey(InvestmentPortfolio,
-                                  on_delete=models.CASCADE,
-                                  related_name='investments')
-    type = models.CharField(max_length=50)  # 'Stock', 'Bond', 'ETF'
-    symbol = models.CharField(max_length=10)
-    shares = models.DecimalField(max_digits=10, decimal_places=2)
-    buy_price = models.DecimalField(max_digits=10, decimal_places=2)
-    available = models.BooleanField(default=True)
+    portfolio = models.ForeignKey(InvestmentPortfolio, related_name='investments', on_delete=models.CASCADE)
+    symbol = models.CharField(max_length=10)  # 股票代码或资产标志
+    shares = models.IntegerField()  # 持有股票数量
+    buy_price = models.DecimalField(max_digits=10, decimal_places=2)  # 买入价格
+    available = models.BooleanField(default=True)  # 是否仍然有效
 
+    def __str__(self):
+        return f"{self.symbol} - {self.shares} shares"
 
     class Meta:
-        db_table = 'investment'
+        db_table = 'investment'  # 確保這裡的表名正確
+
 
 
 #資產

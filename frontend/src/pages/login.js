@@ -20,7 +20,7 @@ const Login = () => {
   useEffect(() => {
     const is_login = localStorage.getItem('is_login');
     if (is_login) {
-      alert('帳號已登入，請登出後再試一次')
+      alert('帳號已登入，請登出後再試一次');
       navigate('/#', { replace: true });
     }
   }, [navigate]);
@@ -33,13 +33,13 @@ const Login = () => {
   
     if (window.grecaptcha) {
       window.grecaptcha.ready(async () => {
-        const token = await window.grecaptcha.execute('6LdmwcgpAAAAAChdggC5Z37c_r09EmUk1stanjTj', { action: 'login' });
-        document.getElementById('recaptchaToken').value = token;
+        const recaptchaToken = await window.grecaptcha.execute('6LdmwcgpAAAAAChdggC5Z37c_r09EmUk1stanjTj', { action: 'login' });
+        document.getElementById('recaptchaToken').value = recaptchaToken;
   
         const loginData = {
           username: username,
           password: password,
-          'g-recaptcha-response': token
+          'g-recaptcha-response': recaptchaToken
         };
   
         try {
@@ -53,10 +53,40 @@ const Login = () => {
               alert('帳號已被停用');
             } else {
               // 將 email 和 token 暫存
-              localStorage.setItem('pending_username',username);
-              localStorage.setItem('pending_token', token);
+              localStorage.setItem('pending_username', username);
+              localStorage.setItem('pending_token', token);  // 更新這裡，使用 token 而不是 pending_token
               localStorage.setItem('is_superuser', is_superuser);
               localStorage.setItem('is_staff', is_staff);
+  
+              // // 登錄成功後，創建新的投資組合
+              // const newPortfolio = {
+              //   name: "新投資組合", // 可以根據需求動態設置
+              //   description: "這是一個新的投資組合", // 可以動態設置
+              //   investments: [] // 如果有投資項目，可以在這裡添加
+            //   // };
+  
+            // if (token) {
+            //   axios.post(`${BASE_URL}/api/portfolios/create/`, {
+            //     headers: {
+            //       'Authorization': `Bearer ${token}`,  // 設置 Authorization 頭部
+            //       'Content-Type': 'application/json'
+            //     }
+            //   })
+            //   .then(response => {
+            //     console.log('投資組合創建成功:', response.data);
+            //   })
+            //   .catch(error => {
+            //     if (error.response) {
+            //       console.error('新增投資組合失敗:', error.response.data);
+            //       alert('新增投資組合失敗: ' + (error.response.data.message || error.response.data.detail));
+            //     } else {
+            //       console.error('新增投資組合請求出錯:', error.message);
+            //       alert('新增投資組合請求出錯: ' + error.message);
+            //     }
+            //   });
+            // } else {
+            //   console.error('Token not found');
+            // }
   
               // 發送驗證碼
               await sendVerificationCode(email);
@@ -67,21 +97,30 @@ const Login = () => {
             alert('帳號或密碼錯誤，請再試一次');
           }
         } catch (error) {
-          console.error('登入失敗:', error);
-          alert('登入請求出錯');
+          if (error.response) {
+            console.error('登入失敗:', error.response.data);
+            alert('登入失敗: ' + (error.response.data.message || error.response.data.detail));
+          } else {
+            console.error('登入請求出錯:', error.message);
+            alert('登入請求出錯: ' + error.message);
+          }
         }
       });
     }
   };
   
-  
 
+  const token = localStorage.getItem('token');
+if (token) {
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+}
+  
   const sendVerificationCode = async (email) => {
-    const tast = "tast"
+    const tast = "tast";
     try {
       const response = await axios.post(`${BASE_URL}/send_verification_code/`, 
         { email, tast },
-        { headers: { 'Content-Type': 'application/json' } }  // 确保内容类型为 JSON
+        { headers: { 'Content-Type': 'application/json' } }  // 確保内容類型為 JSON
       );
       if (response.data.status === 'success') {
         alert('驗證碼已發送到您的電子郵件');
@@ -93,6 +132,7 @@ const Login = () => {
       alert('發送驗證碼請求出錯');
     }
   };
+
   
 
   return (

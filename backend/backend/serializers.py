@@ -38,18 +38,28 @@ class APICredentialsSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
+class InvestmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Investment
+        fields = ['symbol', 'shares', 'buy_price', 'available']  # 確保包含必要的欄位
+
 class InvestmentPortfolioSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
+    investments = InvestmentSerializer(many=True)  # 加上投資的序列化器
 
     class Meta:
         model = InvestmentPortfolio
-        fields = '__all__'
+        fields = ['id', 'name', 'description', 'available', 'user', 'investments']
 
+    def create(self, validated_data):
+        investments_data = validated_data.pop('investments', [])  # 獲取投資數據
+        portfolio = InvestmentPortfolio.objects.create(**validated_data)  # 創建投資組合
 
-class InvestmentSerializer(serializers.ModelSerializer):
+        # 保存每一個投資項目
+        for investment_data in investments_data:
+            Investment.objects.create(portfolio=portfolio, **investment_data)
 
-    class Meta:
-        model = Investment
-        fields = '__all__'
+        return portfolio
 
 
 class AssetSerializer(serializers.ModelSerializer):

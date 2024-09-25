@@ -53,6 +53,7 @@ const Navbar = () => {
     localStorage.removeItem('username');
     localStorage.removeItem('is_superuser');
     localStorage.removeItem('is_staff');
+    localStorage.removeItem('is_login');
     setUsername(''); // 重置用戶名狀態為 ''
     navigate('/login'); // 重定向到登錄頁面
   };

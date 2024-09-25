@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',  # 用於 JWT 認證
     'corsheaders',
 ]
 
@@ -68,6 +69,7 @@ SIMPLE_JWT = {
     "USER_ID_FIELD": "username",
     "USER_ID_CLAIM": "username",
 }
+
 
 CORS_ALLOW_ALL_ORIGINS = True
 
