@@ -19,6 +19,8 @@ from django.urls import path
 from backend import views
 from django.conf import settings
 from django.conf.urls.static import static
+from backend.stockViews import get_all_stocks
+from backend import stockViews
 
 urlpatterns = [
     #django後台
@@ -71,7 +73,17 @@ urlpatterns = [
     path('bank-profile/get/<int:id>/', views.get_bank_profile, name='get-bank-profile'),
     
     #股票查詢
-    path('stock/get/<str:id>/', views.get_stock_detail, name='get-stock-detail'),
+    path('stock/get/<str:id>/', stockViews.get_stock_detail, name='get-stock-detail'),
+    path('api/stocks/', get_all_stocks, name='get_all_stocks'),
+
+    #投資組合
+    path('api/portfolios/', stockViews.get_portfolios, name='get_portfolios'),
+    path('api/portfolios/create/', stockViews.create_portfolio, name='create_portfolio'),
+    path('api/portfolios/<int:id>/investments/', stockViews.add_investment, name='add_investment'),
+    path('api/portfolios/<int:portfolio_id>/delete/', stockViews.delete_portfolio, name='delete_portfolio'),
+    path('api/stock_price/<str:symbol>/', stockViews.get_stock_price, name='get_stock_price'),
+
+
 
     #資產負債查詢
     path('users/<username>/financial-summary/', views.financial_summary, name='financial-summary'),

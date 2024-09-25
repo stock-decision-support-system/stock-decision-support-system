@@ -12,14 +12,21 @@ const TwoFactorAuthPage = () => {
   const handleVerificationSuccess = async () => {
     const username = localStorage.getItem('pending_username');
     const token = localStorage.getItem('pending_token');
-  
-    // 使用 login 函数设置用户状态
-    login(username);
-    localStorage.setItem('token', token);
-    localStorage.removeItem('pending_username');
-    localStorage.removeItem('pending_token');
-  
-    navigate('/'); // 跳转到登录后的首页
+    
+    // 確認 pending_token 存在並非 null
+    if (token) {
+      // 使用 login 函數設置用戶狀態
+      login(username);
+      localStorage.setItem('token', token);  // 將 token 設置到 localStorage
+      localStorage.removeItem('pending_username');
+      localStorage.removeItem('pending_token');
+      
+      // 驗證成功，導航到首頁
+      navigate('/');
+    } else {
+      console.error('無法獲取驗證後的 token');
+      alert('驗證失敗，請重新登入');
+    }
   };
   
 

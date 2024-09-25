@@ -18,7 +18,7 @@ const StockList = () => {
 
     const downloadFile = async () => {
         try {
-            fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL')
+            axios.get('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL')
                 .then((response) => JSON.parse(response.json()))
                 .then((json) => console.log(json));
         } catch (error) {

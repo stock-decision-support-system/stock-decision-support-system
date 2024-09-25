@@ -16,6 +16,7 @@ const Navbar = () => {
   const [isSuperuser, setIsSuperuser] = useState(localStorage.getItem('is_superuser') === 'true');
   const [isStaff, setIsStaff] = useState(localStorage.getItem('is_staff') === 'true');
   const navigate = useNavigate();
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
     const storedUsername = localStorage.getItem('username');
@@ -30,7 +31,6 @@ const Navbar = () => {
   }, [user]);
 
   const handleLogout = async () => {
-    const token = localStorage.getItem('token'); // 從 localStorage 獲取 token
     if (!token) {
       console.error('登出失敗：無法獲取 token');
       return; // 如果沒有 token，直接返回
@@ -53,6 +53,7 @@ const Navbar = () => {
     localStorage.removeItem('username');
     localStorage.removeItem('is_superuser');
     localStorage.removeItem('is_staff');
+    localStorage.removeItem('is_login');
     setUsername(''); // 重置用戶名狀態為 ''
     navigate('/login'); // 重定向到登錄頁面
   };
@@ -146,7 +147,7 @@ const Navbar = () => {
               }}
               placement="bottom"
             >
-              {username ? (
+              {token ? (
                 // 如果用戶已登入，顯示用戶名稱
                 <li className="nav-item">
                   <span className="nav-link ms-4 justify-content-center d-flex align-items-center" style={{ height: '37px' }}>
