@@ -18,9 +18,9 @@ const Login = () => {
   const { login } = useUser();  // 使用 Context 中的 login 函數
   
   useEffect(() => {
-    const is_login = localStorage.getItem('is_login');
-    if (is_login) {
-      alert('帳號已登入，請登出後再試一次');
+    const token = localStorage.getItem('token');
+    if (token) {
+      alert('帳號已登入，請登出後再試一次')
       navigate('/#', { replace: true });
     }
   }, [navigate]);

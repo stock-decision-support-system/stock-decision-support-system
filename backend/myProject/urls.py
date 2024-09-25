@@ -73,7 +73,7 @@ urlpatterns = [
     path('bank-profile/get/<int:id>/', views.get_bank_profile, name='get-bank-profile'),
     
     #股票查詢
-    path('stock/get/<str:id>/', views.get_stock_detail, name='get-stock-detail'),
+    path('stock/get/<str:id>/', stockViews.get_stock_detail, name='get-stock-detail'),
     path('api/stocks/', get_all_stocks, name='get_all_stocks'),
 
     #投資組合

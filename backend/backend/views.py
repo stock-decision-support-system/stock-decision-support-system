@@ -1,4 +1,5 @@
-import datetime
+import time
+from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.contrib.auth.hashers import check_password, make_password
@@ -979,37 +980,6 @@ def delete_bank_profile(request, id):
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )
-
-
-# 股票資料 單獨查詢
-@api_view(["GET"])
-def get_stock_detail(request, id):
-    if request.method == "GET":
-        try:
-            api = sj.Shioaji(simulation=True)  # 模擬模式
-            today = datetime.now().strftime("%Y-%m-%d")
-            api.login(
-                api_key=config["shioaji"]["api_key"],
-                secret_key=config["shioaji"]["secret_key"],
-            )
-            ticks = api.ticks(contract=api.Contracts.Stocks[id], date=today)
-            df = pd.DataFrame({**ticks})
-            df.ts = pd.to_datetime(df.ts)
-        except:
-            return Response(
-                {
-                    "status": "error",
-                    "message": "查無此股票代碼"
-                },
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-    return Response({
-        "status": "success",
-        "data": df.T
-    },
-                    status=status.HTTP_200_OK)
-
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG,

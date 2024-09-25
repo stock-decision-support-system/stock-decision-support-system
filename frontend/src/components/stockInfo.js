@@ -1,34 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Modal, Input, Select, Radio, Card, Col, Row, Statistic } from 'antd';
 import fakeChart from '../assets/images/chart.png';
 import { ArrowDownOutlined, ArrowUpOutlined } from '@ant-design/icons';
+import { StockRequest } from '../api/request/stockRequest.js';
 
 const { Option } = Select;
 
-const StockInfo = () => {
+const StockInfo = ({ id }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isAddPortfolioModalVisible, setIsAddPortfolioModalVisible] = useState(false);
   const [selectedOption, setSelectedOption] = useState('buyAndHold');
   const [customAmount, setCustomAmount] = useState('');
   const [totalPrice, setTotalPrice] = useState(0);
   const [portfolioName, setPortfolioName] = useState('');
-  const [formData, setFormData] = useState({
-    code: "2330",
-    exchange: "Taiwan Stock Exchange",
-    ts: new Date(2024, 8, 14).getTime(),
-    open_price: 17.85,
-    high_price: 17.90,
-    low_price: 17.75,
-    close_price: 17.80,
-    change_price: -8.00,
-    change_rate: -0.91,
-    volume: 6748,
-    total_volume: 34094,
-    pe_ratio: 26.24,
-    pe_ratio_industry_avg: 81.80,
-  });
-
-  const { code, open_price, high_price, low_price, close_price, volume, total_volume, pe_ratio, pe_ratio_industry_avg } = formData;
+  const [formData, setFormData] = useState({});
+  const [formattedDate, setFormattedDate] = useState('');
 
   const priceColor = formData.change_price < 0 ? '#09CF41' : '#dc3545';
   const changeIcon = formData.change_price < 0 ? <ArrowDownOutlined /> : <ArrowUpOutlined />;
@@ -36,6 +22,29 @@ const StockInfo = () => {
   const stockPrice = 841.00;
   const buyAndHoldAmount = 100;
   const naiveAmount = 200;
+
+  useEffect(() => {
+    const fetchStockData = async () => {
+      StockRequest.getStock(id)
+        .then(response => {
+          setFormData(response.data);
+          const millisecondsTimestamp = response.data.ts / 1e6;
+          const date = new Date(millisecondsTimestamp);
+          const getDay = date.getFullYear() + '-' +
+            String(date.getMonth() + 1).padStart(2, '0') + '-' +
+            String(date.getDate()).padStart(2, '0') + ' ' +
+            String(date.getHours()).padStart(2, '0') + ':' +
+            String(date.getMinutes()).padStart(2, '0') + ':' +
+            String(date.getSeconds()).padStart(2, '0');
+          setFormattedDate(getDay);
+        })
+        .catch((error) => {
+          alert(error.message);
+        });
+    };
+
+    fetchStockData();
+  }, []);
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -80,9 +89,9 @@ const StockInfo = () => {
 
   return (
     <div className="stock-info">
-    <p>最後更新時間 {new Date(formData.ts).toLocaleDateString()}</p>
-    <h2>
-        台積電 {code}
+      <p>最後更新時間 {formattedDate}</p>
+      <h2>
+        {formData.name} {id}
         <Button
           type="primary"
           onClick={showModal}
@@ -96,7 +105,7 @@ const StockInfo = () => {
         <Col span={6}>
           <Statistic
             title="價格"
-            value={close_price}
+            value={formData.close}
             precision={2}
             valueStyle={{ color: priceColor }}
           />
@@ -114,37 +123,37 @@ const StockInfo = () => {
       </Row>
       <Row gutter={16}>
         <Col span={5}>
-          <Statistic title="開" value={open_price} precision={2} />
+          <Statistic title="開盤價" value={formData.open} precision={2} />
         </Col>
         <Col span={5}>
-          <Statistic title="收" value={close_price} precision={2} />
+          <Statistic title="收盤價" value={formData.close} precision={2} />
         </Col>
         <Col span={5}>
-          <Statistic title="高" value={high_price} precision={2} />
+          <Statistic title="最高價" value={formData.high} precision={2} />
         </Col>
         <Col span={5}>
-          <Statistic title="低" value={low_price} precision={2} />
+          <Statistic title="最低價" value={formData.low} precision={2} />
         </Col>
         <Col span={4}>
-          <Statistic title="量" value={volume} precision={2} />
+          <Statistic title="單量" value={formData.volume} precision={2} />
         </Col>
       </Row>
       <Row gutter={16}>
         <Col span={5}>
-          <Statistic title="成交量" value={total_volume.toLocaleString()} />
+          <Statistic title="成交量" value={formData.total_volume} />
+        </Col>
+        {/*<Col span={5}>
+          <Statistic title="本益比" value={formData.pe_ratio} precision={2} />
         </Col>
         <Col span={5}>
-          <Statistic title="本益比" value={pe_ratio} precision={2} />
-        </Col>
-        <Col span={5}>
-          <Statistic title="同業平均" value={pe_ratio_industry_avg} precision={2} />
-        </Col>
+          <Statistic title="同業平均" value={formData.pe_ratio_industry_avg} precision={2} />
+        </Col>*/}
       </Row>
       <div className="stock-chart">
         <img src={fakeChart} alt="Stock Chart" />
       </div>
 
-      <Modal title={<h3>台積電 {code}</h3>} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
+      <Modal title={<h3>台積電 {id}</h3>} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
         <div>
           <div>
             <Radio.Group onChange={handleOptionChange} value={selectedOption}>
