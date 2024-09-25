@@ -63,7 +63,9 @@ class UserList(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, format=None):
-        output = [{"users": output.username} for output in CustomUser.objects.all()]
+        output = [{
+            "users": output.username
+        } for output in CustomUser.objects.all()]
         return Response(output)
 
     def post(self, request, format=None):
@@ -87,7 +89,10 @@ def register(request):
         # 檢查是否已存在相同的郵箱
         if CustomUser.objects.filter(email=email).exists():
             return Response(
-                {"status": "error", "message": "信箱已被使用"},
+                {
+                    "status": "error",
+                    "message": "信箱已被使用"
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -103,12 +108,18 @@ def register(request):
             return Response({"status": "success"})
         else:
             return Response(
-                {"status": "error", "message": "帳號已被使用，無法註冊"},
+                {
+                    "status": "error",
+                    "message": "帳號已被使用，無法註冊"
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
     else:
         return Response(
-            {"status": "error", "message": "請求方法無效"},
+            {
+                "status": "error",
+                "message": "請求方法無效"
+            },
             status=status.HTTP_405_METHOD_NOT_ALLOWED,
         )
 
@@ -119,19 +130,19 @@ logger = logging.getLogger(__name__)
 def verify_recaptcha(token):
     """用于验证前端传递的 reCAPTCHA token 的函数"""
     secret_key = "6LdmwcgpAAAAAFkprWdUSzzAZ8dE-1obmzqLK3Nf"
-    data = {"secret": secret_key, "response": token}
-    r = requests.post("https://www.google.com/recaptcha/api/siteverify", data=data)
+    data = {'secret': secret_key, 'response': token}
+    r = requests.post('https://www.google.com/recaptcha/api/siteverify',
+                      data=data)
     result = r.json()
     logger.debug(f"reCAPTCHA verification result: {result}")
     return result
 
-
-# 登入
+#登入
 @api_view(["POST"])
 def login_view(request):
     login_credential = request.data.get("username")
     password = request.data.get("password")
-    recaptcha_response = request.data.get("g-recaptcha-response")
+    recaptcha_response = request.data.get('g-recaptcha-response')
 
     logger.debug(f"Recaptcha Response: {recaptcha_response}")
 
@@ -139,18 +150,14 @@ def login_view(request):
     verification_result = verify_recaptcha(recaptcha_response)
     assessment_result = create_assessment(
         "my-project-8423-1685343098922",
-        "6LdmwcgpAAAAAChdggC5Z37c_r09EmUk1stanjTj",
-        recaptcha_response,
-        "login",
-    )
+        "6LdmwcgpAAAAAChdggC5Z37c_r09EmUk1stanjTj", recaptcha_response,
+        "login")
 
     logger.debug(f"Assessment Result: {assessment_result}")
 
     # 判断 reCAPTCHA 验证结果
-    if not verification_result.get("success"):
-        return JsonResponse(
-            {"status": "error", "message": "reCAPTCHA 驗證失敗"}, status=400
-        )
+    if not verification_result.get('success'):
+        return JsonResponse({'status': 'error', 'message': 'reCAPTCHA 驗證失敗'}, status=400)
 
     # reCAPTCHA 验证通过后处理用户登录
     try:
@@ -162,17 +169,16 @@ def login_view(request):
 
             # 生成 token
             refresh = RefreshToken.for_user(user)
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "username": user.username,
-                    "is_active": user.is_active,
-                    "is_superuser": user.is_superuser,
-                    "is_staff": user.is_staff,
-                    "token": str(refresh.access_token),
-                    "email": user.email,
-                }
-            )
+            return JsonResponse({
+                "status": "success",
+                "username": user.username,
+                "is_active": user.is_active,
+                "is_superuser": user.is_superuser,
+                "is_staff": user.is_staff,
+                "token": str(refresh.access_token),
+                "email": user.email
+
+            })
         else:
             return JsonResponse({"status": "error", "message": "密碼錯誤"}, status=400)
     except CustomUser.DoesNotExist:
@@ -204,35 +210,36 @@ def change_password(request):
         user.set_password(new_password)
         user.save()
         return Response(
-            {"status": "success", "message": "密碼已成功更改"},
+            {
+                "status": "success",
+                "message": "密碼已成功更改"
+            },
             status=status.HTTP_200_OK,
         )
     else:
         return Response(
-            {"status": "error", "message": "舊密碼不正確"},
+            {
+                "status": "error",
+                "message": "舊密碼不正確"
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
 
 
 token_generator = PasswordResetTokenGenerator()
 
-
-# 兩段式驗證
+#兩段式驗證
 @api_view(["POST"])
 def send_verification_code(request):
     print(f"Request data: {request.data}")  # 调试时打印接收到的数据
     email = request.data.get("email")
     try:
         user = CustomUser.objects.get(email=email)
-        verification_code = "".join(
-            random.choices(string.digits, k=6)
-        )  # 生成六位數字的驗證碼
+        verification_code = ''.join(random.choices(string.digits, k=6))  # 生成六位數字的驗證碼
 
         # 設置驗證碼及其過期時間
         user.verification_code = verification_code
-        user.verification_code_expiry = timezone.now() + timedelta(
-            minutes=10
-        )  # 設置10分鐘的有效期
+        user.verification_code_expiry = timezone.now() + timedelta(minutes=10)  # 設置10分鐘的有效期
         user.save()
 
         # 構建郵件內容
@@ -251,17 +258,11 @@ def send_verification_code(request):
         email_message.attach_alternative(html_message, "text/html")
         email_message.send(fail_silently=False)
 
-        return Response(
-            {"status": "success", "message": "驗證碼已發送"}, status=status.HTTP_200_OK
-        )
+        return Response({"status": "success", "message": "驗證碼已發送"}, status=status.HTTP_200_OK)
     except CustomUser.DoesNotExist:
-        return Response(
-            {"status": "error", "message": "該E-mail對應的帳號不存在"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        return Response({"status": "error", "message": "該E-mail對應的帳號不存在"}, status=status.HTTP_400_BAD_REQUEST)
 
-
-# 驗證驗證碼
+#驗證驗證碼
 @api_view(["POST"])
 def verify_code(request):
     print(f"Request data: {request.data}")  # 打印请求数据以进行调试
@@ -271,19 +272,12 @@ def verify_code(request):
         user = CustomUser.objects.get(email=email)
         if user.verification_code == input_code:
             # 验证码有效，继续后续逻辑
-            return Response(
-                {"status": "success", "message": "驗證成功"}, status=status.HTTP_200_OK
-            )
+            return Response({"status": "success", "message": "驗證成功"}, status=status.HTTP_200_OK)
         else:
-            return Response(
-                {"status": "error", "message": "驗證碼不正確"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"status": "error", "message": "驗證碼不正確"}, status=status.HTTP_400_BAD_REQUEST)
     except CustomUser.DoesNotExist:
-        return Response(
-            {"status": "error", "message": "該E-mail對應的帳號不存在"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        return Response({"status": "error", "message": "該E-mail對應的帳號不存在"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 # 忘記密碼 - 會發送修改密碼連結到輸入的email
@@ -313,7 +307,7 @@ def password_reset_request(request):
             to_email = [email]
 
             # 使用 EmailMultiAlternatives 發送 HTML 郵件
-            email_message = EmailMultiAlternatives(subject, "", from_email, to_email)
+            email_message = EmailMultiAlternatives(subject, "", from_email,to_email)
             email_message.attach_alternative(html_message, "text/html")
             email_message.send(fail_silently=False)
 
@@ -328,11 +322,17 @@ def password_reset_request(request):
             )
         except CustomUser.DoesNotExist:
             return Response(
-                {"status": "error", "message": "沒有對應的帳號使用此E-mail"},
+                {
+                    "status": "error",
+                    "message": "沒有對應的帳號使用此E-mail"
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
     return Response(
-        {"status": "error", "message": "請求方法無效"},
+        {
+            "status": "error",
+            "message": "請求方法無效"
+        },
         status=status.HTTP_405_METHOD_NOT_ALLOWED,
     )
 
@@ -357,16 +357,25 @@ def password_reset_confirm(request, uidb64, token):
                 )
             else:
                 return Response(
-                    {"status": "error", "message": "無效的token"},
+                    {
+                        "status": "error",
+                        "message": "無效的token"
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
         except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
             return Response(
-                {"status": "error", "message": "請求無效"},
+                {
+                    "status": "error",
+                    "message": "請求無效"
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
     return Response(
-        {"status": "error", "message": "請求方法無效"},
+        {
+            "status": "error",
+            "message": "請求方法無效"
+        },
         status=status.HTTP_405_METHOD_NOT_ALLOWED,
     )
 
@@ -414,7 +423,10 @@ def edit_user(request):
             user = CustomUser.objects.get(username=username)
         except CustomUser.DoesNotExist:
             return Response(
-                {"status": "error", "message": "查無此用戶"},
+                {
+                    "status": "error",
+                    "message": "查無此用戶"
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -459,19 +471,20 @@ def profile(request):
             user = CustomUser.objects.get(username=username)
         except CustomUser.DoesNotExist:
             return Response(
-                {"status": "error", "message": "查無此用戶"},
+                {
+                    "status": "error",
+                    "message": "查無此用戶"
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-    return Response(
-        {
-            "status": "success",
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "username": username,
-        }
-    )
+    return Response({
+        "status": "success",
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "username": username,
+    })
 
 
 # 修改個人帳戶資訊
@@ -484,7 +497,10 @@ def edit_profile(request):
             user = CustomUser.objects.get(username=username)
         except CustomUser.DoesNotExist:
             return Response(
-                {"status": "error", "message": "查無此用戶"},
+                {
+                    "status": "error",
+                    "message": "查無此用戶"
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -516,48 +532,65 @@ def accounting_list_for_user(request):
     user = request.user
     if request.method == "GET":
         accountings = Accounting.objects.filter(
-            createdId=user.username, available=True
-        ).select_related("consumeType_id")
+            createdId=user.username,
+            available=True).select_related("consumeType_id")
         serializer = AccountingSerializer(accountings, many=True)
-        return Response(
-            {"status": "success", "data": serializer.data}, status=status.HTTP_200_OK
-        )
+        return Response({
+            "status": "success",
+            "data": serializer.data
+        },
+                        status=status.HTTP_200_OK)
     elif request.method == "POST":
         serializer = AccountingSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(createdId=user.username, createDate=timezone.now())
             user.calculate_net_and_total_assets()
             return Response(
-                {"status": "success", "message": "新增成功"},
+                {
+                    "status": "success",
+                    "message": "新增成功"
+                },
                 status=status.HTTP_201_CREATED,
             )
         else:
-            return Response(
-                {"status": "error", "message": serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({
+                "status": "error",
+                "message": serializer.errors
+            },
+                            status=status.HTTP_400_BAD_REQUEST)
     elif request.method == "PUT":
-        accounting = get_object_or_404(Accounting, pk=request.data.get("accountingId"))
-        serializer = AccountingSerializer(accounting, data=request.data, partial=True)
+        accounting = get_object_or_404(Accounting,
+                                       pk=request.data.get("accountingId"))
+        serializer = AccountingSerializer(accounting,
+                                          data=request.data,
+                                          partial=True)
         if serializer.is_valid():
             serializer.save()
             user.calculate_net_and_total_assets()
-            return Response(
-                {"status": "success", "message": "更新成功"}, status=status.HTTP_200_OK
-            )
+            return Response({
+                "status": "success",
+                "message": "更新成功"
+            },
+                            status=status.HTTP_200_OK)
         else:
             return Response(
-                {"status": "error", "message": serializer.errors},
+                {
+                    "status": "error",
+                    "message": serializer.errors
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
     elif request.method == "DELETE":
-        accounting = get_object_or_404(Accounting, pk=request.data.get("accountingId"))
+        accounting = get_object_or_404(Accounting,
+                                       pk=request.data.get("accountingId"))
         accounting.available = False
         accounting.save()
         user.calculate_net_and_total_assets()
-        return Response(
-            {"status": "success", "message": "紀錄已被刪除"}, status=status.HTTP_200_OK
-        )
+        return Response({
+            "status": "success",
+            "message": "紀錄已被刪除"
+        },
+                        status=status.HTTP_200_OK)
 
 
 @api_view(["GET", "PUT", "DELETE"])
@@ -568,8 +601,7 @@ def accounting_list_for_admin(request):
         create_id = request.query_params.get("createId")
         available = request.query_params.get("available")
         sort_order = request.query_params.get(
-            "sort", "createDate"
-        )  # Use '-createDate' for descending order
+            "sort", "createDate")  # Use '-createDate' for descending order
 
         # Build the query
         query = Accounting.objects.all()
@@ -581,36 +613,51 @@ def accounting_list_for_admin(request):
         # Execute the query
         if not query.exists():
             return Response(
-                {"status": "error", "message": "紀錄不存在"},
+                {
+                    "status": "error",
+                    "message": "紀錄不存在"
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         # Serialize the queryset
         serializer = AccountingSerializer(query, many=True)
-        return Response(
-            {"status": "success", "data": serializer.data}, status=status.HTTP_200_OK
-        )
+        return Response({
+            "status": "success",
+            "data": serializer.data
+        },
+                        status=status.HTTP_200_OK)
     elif request.method == "PUT":
         pk = request.GET.get("accountingId")
         accounting = Accounting.objects.get(accountingId=pk)
-        serializer = AccountingSerializer(accounting, data=request.data, partial=True)
+        serializer = AccountingSerializer(accounting,
+                                          data=request.data,
+                                          partial=True)
         if serializer.is_valid():
             serializer.save()
             user.calculate_net_and_total_assets()
-            return Response(
-                {"status": "success", "message": "更新成功"}, status=status.HTTP_200_OK
-            )
+            return Response({
+                "status": "success",
+                "message": "更新成功"
+            },
+                            status=status.HTTP_200_OK)
         return Response(
-            {"status": "error", "message": serializer.errors},
+            {
+                "status": "error",
+                "message": serializer.errors
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
     elif request.method == "DELETE":
-        accounting = get_object_or_404(Accounting, pk=request.data.get("accountingId"))
+        accounting = get_object_or_404(Accounting,
+                                       pk=request.data.get("accountingId"))
         accounting.available = False
         accounting.save()
         user.calculate_net_and_total_assets()
-        return Response(
-            {"status": "success", "message": "紀錄已被刪除"}, status=status.HTTP_200_OK
-        )
+        return Response({
+            "status": "success",
+            "message": "紀錄已被刪除"
+        },
+                        status=status.HTTP_200_OK)
 
 
 # ConsumeType Views
@@ -624,27 +671,39 @@ def consume_type_operations(request, pk=None):
                 serializer = ConsumeTypeSerializer(consume_type)
             except ConsumeType.DoesNotExist:
                 return Response(
-                    {"status": "error", "message": "紀錄不存在"},
+                    {
+                        "status": "error",
+                        "message": "紀錄不存在"
+                    },
                     status=status.HTTP_404_NOT_FOUND,
                 )
         else:
             consume_types = ConsumeType.objects.all()
             serializer = ConsumeTypeSerializer(consume_types, many=True)
-        return Response(
-            {"status": "success", "data": serializer.data}, status=status.HTTP_200_OK
-        )
+        return Response({
+            "status": "success",
+            "data": serializer.data
+        },
+                        status=status.HTTP_200_OK)
 
     elif request.method == "POST":
         serializer = ConsumeTypeSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(createdId=request.user.username, createDate=timezone.now())
+            serializer.save(createdId=request.user.username,
+                            createDate=timezone.now())
             return Response(
-                {"status": "success", "message": "新增成功"},
+                {
+                    "status": "success",
+                    "message": "新增成功"
+                },
                 status=status.HTTP_201_CREATED,
             )
         else:
             return Response(
-                {"status": "error", "message": serializer.errors},
+                {
+                    "status": "error",
+                    "message": serializer.errors
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -652,18 +711,22 @@ def consume_type_operations(request, pk=None):
         pk = request.GET.get("consumeTypeId")
         try:
             consume_type = ConsumeType.objects.get(consumeTypeId=pk)
-            serializer = ConsumeTypeSerializer(
-                consume_type, data=request.data, partial=True
-            )
+            serializer = ConsumeTypeSerializer(consume_type,
+                                               data=request.data,
+                                               partial=True)
             if serializer.is_valid():
                 serializer.save()
-                return Response(
-                    {"status": "success", "message": "更新成功"},
-                    status=status.HTTP_200_OK,
-                )
+                return Response({
+                    "status": "success",
+                    "message": "更新成功"
+                },
+                                status=status.HTTP_200_OK)
         except ConsumeType.DoesNotExist:
             return Response(
-                {"status": "error", "message": "紀錄不存在"},
+                {
+                    "status": "error",
+                    "message": "紀錄不存在"
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -672,27 +735,33 @@ def consume_type_operations(request, pk=None):
         try:
             # Use .update() for QuerySets
             updated = ConsumeType.objects.filter(consumeTypeId=pk).update(
-                available=False
-            )
+                available=False)
             if updated:
-                return Response(
-                    {"status": "success", "message": "紀錄已被刪除"},
-                    status=status.HTTP_200_OK,
-                )
+                return Response({
+                    "status": "success",
+                    "message": "紀錄已被刪除"
+                },
+                                status=status.HTTP_200_OK)
             else:
                 # If nothing was updated, then the accounting record doesn't exist
                 return Response(
-                    {"status": "error", "message": "紀錄不存在"},
+                    {
+                        "status": "error",
+                        "message": "紀錄不存在"
+                    },
                     status=status.HTTP_404_NOT_FOUND,
                 )
         except ConsumeType.DoesNotExist:
             return Response(
-                {"status": "error", "message": "紀錄不存在"},
+                {
+                    "status": "error",
+                    "message": "紀錄不存在"
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
 
-# 取得資產和負債資訊
+#取得資產和負債資訊
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def financial_summary(request, username):
@@ -704,21 +773,25 @@ def financial_summary(request, username):
     end_date = request.query_params.get("end_date", None)
     aggregate_by = request.query_params.get("aggregate_by", None)
     model_type = request.query_params.get(
-        "model_type", "assets"
-    )  # Default to 'assets' if not specified
+        "model_type", "assets")  # Default to 'assets' if not specified
 
     if model_type not in ["assets", "liabilities"]:
         return Response(
-            {"status": "error", "message": "指定的模型類型無效。選擇“資產”或“負債”"},
+            {
+                "status": "error",
+                "message": "指定的模型類型無效。選擇“資產”或“負債”"
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    data = user.aggregate_financials(
-        model_type, asset_type, start_date, end_date, aggregate_by
-    )
+    data = user.aggregate_financials(model_type, asset_type, start_date,
+                                     end_date, aggregate_by)
 
     return Response(
-        {"status": "success", "data": data},
+        {
+            "status": "success",
+            "data": data
+        },
         status=status.HTTP_200_OK,
     )
 
@@ -732,25 +805,28 @@ def get_bank_profile_list(request):
 
         if not list.exists():
             return Response(
-                {"status": "error", "message": "用戶不存在銀行資料"},
+                {
+                    "status": "error",
+                    "message": "用戶不存在銀行資料"
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
         bank_data = []
         for bank in list:
-            bank_data.append(
-                {
-                    "id": bank.id,
-                    "bank_name": bank.bank_name,
-                    "region": bank.region,
-                    "branch": bank.branch,
-                    "account": bank.account[-4:],
-                }
-            )
+            bank_data.append({
+                "id": bank.id,
+                "bank_name": bank.bank_name,
+                "region": bank.region,
+                "branch": bank.branch,
+                "account": bank.account[-4:],
+            })
 
-        return Response(
-            {"status": "success", "data": bank_data}, status=status.HTTP_200_OK
-        )
+        return Response({
+            "status": "success",
+            "data": bank_data
+        },
+                        status=status.HTTP_200_OK)
 
 
 # 銀行資料 個別查詢
@@ -762,14 +838,19 @@ def get_bank_profile(request, id):
             bank = APICredentials.objects.get(id=id)
         except APICredentials.DoesNotExist:
             return Response(
-                {"status": "error", "message": "查無此銀行資料"},
+                {
+                    "status": "error",
+                    "message": "查無此銀行資料"
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
     serializer = APICredentialsSerializer(bank)
-    return Response(
-        {"status": "success", "data": serializer.data}, status=status.HTTP_200_OK
-    )
+    return Response({
+        "status": "success",
+        "data": serializer.data
+    },
+                    status=status.HTTP_200_OK)
 
 
 # 銀行資料 新增
@@ -778,27 +859,35 @@ def get_bank_profile(request, id):
 def add_bank_profile(request):
     if request.method == "POST":
         username = request.user.username
-        serializer = APICredentialsSerializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = APICredentialsSerializer(data=request.data,
+                                              context={"request": request})
         if serializer.is_valid():
-            ca_file = request.data.get("ca_file", None)
+            ca_file = request.data.get('ca_file', None)
             if not ca_file:
                 return Response(
-                    {"status": "error", "message": "未上傳文件"},
+                    {
+                        "status": "error",
+                        "message": "未上傳文件"
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            serializer.validated_data["ca_path"] = ca_file
+            serializer.validated_data['ca_path'] = ca_file
 
             serializer.save()
             return Response(
-                {"status": "success", "message": "銀行資料新增成功"},
+                {
+                    "status": "success",
+                    "message": "銀行資料新增成功"
+                },
                 status=status.HTTP_201_CREATED,
             )
         else:
             return Response(
-                {"status": "error", "message": serializer.errors},
+                {
+                    "status": "error",
+                    "message": serializer.errors
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -811,47 +900,61 @@ def update_bank_profile(request, id):
             bank = APICredentials.objects.get(id=id)
         except APICredentials.DoesNotExist:
             return Response(
-                {"status": "error", "message": "查無此銀行資料"},
+                {
+                    "status": "error",
+                    "message": "查無此銀行資料"
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        ca_file = request.FILES.get("ca_file", None)
+        ca_file = request.FILES.get('ca_file', None)
         if ca_file:
-            request.data["ca_path"] = ca_file
-            serializer = APICredentialsSerializer(bank, data=request.data, partial=True)
+            request.data['ca_path'] = ca_file
+            serializer = APICredentialsSerializer(bank,
+                                                  data=request.data,
+                                                  partial=True)
             if serializer.is_valid():
                 serializer.save()
                 storage, path = bank.ca_path.storage, bank.ca_path.path
                 storage.delete(path)
                 return Response(
-                    {"status": "success", "message": "銀行資料更新成功"},
+                    {
+                        "status": "success",
+                        "message": "銀行資料更新成功"
+                    },
                     status=status.HTTP_200_OK,
                 )
             else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response(serializer.errors,
+                                status=status.HTTP_400_BAD_REQUEST)
         else:
-            ca_path = request.data.get("ca_path", None)
+            ca_path = request.data.get('ca_path', None)
             if isinstance(ca_path, str):
                 bank.ca_path = ca_path
                 bank.save()
                 return Response(
-                    {"status": "success", "message": "銀行資料更新成功"},
+                    {
+                        "status": "success",
+                        "message": "銀行資料更新成功"
+                    },
                     status=status.HTTP_200_OK,
                 )
             else:
-                serializer = APICredentialsSerializer(
-                    bank, data=request.data, partial=True
-                )
+                serializer = APICredentialsSerializer(bank,
+                                                      data=request.data,
+                                                      partial=True)
                 if serializer.is_valid():
                     serializer.update()
                     return Response(
-                        {"status": "success", "message": "銀行資料更新成功"},
+                        {
+                            "status": "success",
+                            "message": "銀行資料更新成功"
+                        },
                         status=status.HTTP_200_OK,
                     )
                 else:
-                    return Response(
-                        serializer.errors, status=status.HTTP_400_BAD_REQUEST
-                    )
+                    return Response(serializer.errors,
+                                    status=status.HTTP_400_BAD_REQUEST)
 
 
 # 銀行資料 刪除
@@ -863,57 +966,66 @@ def delete_bank_profile(request, id):
             bank = APICredentials.objects.get(id=id)
             bank.delete()
             return Response(
-                {"status": "success", "message": "銀行資料刪除成功"},
+                {
+                    "status": "success",
+                    "message": "銀行資料刪除成功"
+                },
                 status=status.HTTP_200_OK,
             )
         except APICredentials.DoesNotExist:
             return Response(
-                {"status": "error", "message": "查無此銀行資料"},
+                {
+                    "status": "error",
+                    "message": "查無此銀行資料"
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-
 app = Flask(__name__)
-logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-@app.route("/submit", methods=["POST"])
+@app.route('/submit', methods=['POST'])
 def validate_recaptcha():
     logging.debug("Function called")  # 新增日誌輸出
-    recaptcha_response = request.form["g-recaptcha-response"]
-    secret_key = "6LdmwcgpAAAAAFkprWdUSzzAZ8dE-1obmzqLK3Nf"
+    recaptcha_response = request.form['g-recaptcha-response']
+    secret_key = '6LdmwcgpAAAAAFkprWdUSzzAZ8dE-1obmzqLK3Nf'
 
     logging.debug(f"Received reCAPTCHA response: {recaptcha_response}")
 
-    data = {"secret": secret_key, "response": recaptcha_response}
-    verify_url = "https://www.google.com/recaptcha/api/siteverify"
+    data = {'secret': secret_key, 'response': recaptcha_response}
+    verify_url = 'https://www.google.com/recaptcha/api/siteverify'
     response = requests.post(verify_url, data=data)
     verification_result = response.json()
 
     logging.debug(f"Google verification result: {verification_result}")
 
-    if verification_result.get("success"):
-        logging.info("CAPTCHA verification succeeded")
+    if verification_result.get('success'):
+        logging.info('CAPTCHA verification succeeded')
         return Response(
-            {"status": "success", "message": "CAPTCHA驗證成功"},
+            {
+                "status": "success",
+                "message": "CAPTCHA驗證成功"
+            },
             status=status.HTTP_200_OK,
         )
     else:
-        logging.warning("CAPTCHA verification failed")
+        logging.warning('CAPTCHA verification failed')
         return Response(
-            {"status": "error", "message": "CAPTCHA驗證失敗"},
+            {
+                "status": "error",
+                "message": "CAPTCHA驗證失敗"
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
 
 
-logger = logging.getLogger("my_logger")
+logger = logging.getLogger('my_logger')
 
 
-def create_assessment(
-    project_id: str, recaptcha_key: str, token: str, recaptcha_action: str
-):
+def create_assessment(project_id: str, recaptcha_key: str, token: str,
+                      recaptcha_action: str):
     logger.debug(f"Project ID: {project_id}")
     logger.debug(f"Recaptcha Key: {recaptcha_key}")
     logger.debug(f"Token: {token}")
@@ -941,8 +1053,7 @@ def create_assessment(
     if not response.token_properties.valid:
         print(
             "The CreateAssessment call failed because the token was invalid for the following reasons: "
-            + str(response.token_properties.invalid_reason)
-        )
+            + str(response.token_properties.invalid_reason))
         return
 
     # 确认是否已执行预期的动作。
@@ -955,12 +1066,11 @@ def create_assessment(
         # 获取风险分数和原因。
         for reason in response.risk_analysis.reasons:
             print(reason)
-        print(
-            "The reCAPTCHA score for this token is: "
-            + str(response.risk_analysis.score)
-        )
+        print("The reCAPTCHA score for this token is: " +
+              str(response.risk_analysis.score))
         # 获取评估作业名称 (ID)，然后使用该名称为评估作业加注。
-        assessment_name = client.parse_assessment_path(response.name).get("assessment")
+        assessment_name = client.parse_assessment_path(
+            response.name).get("assessment")
         print(f"Assessment name: {assessment_name}")
 
     return response
