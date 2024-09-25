@@ -10,7 +10,11 @@ from .models import InvestmentPortfolio, Investment
 from .serializers import InvestmentPortfolioSerializer, InvestmentSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
 
 # 設置日誌
 logger = logging.getLogger(__name__)
@@ -49,13 +53,10 @@ def get_stock_detail(request, id):
         contracts = [stock_contract]
         snapshots = api.snapshots(contracts)
         data = vars(snapshots[0])
-        data['name'] = stock_contract.name
-         
+        data["name"] = stock_contract.name
+
         return Response(
-            {
-                "status": "success",
-                "data": data
-            },
+            {"status": "success", "data": data},
             status=status.HTTP_200_OK,
         )
 
@@ -78,21 +79,14 @@ def get_all_stocks(request):
             if isinstance(contracts, dict):  # 確保 contracts 是字典
                 for stock in contracts.values():
                     # 確認每個股票合約具有 'code' 和 'name' 屬性
-                    if hasattr(stock, 'code') and hasattr(stock, 'name'):
-                        stock_list.append({
-                            "symbol": stock.code,
-                            "name": stock.name
-                        })
+                    if hasattr(stock, "code") and hasattr(stock, "name"):
+                        stock_list.append({"symbol": stock.code, "name": stock.name})
 
         # # 添加日誌輸出以便於檢查
         # logger.info(f"Total stocks fetched: {len(stock_list)}")
         # logger.debug(f"Stocks data: {stock_list[:5]}...")  # 只顯示前5個以簡化輸出
 
-        return JsonResponse({
-            "status": "success",
-            "stocks": stock_list
-        },
-                            status=200)
+        return JsonResponse({"status": "success", "stocks": stock_list}, status=200)
     except Exception as e:
         logger.error(f"Error fetching stocks: {str(e)}")
         return JsonResponse({"status": "error", "message": str(e)}, status=400)
@@ -129,9 +123,11 @@ def get_stock_price(request, symbol):
         stock_name = contract.name  # 從合約中提取股票名稱
 
         # 訂閱即時行情
-        api.quote.subscribe(contract,
-                            quote_type=sj.constant.QuoteType.Tick,
-                            version=sj.constant.QuoteVersion.v1)
+        api.quote.subscribe(
+            contract,
+            quote_type=sj.constant.QuoteType.Tick,
+            version=sj.constant.QuoteVersion.v1,
+        )
 
         # # 等待數據回來（這裡使用一個簡單的等待機制）
         # for _ in range(1):  # 最多等待 10 次
@@ -149,7 +145,7 @@ def get_stock_price(request, symbol):
             response_data = {
                 "symbol": symbol,
                 "name": stock_name,  # 返回股票名稱
-                "price": last_price
+                "price": last_price,
             }
             return JsonResponse(response_data, status=200)
         else:
@@ -160,50 +156,49 @@ def get_stock_price(request, symbol):
         return JsonResponse({"status": "error", "message": str(e)}, status=400)
 
 
-#獲取當前用戶的所有投資組合
-@api_view(['GET'])
+# 獲取當前用戶的所有投資組合
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])  # 只有已認證用戶可以訪問
 def get_portfolios(request):
-    portfolios = InvestmentPortfolio.objects.filter(
-        user=request.user).prefetch_related('investments')
+    portfolios = InvestmentPortfolio.objects.filter(user=request.user).prefetch_related(
+        "investments"
+    )
     response_data = []
 
     for portfolio in portfolios:
         total_value = portfolio.calculate_portfolio_value()
         total_invested = sum(
             investment.shares * investment.buy_price
-            for investment in portfolio.investments.filter(available=True))
-        performance = (total_value - total_invested
-                       ) / total_invested * 100 if total_invested else 0
+            for investment in portfolio.investments.filter(available=True)
+        )
+        performance = (
+            (total_value - total_invested) / total_invested * 100
+            if total_invested
+            else 0
+        )
 
         portfolio_data = {
-            "id":
-            portfolio.id,
-            "name":
-            portfolio.name,
-            "description":
-            portfolio.description,
-            "performance":
-            round(performance, 2),
-            "marketValue":
-            total_value,
-            "annualReturn":
-            performance / (portfolio.investments.count() or 1),
-            "dayChange":
-            "+0.00",
-            "investments":
-            InvestmentSerializer(portfolio.investments.all(), many=True).data
+            "id": portfolio.id,
+            "name": portfolio.name,
+            "description": portfolio.description,
+            "performance": round(performance, 2),
+            "marketValue": total_value,
+            "annualReturn": performance / (portfolio.investments.count() or 1),
+            "dayChange": "+0.00",
+            "investments": InvestmentSerializer(
+                portfolio.investments.all(), many=True
+            ).data,
         }
 
         # 調試輸出 investments 確保 name 被包含
-        print(portfolio_data['investments'])
+        print(portfolio_data["investments"])
         response_data.append(portfolio_data)
 
     return Response(response_data)
 
 
 # 創建新的投資組合
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])  # 確保只有已認證用戶可以訪問
 def create_portfolio(request):
     user = request.user
@@ -214,7 +209,7 @@ def create_portfolio(request):
         portfolio = serializer.save(user=user)  # 保存用戶相關的數據
         print(f"Portfolio created: {portfolio}")
         # 檢查投資數據是否傳遞
-        for investment in request.data.get('investments', []):
+        for investment in request.data.get("investments", []):
             print(f"Investment: {investment}")  # 這裡應該打印出來每個投資項目的資料
 
         return Response(serializer.data, status=201)
@@ -223,8 +218,8 @@ def create_portfolio(request):
     return Response(serializer.errors, status=400)
 
 
-#用於向某個投資組合中添加新的投資
-@api_view(['POST'])
+# 用於向某個投資組合中添加新的投資
+@api_view(["POST"])
 def add_investment(request, portfolio_id):
     portfolio = InvestmentPortfolio.objects.get(id=portfolio_id)
     serializer = InvestmentSerializer(data=request.data)
@@ -234,22 +229,23 @@ def add_investment(request, portfolio_id):
     return Response(serializer.errors, status=400)
 
 
-#刪除
-@api_view(['DELETE'])
+# 刪除
+@api_view(["DELETE"])
 @permission_classes([IsAuthenticated])  # 確保只有認證的用戶可以訪問
 def delete_portfolio(request, portfolio_id):
     try:
         # 確保投資組合是該用戶的
-        portfolio = InvestmentPortfolio.objects.get(id=portfolio_id,
-                                                    user=request.user)
+        portfolio = InvestmentPortfolio.objects.get(id=portfolio_id, user=request.user)
         portfolio.delete()  # 刪除投資組合
         return Response({"message": "投資組合已刪除"}, status=status.HTTP_200_OK)
     except InvestmentPortfolio.DoesNotExist:
-        return Response({"error": "未找到投資組合或您無權限刪除此投資組合"},
-                        status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "未找到投資組合或您無權限刪除此投資組合"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def some_protected_view(request):
     return JsonResponse({"message": "已通過身份驗證"})
