@@ -25,7 +25,6 @@ const SearchContainer = () => {
       <button id="searchButton" onClick={handleSearch}>
         🔍
       </button>
-      <button id="filterButton">股類篩選</button>
     </div>
   );
 };
