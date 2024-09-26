@@ -17,7 +17,7 @@ const StockTable = ({ data, onCheckboxChange }) => {
     },
     {
       title: '股票名稱/代號',
-      key: 'name',
+      key: 'code',
       render: (text, record) => (
         <>
           <div><Link to={`/stock/${record.code}`}>{record.name}</Link></div>
@@ -27,29 +27,29 @@ const StockTable = ({ data, onCheckboxChange }) => {
     },
     {
       title: '股價',
-      dataIndex: 'price',
-      key: 'price',
+      dataIndex: 'close',
+      key: 'close',
       render: (text, record) => (
-        <span style={{ color: record.change >= 0 ? 'green' : 'red' }}>
-          {record.price}
+        <span style={{ color: record.change_price >= 0 ? 'green' : 'red' }}>
+          {record.close}
         </span>
       ),
     },
     {
       title: '漲跌',
-      key: 'change',
+      key: 'change_rate',
       render: (text, record) => (
-        <span style={{ color: record.change >= 0 ? 'green' : 'red' }}>
-          {record.change}
+        <span style={{ color: record.change_price >= 0 ? 'green' : 'red' }}>
+          {record.change_price}
         </span>
       ),
     },
     {
       title: '漲跌幅(%)',
-      key: 'changePercent',
+      key: 'change_rate',
       render: (text, record) => (
-        <span style={{ color: record.changePercent >= 0 ? 'green' : 'red' }}>
-          {record.changePercent}%
+        <span style={{ color: record.change_rate >= 0 ? 'green' : 'red' }}>
+          {record.change_rate}%
         </span>
       ),
     },
@@ -60,8 +60,8 @@ const StockTable = ({ data, onCheckboxChange }) => {
     },
     {
       title: '昨日收盤價',
-      dataIndex: 'previousClose',
-      key: 'previousClose',
+      dataIndex: 'close',
+      key: 'close',
     },
     {
       title: '最高',
@@ -75,15 +75,30 @@ const StockTable = ({ data, onCheckboxChange }) => {
     },
     {
       title: '成交量(張)',
-      dataIndex: 'volume',
-      key: 'volume',
+      dataIndex: 'total_volume',
+      key: 'total_volume',
     },
     {
-      title: '時間',
-      dataIndex: 'time',
-      key: 'time',
+      title: '最後成交時間',
+      key: 'ts',
+      render: (text, record) => (
+        <p>
+          {getDate(record.ts)}
+        </p>
+      ),
     },
   ];
+
+  const getDate = (ts) => {
+    const millisecondsTimestamp = ts / 1e6;
+    const date = new Date(millisecondsTimestamp);
+    return date.getFullYear() + '-' +
+      String(date.getMonth() + 1).padStart(2, '0') + '-' +
+      String(date.getDate()).padStart(2, '0') + ' ' +
+      String(date.getHours()).padStart(2, '0') + ':' +
+      String(date.getMinutes()).padStart(2, '0') + ':' +
+      String(date.getSeconds()).padStart(2, '0');
+  };
 
   return <Table className="stock-table" columns={columns} dataSource={data} pagination={false} />;
 };

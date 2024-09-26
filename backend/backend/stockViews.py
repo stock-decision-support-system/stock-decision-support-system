@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 import shioaji as sj
@@ -15,6 +16,7 @@ from rest_framework.decorators import (
     authentication_classes,
     permission_classes,
 )
+import pandas as pd
 
 # 設置日誌
 logger = logging.getLogger(__name__)
@@ -38,8 +40,6 @@ api.login(
     contracts_cb=contracts_callback,  # 使用回調函數來確認合約加載完成
 )
 
-from shioaji import TickSTKv1, Exchange
-
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -61,9 +61,123 @@ def get_stock_detail(request, id):
         )
 
     except Exception as e:
-        logger.error(f"Error fetching stocks: {str(e)}")
-        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+        return Response(
+            {"status": "error", "message": str(e)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
+@api_view(["GET"])
+def get_kbars(request, id):
+    try:
+        # 根據不同的時間範圍設置請求的參數
+        kbar_type = request.GET.get('type')
+
+        today = datetime.today()
+
+        # 根據不同的時間範圍設置日期
+        if kbar_type == "0":  # 月
+            start_date = today - timedelta(days=30)
+            end_date = today
+        elif kbar_type == "1":  # 週
+            start_date = today - timedelta(days=7)
+            end_date = today
+        elif kbar_type == "2":  # 日
+            start_date = today - timedelta(days=1)
+            end_date = today
+        else:
+            return Response(
+                {"status": "error", "message": "無效的傳入，傳入只能是月、週、日"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        start_str = start_date.strftime("%Y-%m-%d")
+        end_str = end_date.strftime("%Y-%m-%d")
+        kbars = api.kbars(
+            contract=api.Contracts.Stocks[id], start=start_str, end=end_str
+        )
+        df = pd.DataFrame({**kbars})
+
+        return Response(
+            {"status": "success", "data": df.T},
+            status=status.HTTP_200_OK,
+        )
+
+    except Exception as e:
+        return Response(
+            {"status": "error", "message": "查無資料"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    
+@api_view(["GET"])
+def get_tw_stocks(request):
+    contracts = [
+        api.Contracts.Stocks['1101'],  # 台泥
+        api.Contracts.Stocks['1216'],  # 統一
+        api.Contracts.Stocks['1301'],  # 台塑
+        api.Contracts.Stocks['1303'],  # 南亞
+        api.Contracts.Stocks['1326'],  # 台化
+        api.Contracts.Stocks['1590'],  # 亞德客-KY
+        api.Contracts.Stocks['2002'],  # 中鋼
+        api.Contracts.Stocks['2207'],  # 和泰車
+        api.Contracts.Stocks['2301'],  # 光寶科
+        api.Contracts.Stocks['2303'],  # 聯電
+        api.Contracts.Stocks['2308'],  # 台達電
+        api.Contracts.Stocks['2317'],  # 鴻海
+        api.Contracts.Stocks['2327'],  # 國巨
+        api.Contracts.Stocks['2330'],  # 台積電
+        api.Contracts.Stocks['2345'],  # 智邦
+        api.Contracts.Stocks['2357'],  # 華碩
+        api.Contracts.Stocks['2379'],  # 瑞昱
+        api.Contracts.Stocks['2382'],  # 廣達
+        api.Contracts.Stocks['2395'],  # 研華
+        api.Contracts.Stocks['2412'],  # 中華電
+        api.Contracts.Stocks['2454'],  # 聯發科
+        api.Contracts.Stocks['2603'],  # 長榮
+        api.Contracts.Stocks['2880'],  # 華南金
+        api.Contracts.Stocks['2881'],  # 富邦金
+        api.Contracts.Stocks['2882'],  # 國泰金
+        api.Contracts.Stocks['2883'],  # 開發金
+        api.Contracts.Stocks['2884'],  # 玉山金
+        api.Contracts.Stocks['2885'],  # 元大金
+        api.Contracts.Stocks['2886'],  # 兆豐金
+        api.Contracts.Stocks['2887'],  # 台新金
+        api.Contracts.Stocks['2890'],  # 永豐金
+        api.Contracts.Stocks['2891'],  # 中信金
+        api.Contracts.Stocks['2892'],  # 第一金
+        api.Contracts.Stocks['2912'],  # 統一超
+        api.Contracts.Stocks['3008'],  # 大立光
+        api.Contracts.Stocks['3017'],  # 奇鋐
+        api.Contracts.Stocks['3034'],  # 聯詠
+        api.Contracts.Stocks['3037'],  # 欣興
+        api.Contracts.Stocks['3045'],  # 台灣大
+        api.Contracts.Stocks['3231'],  # 緯創
+        api.Contracts.Stocks['3661'],  # 世芯-KY
+        api.Contracts.Stocks['3711'],  # 日月光投控
+        api.Contracts.Stocks['4904'],  # 遠傳
+        api.Contracts.Stocks['4938'],  # 和碩
+        api.Contracts.Stocks['5871'],  # 中租-KY
+        api.Contracts.Stocks['5876'],  # 上海商銀
+        api.Contracts.Stocks['5880'],  # 合庫金
+        api.Contracts.Stocks['6446'],  # 藥華藥
+        api.Contracts.Stocks['6505'],  # 台塑化
+        api.Contracts.Stocks['6669'],  # 緯穎
+    ]
+    try:
+        snapshots = api.snapshots(contracts)
+        
+        # 將每個快照的股票名稱加進去
+        for i, snapshot in enumerate(snapshots):
+            snapshots[i] = {**vars(snapshot), "name": contracts[i].name}
+
+        return Response(
+            {"status": "success", "data": snapshots},
+            status=status.HTTP_200_OK,
+        )
+
+    except Exception as e:
+        return Response(
+            {"status": "error", "message": str(e)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 @api_view(["GET"])
 def get_all_stocks(request):

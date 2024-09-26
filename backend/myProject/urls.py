@@ -74,7 +74,9 @@ urlpatterns = [
     
     #股票查詢
     path('stock/get/<str:id>/', stockViews.get_stock_detail, name='get-stock-detail'),
+    path('stock/kbar/<str:id>/', stockViews.get_kbars, name='get-kbar'),
     path('api/stocks/', get_all_stocks, name='get_all_stocks'),
+    path('stock/twfif/', stockViews.get_tw_stocks, name='get-tw-stocks'),
 
     #投資組合
     path('api/portfolios/', stockViews.get_portfolios, name='get_portfolios'),
