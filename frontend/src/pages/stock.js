@@ -9,16 +9,14 @@ const Stock = () => {
     const { code } = useParams();
 
     return (
-        <div className="position-absolute top-50 start-50 translate-middle w-75 h-75">
-            <Card
-                title={
-                    <div className="d-flex justify-content-center align-items-center">
-                        <SearchContainer/>
-                    </div>}
-                className='h-100'
-            >
-                <StockInfo id={code}/>
-            </Card>
+        <div className="position-absolute top-50 start-50 translate-middle w-75 h-75"
+            style={{ overflowY: 'scroll' }} >
+            <div className="d-flex justify-content-center align-items-center mb-5">
+                <Card>
+                    <SearchContainer />
+                </Card>
+            </div>
+            <StockInfo id={code} />
         </div>
     );
 };

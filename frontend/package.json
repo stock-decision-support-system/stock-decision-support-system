@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@ant-design/charts": "^2.2.1",
+    "@ant-design/charts": "^1.4.3",
     "@ant-design/icons": "^5.3.7",
     "@popperjs/core": "^2.11.8",
     "@testing-library/jest-dom": "^5.17.0",

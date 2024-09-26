@@ -12,8 +12,7 @@ const KBar = ({ id }) => {
 
     const typeChange = (e) => {
         setType(e.target.value);
-
-        fetchStockData();
+        fetchStockData(e.target.value);
     };
 
     const formatKBarData = (rawData) => {
@@ -30,11 +29,11 @@ const KBar = ({ id }) => {
         });
     };
 
-    const fetchStockData = async () => {
+    const fetchStockData = async (changeType) => {
         try {
-            const response = await axios.get(`${API_URL}/stock/kbar/${id}/?type=${type}`);
+            const response = await axios.get(`${API_URL}/stock/kbar/${id}/?type=${changeType}`);
             const kbarData = response.data.data;
-    
+
             const formattedData = formatKBarData(kbarData);
             setData(formattedData);
         } catch (error) {
@@ -43,7 +42,7 @@ const KBar = ({ id }) => {
     };
 
     useEffect(() => {
-        fetchStockData();
+        fetchStockData(type);
     }, []);
 
     const getDate = (ts) => {
@@ -59,16 +58,30 @@ const KBar = ({ id }) => {
     };
 
     const config = {
+        appendPadding: [0, 10, 0, 0],
         xField: 'date',
         yField: ['open', 'close', 'high', 'low'],
         data: data,
         meta: {
-            open: { alias: '開盤價' },
-            close: { alias: '收盤價' },
-            high: { alias: '最高價' },
-            low: { alias: '最低價' },
+            open: {
+                alias: '開盤價',
+                formatter: (v) => v.toFixed(2),  // 限制小數點到兩位
+            },
+            close: {
+                alias: '收盤價',
+                formatter: (v) => v.toFixed(2),
+            },
+            high: {
+                alias: '最高價',
+                formatter: (v) => v.toFixed(2),
+            },
+            low: {
+                alias: '最低價',
+                formatter: (v) => v.toFixed(2),
+            },
             date: { alias: '日期' },
         },
+        slider: {},
     };
 
     return (
