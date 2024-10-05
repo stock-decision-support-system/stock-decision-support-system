@@ -102,10 +102,11 @@ const BankDialog = ({ isEdit, initialData, onClose }) => {
         <div className="form-container">
           <div className="mt-2">銀行名稱</div>
           <Input
-            placeholder="請輸入"
+            placeholder="永豐商業銀行"
             className="mt-1"
-            value={formData.bank_name}
+            value="永豐商業銀行"
             onChange={e => setFormData({ ...formData, bank_name: e.target.value })}
+            disabled // 設置為禁用狀態
           />
           <div className="mt-2">城市</div>
           <Select

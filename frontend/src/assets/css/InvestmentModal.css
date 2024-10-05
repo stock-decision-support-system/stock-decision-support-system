@@ -1,0 +1,18 @@
+.ant-radio-wrapper .ant-radio-checked .ant-radio-inner {
+    border-color: #ffcccc; /* 選中狀態的粉色邊框 */
+    background-color: #ffcccc; /* 選中狀態的粉色背景 */
+}
+
+/* 將選中圓點改為白色 */
+.ant-radio-wrapper .ant-radio-checked .ant-radio-inner::after {
+    background-color: #ffffff; /* 選中圓點的白色 */
+}
+
+/* 取消預設藍色的 hover 效果 */
+.ant-radio-wrapper:hover .ant-radio-inner {
+    border-color: #ffcccc; /* 懸停時的粉色邊框 */
+}
+
+.ant-radio-wrapper .ant-radio-checked:hover .ant-radio-inner {
+    border-color: #ffcccc; /* 選中狀態懸停時的粉色邊框 */
+}

@@ -174,7 +174,8 @@ def login_view(request):
                         "is_staff": user.is_staff,
                         "token": str(refresh.access_token),  # 直接返回 token
                         "email": user.email,
-                    }
+                        "avatar": user.avatar_path.url if user.avatar_path else None,  # 回傳圖片 URL
+                    }, status=status.HTTP_200_OK
                 )
             else:
                 # 如果沒有有效記錄，產生 pending_token 以要求二次驗證
@@ -188,15 +189,14 @@ def login_view(request):
                         "is_staff": user.is_staff,
                         "pending_token": str(pending_token.access_token),
                         "email": user.email,
-                    }
+                    }, status=status.HTTP_200_OK
                 )
 
         else:
-            return JsonResponse({"status": "error", "message": "密碼錯誤"}, status=400)
+            return JsonResponse({"status": "error", "message": "密碼錯誤"}, status=status.HTTP_400_BAD_REQUEST)
 
     except CustomUser.DoesNotExist:
-        return JsonResponse({"status": "error", "message": "帳號不存在"}, status=404)
-
+        return JsonResponse({"status": "error", "message": "帳號不存在"}, status=status.HTTP_404_NOT_FOUND)
 
 # 登出
 @api_view(["GET"])
@@ -497,9 +497,10 @@ def profile(request):
             "first_name": user.first_name,
             "last_name": user.last_name,
             "username": username,
+            "avatar": user.avatar_path.url if user.avatar_path else None,  # 回傳圖片 URL
         }
+        , status=status.HTTP_200_OK
     )
-
 
 # 修改個人帳戶資訊
 @api_view(["POST"])
@@ -520,6 +521,7 @@ def edit_profile(request):
         last_name = request.data.get("last_name")
         email = request.data.get("email")
         password = request.data.get("password")
+        avatar = request.FILES.get('avatar')  # 獲取上傳的圖片（如果有）
 
         # 部分更新用户对象
         if first_name is not None:
@@ -530,12 +532,13 @@ def edit_profile(request):
             user.email = email
         if password is not None:
             user.set_password(password)
+        if avatar is not None:
+            user.avatar_path = avatar  # 更新圖片欄位
 
         # 保存更新后的用户信息
         user.save()
 
-        return Response({"status": "success", "message": "個人資料修改成功"})
-
+        return Response({"status": "success", "message": "個人資料修改成功"}, status=status.HTTP_200_OK)
 
 @api_view(["GET", "POST", "PUT", "DELETE"])
 @permission_classes([IsAuthenticated])
