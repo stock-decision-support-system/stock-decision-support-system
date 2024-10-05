@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // 假設你使用 react-router-dom 進行導航
 import iconImage from '../assets/images/logo.png';
 import '../assets/css/navbar.css';
-import { Button, Dropdown, Space } from 'antd';
+import { Button, Dropdown, Space, Avatar } from 'antd';
 import headIcon from '../assets/images/account.png';
 import axios from 'axios';
 import { useUser } from '../userContext'; // 確保正確導入 useUser
@@ -11,19 +11,13 @@ import { config } from "../config";
 const BASE_URL = config.API_URL;
 
 const Navbar = () => {
-  const [username, setUsername] = useState(localStorage.getItem('username') || '');
+  const username = localStorage.getItem('username');
   const { user, logout } = useUser();
   const [isSuperuser, setIsSuperuser] = useState(localStorage.getItem('is_superuser') === 'true');
   const [isStaff, setIsStaff] = useState(localStorage.getItem('is_staff') === 'true');
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
-
-  useEffect(() => {
-    const storedUsername = localStorage.getItem('username');
-    if (storedUsername) {
-      setUsername(storedUsername);
-    }
-  }, [user]);
+  const avatar = localStorage.getItem('avatar');
 
   useEffect(() => {
     setIsSuperuser(localStorage.getItem('is_superuser') === 'true');
@@ -54,7 +48,7 @@ const Navbar = () => {
     localStorage.removeItem('is_superuser');
     localStorage.removeItem('is_staff');
     localStorage.removeItem('is_login');
-    setUsername(''); // 重置用戶名狀態為 ''
+    localStorage.removeItem('avatar');
     navigate('/login'); // 重定向到登錄頁面
   };
 
@@ -151,12 +145,21 @@ const Navbar = () => {
                 // 如果用戶已登入，顯示用戶名稱
                 <li className="nav-item">
                   <span className="nav-link ms-4 justify-content-center d-flex align-items-center" style={{ height: '37px' }}>
-                    <img
-                      src={headIcon}
-                      alt=""
-                      className="img-fluid me-3"
-                      style={{ width: 30 }}
-                    />
+                    {avatar ? (
+                      <img
+                        src={`${BASE_URL}${avatar}`}
+                        alt="avatar"
+                        className="me-3"
+                        style={{ width: 30 }}
+                      />
+                    ) : (
+                      <img
+                        src={headIcon}
+                        alt=""
+                        className="img-fluid me-3"
+                        style={{ width: 30 }}
+                      />
+                    )}
                     {username}
                   </span>
                 </li>

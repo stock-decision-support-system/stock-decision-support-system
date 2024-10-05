@@ -6,7 +6,7 @@ import padlockIcon from '../assets/images/padlock.png';
 import '../assets/css/login.css';
 import { useUser } from '../userContext';
 import axios from 'axios';
-import { config } from "../config";  
+import { config } from "../config";
 
 const BASE_URL = config.API_URL;
 
@@ -16,7 +16,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const { setUser, user } = useUser(); // 獲取 setUser 函數
   const { login } = useUser();  // 使用 Context 中的 login 函數
-  
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -30,26 +30,26 @@ const Login = () => {
       alert('請填寫所有欄位');
       return;
     }
-  
+
     if (window.grecaptcha) {
       window.grecaptcha.ready(async () => {
         const recaptchaToken = await window.grecaptcha.execute('6LdmwcgpAAAAAChdggC5Z37c_r09EmUk1stanjTj', { action: 'login' });
         document.getElementById('recaptchaToken').value = recaptchaToken;
-  
+
         const loginData = {
           username: username,
           password: password,
           'g-recaptcha-response': recaptchaToken
         };
-  
+
         try {
           const response = await axios.post(`${BASE_URL}/login/`, loginData, {
             headers: { 'Content-Type': 'application/json' }
           });
-  
+
           if (response.data.status === 'success') {
-            const { is_active, username, email, token, is_superuser, is_staff } = response.data;
-  
+            const { is_active, username, email, token, is_superuser, is_staff, avatar } = response.data;
+
             if (!is_active) {
               alert('帳號已被停用');
             } else {
@@ -60,6 +60,9 @@ const Login = () => {
                 localStorage.setItem('token', token);
                 localStorage.setItem('is_superuser', is_superuser);
                 localStorage.setItem('is_staff', is_staff);
+                if (avatar) {
+                  localStorage.setItem('avatar', avatar);
+                }
                 navigate('/');
               } else {
                 // 如果是 pending_token，暫存資料並進行二階段驗證
@@ -67,7 +70,7 @@ const Login = () => {
                 localStorage.setItem('pending_token', token);
                 localStorage.setItem('is_superuser', is_superuser);
                 localStorage.setItem('is_staff', is_staff);
-  
+
                 // 發送驗證碼
                 await sendVerificationCode(email);
                 // 導向二階段驗證頁面
@@ -89,17 +92,17 @@ const Login = () => {
       });
     }
   };
-  
-  
+
+
 
   const token = localStorage.getItem('token');
-if (token) {
-  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-}
-  
+  if (token) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  }
+
   const sendVerificationCode = async (email) => {
     try {
-      const response = await axios.post(`${BASE_URL}/send_verification_code/`, 
+      const response = await axios.post(`${BASE_URL}/send_verification_code/`,
         { email },
         { headers: { 'Content-Type': 'application/json' } }  // 確保内容類型為 JSON
       );
@@ -114,7 +117,7 @@ if (token) {
     }
   };
 
-  
+
 
   return (
     <div className="kv w-100">
@@ -155,7 +158,7 @@ if (token) {
 
                 <Form.Item>
                   <div className="text-end d-flex">
-                    <Checkbox className="me-2"></Checkbox><span className="w-50 d-flex align-items-center"  style={{fontSize:'18px' ,color:'#BD4C7F'}}>記住帳號</span>
+                    <Checkbox className="me-2"></Checkbox><span className="w-50 d-flex align-items-center" style={{ fontSize: '18px', color: '#BD4C7F' }}>記住帳號</span>
                     <div className="w-50 d-flex justify-content-end">
                       <a className="linka align-items-center" style={{ fontSize: '18px' }} href="./forgotPassword">
                         忘記密碼
@@ -166,11 +169,11 @@ if (token) {
 
                 {/* 提交按鈕 */}
                 <Form.Item>
-                  <Button type="primary" htmlType="submit" className="w-100 fw-bolder button2" 
-                  style={{
-                    background: 'linear-gradient(to right, #BD4C7F, #d38a95)',
-                    borderColor: 'initial', // 重設邊框色
-                  }}>
+                  <Button type="primary" htmlType="submit" className="w-100 fw-bolder button2"
+                    style={{
+                      background: 'linear-gradient(to right, #BD4C7F, #d38a95)',
+                      borderColor: 'initial', // 重設邊框色
+                    }}>
                     登入
                   </Button>
                 </Form.Item>

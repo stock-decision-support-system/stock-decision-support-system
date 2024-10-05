@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Card, Avatar, Form, Input, Row, Col, Button, message } from 'antd';
+import { Typography, Card, Avatar, Form, Input, Row, Col, Button, message, Upload } from 'antd';
+import { UploadOutlined, UserOutlined } from '@ant-design/icons';
 import axios from 'axios';
-import { UserOutlined } from '@ant-design/icons';
 import { config } from "../config";
 
 const BASE_URL = config.API_URL;
@@ -12,9 +12,13 @@ const Profile = () => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: ''
+    email: '',
+    password: '',
+    avatar: null // 用於存儲上傳的圖片
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [avatarImage, setAvatarImage] = useState();
+
 
   useEffect(() => {
     const username = localStorage.getItem('username');
@@ -36,7 +40,9 @@ const Profile = () => {
           setFormData({
             firstName: response.data.first_name,
             lastName: response.data.last_name,
-            email: response.data.email
+            email: response.data.email,
+            password: '', // 密碼初始化為空
+            avatar: response.data.avatar // 獲取用戶的圖片資料
           });
         } else {
           alert('User not found.');
@@ -59,16 +65,38 @@ const Profile = () => {
     }));
   };
 
+  const handleImageUpload = (file) => {
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      message.error('請上傳圖片文件！');
+      return false;
+    }
+    setFormData(prevFormData => ({
+      ...prevFormData,
+      avatar: file
+    }));
+    return false;
+  };
+
   const handleComplete = () => {
     const token = localStorage.getItem('token');
-    axios.post(`${BASE_URL}/edit-profile/`, {
-      username: user.username,
-      first_name: formData.firstName,
-      last_name: formData.lastName,
-      email: formData.email
-    }, {
+    const formDataToSend = new FormData();
+
+    formDataToSend.append('username', user.username);
+    formDataToSend.append('first_name', formData.firstName);
+    formDataToSend.append('last_name', formData.lastName);
+    formDataToSend.append('email', formData.email);
+    if (formData.password) {
+      formDataToSend.append('password', formData.password);
+    }
+    if (formData.avatar) {
+      formDataToSend.append('avatar', formData.avatar);
+    }
+
+    axios.post(`${BASE_URL}/edit-profile/`, formDataToSend, {
       headers: {
         'Authorization': `Bearer ${token}`
+        // 移除 Content-Type
       }
     })
       .then(response => {
@@ -95,46 +123,99 @@ const Profile = () => {
           </Col>
           <Col span={3}>
             <Button onClick={handleEdit} disabled={isEditing} className='button2 w-100' style={{
-                    background: 'linear-gradient(to right, #BD4C7F, #d38a95)',
-                    borderColor: 'initial', // 重設邊框色
-                    color:'white'
-                  }}>
-                    編輯</Button>
+              background: 'linear-gradient(to right, #BD4C7F, #d38a95)',
+              borderColor: 'initial', // 重設邊框色
+              color: 'white'
+            }}>
+              編輯</Button>
           </Col>
         </Row>
-        <Row gutter={16}>
-          <Col span={9} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <Avatar size={120} icon={<UserOutlined />} style={{ marginBottom: 20 }} />
-            <Title level={4} style={{ color: '#BD4C7F' }}>{user.username || 'No User'}</Title>
-          </Col>
-          <Col span={15}>
-            <Form layout="vertical">
+        <Form layout="vertical" onFinish={handleComplete}>
+          <Row gutter={16}>
+            <Col span={9} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              {formData.avatar ? (
+                <img
+                  src={`${BASE_URL}${formData.avatar}`}
+                  alt="avatar"
+                  style={{ width: 120, height: 120, borderRadius: 8, marginBottom: 20 }}
+                />
+              ) : (
+                <Avatar size={120} icon={<UserOutlined />} style={{ marginBottom: 20 }} />
+              )}
+              <Title level={4} style={{ color: '#BD4C7F' }}>{user.username || 'No User'}</Title>
+
+              {isEditing && (
+                <Upload
+                  showUploadList={false}
+                  beforeUpload={handleImageUpload}
+                >
+                  <Button icon={<UploadOutlined />}>上傳圖片</Button>
+                </Upload>
+              )}
+            </Col>
+            <Col span={15}>
               <Form.Item label="帳號:">
                 <Input value={user.username} readOnly />
               </Form.Item>
               <Form.Item label="姓:">
-                <Input name="firstName" value={formData.firstName} onChange={handleInputChange} readOnly={!isEditing} />
+                <Input
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  readOnly={!isEditing}
+                />
               </Form.Item>
               <Form.Item label="名:">
-                <Input name="lastName" value={formData.lastName} onChange={handleInputChange} readOnly={!isEditing} />
+                <Input
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  readOnly={!isEditing}
+                />
               </Form.Item>
               <Form.Item label="Email:">
-                <Input name="email" value={formData.email} onChange={handleInputChange} readOnly={!isEditing} />
+                <Input
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  readOnly={!isEditing}
+                />
               </Form.Item>
-            </Form>
-          </Col>
-        </Row>
-        <Row justify="center" style={{ marginTop: '20px' }}>
-          <Col span={2}>
+              {isEditing && (
+                <Form.Item label="密碼:">
+                  <Input.Password
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                  />
+                </Form.Item>
+              )}
+            </Col>
+          </Row>
+          <Form.Item
+            style={{
+              display: 'flex',           // 設置為 flex 來控制內部布局
+              justifyContent: 'center'   // 讓按鈕置中
+            }}
+          >
             {isEditing && (
-              <Button onClick={handleComplete} className='button2' style={{
-                background: 'linear-gradient(to right, #BD4C7F, #d38a95)',
-                borderColor: 'initial', // 重設邊框色
-                color:'white'
-              }}>完成</Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                className="button2"
+                style={{
+                  background: 'linear-gradient(to right, #BD4C7F, #d38a95)',
+                  borderColor: 'initial',
+                  color: 'white',
+                  display: 'flex',           // 按鈕內部元素也是 flex
+                  justifyContent: 'center'   // 按鈕內容置中
+                }}
+              >
+                完成
+              </Button>
             )}
-          </Col>
-        </Row>
+          </Form.Item>
+        </Form>
       </Card>
     </div>
   );

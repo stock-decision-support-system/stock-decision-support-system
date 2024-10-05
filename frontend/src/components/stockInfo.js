@@ -3,6 +3,8 @@ import { Button, Modal, Input, Select, Radio, Card, Col, Row, Statistic } from '
 import { ArrowDownOutlined, ArrowUpOutlined } from '@ant-design/icons';
 import { StockRequest } from '../api/request/stockRequest.js';
 import KBar from './kbar.js';
+import '../assets/css/InvestmentModal.css';
+
 const { Option } = Select;
 
 const StockInfo = ({ id }) => {
@@ -92,12 +94,19 @@ const StockInfo = ({ id }) => {
         {formData.name != null ?
           <>
             <p>最後更新時間 {formattedDate}</p>
-            <h2>
+            <h2 style={{
+              'display': 'flex',
+              'justify-content': 'space-between',
+              'align-items': 'center'
+            }}>
               {formData.name} {id}
               <Button
                 type="primary"
                 onClick={showModal}
-                style={{ marginLeft: '10px', backgroundColor: '#CD4444', borderColor: '#CD4444' }}
+                className="ms-auto button2"
+                style={{
+                  'marginLeft': '10px'
+                }}
               >
                 新增至投資組合
               </Button>
@@ -153,7 +162,10 @@ const StockInfo = ({ id }) => {
             <div className="stock-chart">
               <KBar id={id}></KBar>
             </div>
-            <Modal title={<h3>台積電 {id}</h3>} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
+            <Modal title={<h3>{formData.name} {id}</h3>} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} okText="送出"
+              okButtonProps={{
+                className: "ms-auto button2"
+              }}>
               <div>
                 <div>
                   <Radio.Group onChange={handleOptionChange} value={selectedOption}>
@@ -177,7 +189,7 @@ const StockInfo = ({ id }) => {
                     <Option value="portfolio2">投資組合 2</Option>
                     <Option value="portfolio3">投資組合 3</Option>
                   </Select>
-                  <Button type="primary" onClick={handleAddPortfolioClick}>新增投資組合</Button>
+                  <Button type="primary" className="ms-auto button2" onClick={handleAddPortfolioClick}>新增投資組合</Button>
                 </div>
               </div>
             </Modal>
@@ -199,7 +211,7 @@ const StockInfo = ({ id }) => {
           </div>
         }
       </Card>
-    </div>
+    </div >
   );
 };
 

@@ -8,11 +8,11 @@
 }
 
 .positive-row {
-  background-color: #fafff4; /* light green background for positive rows */
+  background-color: #fafff4;
 }
 
 .negative-row {
-  background-color: #fff0f0; /* light red background for negative rows */
+  background-color: #fff0f0;
 }
 .invback {
   background-color: #ffefe9;

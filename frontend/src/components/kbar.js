@@ -88,7 +88,7 @@ const KBar = ({ id }) => {
         <>
             <div className="clearfix">
                 <div className="float-end mb-2">
-                    <Radio.Group value={type} onChange={typeChange}>
+                    <Radio.Group>
                         <Radio.Button value="0">月</Radio.Button>
                         <Radio.Button value="1">週</Radio.Button>
                         <Radio.Button value="2">日</Radio.Button>
