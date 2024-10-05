@@ -7,7 +7,7 @@ from django.contrib.auth import login as django_login
 from django.contrib.auth import authenticate, login, logout
 from django.utils.dateparse import parse_date
 
-from .models import APICredentials, CustomUser, Accounting, ConsumeType
+from .models import APICredentials, CustomUser, Accounting, ConsumeType, TwoFactorAuthRecord
 
 # from .forms import RegistrationForm
 from django.core.mail import send_mail, EmailMultiAlternatives
@@ -41,12 +41,11 @@ from google.cloud.recaptchaenterprise_v1 import Assessment
 import os
 
 #朱崇銘
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:\\github\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
+#os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:\\github\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
 from django.http import JsonResponse
 
 #彭軍翔
-#os.environ[
-#    "GOOGLE_APPLICATION_CREDENTIALS"] = "C:\\Users\\11046029\\Desktop\\專題\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:\\Users\\11046029\\Desktop\\myproject\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
 
 
 import random
@@ -126,16 +125,16 @@ def verify_recaptcha(token):
     return result
 
 
-# 登入
 @api_view(["POST"])
 def login_view(request):
     login_credential = request.data.get("username")
     password = request.data.get("password")
     recaptcha_response = request.data.get("g-recaptcha-response")
+    client_ip = request.META.get('REMOTE_ADDR')  # 取得客戶端的 IP 位址
 
     logger.debug(f"Recaptcha Response: {recaptcha_response}")
 
-    # 验证 reCAPTCHA 响应
+    # 驗證 reCAPTCHA 響應
     verification_result = verify_recaptcha(recaptcha_response)
     assessment_result = create_assessment(
         "my-project-8423-1685343098922",
@@ -146,35 +145,55 @@ def login_view(request):
 
     logger.debug(f"Assessment Result: {assessment_result}")
 
-    # 判断 reCAPTCHA 验证结果
+    # 判斷 reCAPTCHA 驗證結果
     if not verification_result.get("success"):
         return JsonResponse(
             {"status": "error", "message": "reCAPTCHA 驗證失敗"}, status=400
         )
 
-    # reCAPTCHA 验证通过后处理用户登录
+    # reCAPTCHA 驗證透過後處理使用者登入
     try:
         user = CustomUser.objects.get(username=login_credential)
         if user and user.check_password(password):
-            django_login(request, user)
-            user.last_login = timezone.now()
-            user.save(update_fields=["last_login"])
+            # 檢查是否有未過期的 2FA IP 記錄
+            valid_record_exists = TwoFactorAuthRecord.objects.filter(
+                user=user,
+                ip_address=client_ip,
+                login_date__gte=timezone.now() - timedelta(days=30)  # 假设验证有效期为30天
+            ).exists()
 
-            # 生成 token
-            refresh = RefreshToken.for_user(user)
-            return JsonResponse(
-                {
-                    "status": "success",
-                    "username": user.username,
-                    "is_active": user.is_active,
-                    "is_superuser": user.is_superuser,
-                    "is_staff": user.is_staff,
-                    "token": str(refresh.access_token),
-                    "email": user.email,
-                }
-            )
+            if valid_record_exists:
+                # 如果有有效記錄，跳過驗證碼，產生 token
+                refresh = RefreshToken.for_user(user)
+                return JsonResponse(
+                    {
+                        "status": "success",
+                        "username": user.username,
+                        "is_active": user.is_active,
+                        "is_superuser": user.is_superuser,
+                        "is_staff": user.is_staff,
+                        "token": str(refresh.access_token),  # 直接返回 token
+                        "email": user.email,
+                    }
+                )
+            else:
+                # 如果沒有有效記錄，產生 pending_token 以要求二次驗證
+                pending_token = RefreshToken.for_user(user)
+                return JsonResponse(
+                    {
+                        "status": "success",
+                        "username": user.username,
+                        "is_active": user.is_active,
+                        "is_superuser": user.is_superuser,
+                        "is_staff": user.is_staff,
+                        "pending_token": str(pending_token.access_token),
+                        "email": user.email,
+                    }
+                )
+
         else:
             return JsonResponse({"status": "error", "message": "密碼錯誤"}, status=400)
+
     except CustomUser.DoesNotExist:
         return JsonResponse({"status": "error", "message": "帳號不存在"}, status=404)
 
@@ -260,19 +279,28 @@ def send_verification_code(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-
-# 驗證驗證碼
 @api_view(["POST"])
 def verify_code(request):
-    print(f"Request data: {request.data}")  # 打印请求数据以进行调试
+    print(f"Request data: {request.data}")  # 打印請求數據以進行調試
     email = request.data.get("email")
     input_code = request.data.get("code")
+    remember_device = request.data.get("remember_device", False)  # 獲取“記住此電腦”的選項
+
     try:
         user = CustomUser.objects.get(email=email)
         if user.verification_code == input_code:
-            # 验证码有效，继续后续逻辑
+            # 驗證碼有效，紀錄 IP 地址和“記住此電腦”狀態
+            if remember_device:
+                ip_address = request.META.get('REMOTE_ADDR')  # 獲取客戶端的 IP 地址
+                TwoFactorAuthRecord.objects.create(
+                    user=user,
+                    ip_address=ip_address,
+                    login_date=timezone.now()  # 此處的 login_date 已自動記錄，若無其他特殊需求可省略
+                )
+
             return Response(
-                {"status": "success", "message": "驗證成功"}, status=status.HTTP_200_OK
+                {"status": "success", "message": "驗證成功"},
+                status=status.HTTP_200_OK
             )
         else:
             return Response(
@@ -284,7 +312,6 @@ def verify_code(request):
             {"status": "error", "message": "該E-mail對應的帳號不存在"},
             status=status.HTTP_400_BAD_REQUEST,
         )
-
 
 # 忘記密碼 - 會發送修改密碼連結到輸入的email
 @api_view(["POST"])
@@ -920,46 +947,46 @@ def create_assessment(
     logger.debug(f"Recaptcha Action: {recaptcha_action}")
     client = recaptchaenterprise_v1.RecaptchaEnterpriseServiceClient()
 
-    # 设定要追踪的事件属性。
+    # 設定要追蹤的事件屬性。
     event = recaptchaenterprise_v1.Event()
     event.site_key = recaptcha_key
-    event.token = token  # 使用从参数传递进来的 token
+    event.token = token  # 使用從參數傳遞進來的 token
 
     assessment = recaptchaenterprise_v1.Assessment()
     assessment.event = event
 
     project_name = f"projects/{project_id}"
 
-    # 建立评估请求。
+    # 建立評估請求。
     request = recaptchaenterprise_v1.CreateAssessmentRequest()
     request.assessment = assessment
     request.parent = project_name
 
     response = client.create_assessment(request)
 
-    # 确认 token 是否有效。
+    # 確認token是否有效。
     if not response.token_properties.valid:
         print(
-            "The CreateAssessment call failed because the token was invalid for the following reasons: "
+            "CreateAssessment 呼叫失敗，因為令牌因下列原因無效："
             + str(response.token_properties.invalid_reason)
         )
         return
 
-    # 确认是否已执行预期的动作。
+    # 確認是否已執行預期的動作。
     if response.token_properties.action != recaptcha_action:
         print(
-            "The action attribute in your reCAPTCHA tag does not match the action you are expecting to score"
+            "reCAPTCHA 標記中的操作屬性與您期望評分的操作不匹配"
         )
         return
     else:
-        # 获取风险分数和原因。
+        # 獲取風險分數和原因。
         for reason in response.risk_analysis.reasons:
             print(reason)
         print(
-            "The reCAPTCHA score for this token is: "
+            "該令牌的 reCAPTCHA 分數為："
             + str(response.risk_analysis.score)
         )
-        # 获取评估作业名称 (ID)，然后使用该名称为评估作业加注。
+        # 取得評量作業名稱 (ID)，然後使用此名稱為評量作業加註。
         assessment_name = client.parse_assessment_path(response.name).get("assessment")
         print(f"Assessment name: {assessment_name}")
 

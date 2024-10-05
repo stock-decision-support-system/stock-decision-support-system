@@ -49,49 +49,30 @@ const Login = () => {
   
           if (response.data.status === 'success') {
             const { is_active, username, email, token, is_superuser, is_staff } = response.data;
+  
             if (!is_active) {
               alert('帳號已被停用');
             } else {
-              // 將 email 和 token 暫存
-              localStorage.setItem('pending_username', username);
-              localStorage.setItem('pending_token', token);  // 更新這裡，使用 token 而不是 pending_token
-              localStorage.setItem('is_superuser', is_superuser);
-              localStorage.setItem('is_staff', is_staff);
+              // 檢查是否返回的是正式 token，還是 pending_token
+              if (token) {
+                // 如果是正式 token，直接登入並導向 home
+                localStorage.setItem('username', username);
+                localStorage.setItem('token', token);
+                localStorage.setItem('is_superuser', is_superuser);
+                localStorage.setItem('is_staff', is_staff);
+                navigate('/');
+              } else {
+                // 如果是 pending_token，暫存資料並進行二階段驗證
+                localStorage.setItem('pending_username', username);
+                localStorage.setItem('pending_token', token);
+                localStorage.setItem('is_superuser', is_superuser);
+                localStorage.setItem('is_staff', is_staff);
   
-              // // 登錄成功後，創建新的投資組合
-              // const newPortfolio = {
-              //   name: "新投資組合", // 可以根據需求動態設置
-              //   description: "這是一個新的投資組合", // 可以動態設置
-              //   investments: [] // 如果有投資項目，可以在這裡添加
-            //   // };
-  
-            // if (token) {
-            //   axios.post(`${BASE_URL}/api/portfolios/create/`, {
-            //     headers: {
-            //       'Authorization': `Bearer ${token}`,  // 設置 Authorization 頭部
-            //       'Content-Type': 'application/json'
-            //     }
-            //   })
-            //   .then(response => {
-            //     console.log('投資組合創建成功:', response.data);
-            //   })
-            //   .catch(error => {
-            //     if (error.response) {
-            //       console.error('新增投資組合失敗:', error.response.data);
-            //       alert('新增投資組合失敗: ' + (error.response.data.message || error.response.data.detail));
-            //     } else {
-            //       console.error('新增投資組合請求出錯:', error.message);
-            //       alert('新增投資組合請求出錯: ' + error.message);
-            //     }
-            //   });
-            // } else {
-            //   console.error('Token not found');
-            // }
-  
-              // 發送驗證碼
-              await sendVerificationCode(email);
-              // 導向二次驗證頁面
-              navigate('/two-factor-auth', { state: { email } });
+                // 發送驗證碼
+                await sendVerificationCode(email);
+                // 導向二階段驗證頁面
+                navigate('/two-factor-auth', { state: { email } });
+              }
             }
           } else {
             alert('帳號或密碼錯誤，請再試一次');
@@ -109,6 +90,7 @@ const Login = () => {
     }
   };
   
+  
 
   const token = localStorage.getItem('token');
 if (token) {
@@ -116,10 +98,9 @@ if (token) {
 }
   
   const sendVerificationCode = async (email) => {
-    const tast = "tast";
     try {
       const response = await axios.post(`${BASE_URL}/send_verification_code/`, 
-        { email, tast },
+        { email },
         { headers: { 'Content-Type': 'application/json' } }  // 確保内容類型為 JSON
       );
       if (response.data.status === 'success') {
