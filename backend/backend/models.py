@@ -39,14 +39,20 @@ class CustomUser(AbstractBaseUser):
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(null=True, blank=True)
-    total_assets = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal("0.00")
-    )
-    net_assets = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal("0.00")
-    )
+    total_assets = models.DecimalField(max_digits=10,
+                                       decimal_places=2,
+                                       default=Decimal("0.00"))
+    net_assets = models.DecimalField(max_digits=10,
+                                     decimal_places=2,
+                                     default=Decimal("0.00"))
     verification_code = models.CharField(max_length=6, blank=True, null=True)
     verification_code_expiry = models.DateTimeField(blank=True, null=True)
+    avatar_path = models.FileField(upload_to="avatars/",
+                                   max_length=250,
+                                   blank=True,
+                                   null=True,
+                                   default=None)
+
     objects = CustomUserManager()
 
     USERNAME_FIELD = "email"
@@ -64,8 +70,7 @@ class CustomUser(AbstractBaseUser):
     def calculate_net_and_total_assets(self):
         self.total_assets = sum(asset.balance for asset in self.assets.all())
         self.net_assets = self.total_assets - sum(
-            liability.amount for liability in self.liabilities.all()
-        )
+            liability.amount for liability in self.liabilities.all())
         self.save(update_fields=["total_assets", "net_assets"])
 
     def aggregate_financials(
@@ -97,19 +102,13 @@ class CustomUser(AbstractBaseUser):
 
         # Aggregate by month or year if specified
         if aggregate_by == "month":
-            return (
-                query.annotate(period=TruncMonth("date_added"))
-                .values("period")
-                .annotate(total=Sum("balance"))
-                .order_by("period")
-            )
+            return (query.annotate(
+                period=TruncMonth("date_added")).values("period").annotate(
+                    total=Sum("balance")).order_by("period"))
         elif aggregate_by == "year":
-            return (
-                query.annotate(period=TruncYear("date_added"))
-                .values("period")
-                .annotate(total=Sum("balance"))
-                .order_by("period")
-            )
+            return (query.annotate(
+                period=TruncYear("date_added")).values("period").annotate(
+                    total=Sum("balance")).order_by("period"))
         else:
             return query.aggregate(total=Sum("balance"))["total"] or 0
 
@@ -134,38 +133,43 @@ class ConsumeType(models.Model):
 class Accounting(models.Model):
     accountingId = models.AutoField(primary_key=True)
     accountingName = models.CharField(max_length=50)
-    amount = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True
-    )  # 用於收入、支出、轉帳的金額
+    amount = models.DecimalField(max_digits=10, decimal_places=2,
+                                 null=True)  # 用於收入、支出、轉帳的金額
     consumeType_id = models.ForeignKey(
-        ConsumeType, on_delete=models.CASCADE, db_column="consumeType_id"
-    )  # Set a default value
+        ConsumeType, on_delete=models.CASCADE,
+        db_column="consumeType_id")  # Set a default value
     assetType = models.CharField(max_length=50)
     transactionDate = models.DateTimeField(null=True)
     content = models.TextField(null=True)
     available = models.BooleanField(default=True)
     createdId = models.CharField(max_length=150)
     createDate = models.DateTimeField(auto_now_add=True)
-    fee = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    fee = models.DecimalField(max_digits=10,
+                              decimal_places=2,
+                              null=True,
+                              blank=True)
 
     def save(self, *args, **kwargs):
         user = CustomUser.objects.get(username=self.createdId)
         today = date.today()
-        current_month_start = date(
-            today.year, today.month, 1
-        )  # First day of the current month
+        current_month_start = date(today.year, today.month,
+                                   1)  # First day of the current month
 
         if self.assetType == "Credit Card":
             # Handle credit card liabilities
             liability, created = Liability.objects.get_or_create(
                 user=user,
                 type=self.assetType,
-                defaults={"amount": 0, "date_added": today},
+                defaults={
+                    "amount": 0,
+                    "date_added": today
+                },
             )
             if liability.date_added < current_month_start:
-                liability = Liability.objects.create(
-                    user=user, type=self.assetType, amount=0, date_added=today
-                )
+                liability = Liability.objects.create(user=user,
+                                                     type=self.assetType,
+                                                     amount=0,
+                                                     date_added=today)
 
             if self.consumeType_id.name == "Expense":
                 liability.amount += self.amount  # Increase liability
@@ -178,12 +182,16 @@ class Accounting(models.Model):
             asset, created = Asset.objects.get_or_create(
                 user=user,
                 type=self.assetType,
-                defaults={"balance": 0, "date_added": today},
+                defaults={
+                    "balance": 0,
+                    "date_added": today
+                },
             )
             if asset.date_added < current_month_start:
-                asset = Asset.objects.create(
-                    user=user, type=self.assetType, balance=0, date_added=today
-                )
+                asset = Asset.objects.create(user=user,
+                                             type=self.assetType,
+                                             balance=0,
+                                             date_added=today)
 
             if self.consumeType_id.name == "Income":
                 asset.balance += self.amount  # Increase asset
@@ -217,13 +225,13 @@ class APICredentials(models.Model):
     account = models.CharField(max_length=20)
     region = models.CharField(max_length=10)
     branch = models.CharField(max_length=20)
-    ca_path = models.FileField(
-        upload_to="ca_file/", max_length=250, null=True, default=None
-    )
+    ca_path = models.FileField(upload_to="ca_file/",
+                               max_length=250,
+                               null=True,
+                               default=None)
     ca_passwd = models.CharField(max_length=255)  # CA certificate password
     person_id = models.CharField(
-        max_length=100
-    )  # ID associated with the CA certificate
+        max_length=100)  # ID associated with the CA certificate
     available = models.BooleanField(default=True)
 
     class Meta:
@@ -242,27 +250,22 @@ class InvestmentPortfolio(models.Model):
     description = models.TextField()
     available = models.BooleanField(default=True)
 
-    # 计算投资组合的当前总市值（使用买入价格）
+    # 計算投資組合的當前總市值（使用買入價格）
     def calculate_portfolio_value(self):
         total_value = sum(
             investment.shares * investment.buy_price
-            for investment in self.investments.filter(available=True)
-        )
+            for investment in self.investments.filter(available=True))
         return total_value
 
-    # 计算投资组合的表现
+    # 計算投資組合的表現
     def calculate_portfolio_performance(self):
         total_invested = sum(
             investment.shares * investment.buy_price
-            for investment in self.investments.filter(available=True)
-        )
+            for investment in self.investments.filter(available=True))
         current_value = self.calculate_portfolio_value()
-        # 如果总投资为 0，避免除以 0 的错误
-        return (
-            (current_value - total_invested) / total_invested * 100
-            if total_invested
-            else 0
-        )
+        # 如果總投資為 0，避免除以 0 的錯誤
+        return ((current_value - total_invested) / total_invested *
+                100 if total_invested else 0)
 
     class Meta:
         db_table = "investment_portfolio"
@@ -270,9 +273,9 @@ class InvestmentPortfolio(models.Model):
 
 # 投資
 class Investment(models.Model):
-    portfolio = models.ForeignKey(
-        InvestmentPortfolio, related_name="investments", on_delete=models.CASCADE
-    )
+    portfolio = models.ForeignKey(InvestmentPortfolio,
+                                  related_name="investments",
+                                  on_delete=models.CASCADE)
     symbol = models.CharField(max_length=10)  # 股票代码或资产标志
     shares = models.IntegerField()  # 持有股票数量
     buy_price = models.DecimalField(max_digits=10, decimal_places=2)  # 买入价格
@@ -287,9 +290,10 @@ class Investment(models.Model):
 
 # 資產
 class Asset(models.Model):
-    user = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE, related_name="assets", to_field="username"
-    )
+    user = models.ForeignKey(CustomUser,
+                             on_delete=models.CASCADE,
+                             related_name="assets",
+                             to_field="username")
     type = models.CharField(max_length=50)  # 如 'Cash', 'Bank', 'Credit Card'
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     name = models.CharField(max_length=100)
@@ -320,7 +324,9 @@ class Liability(models.Model):
 
 # 預算
 class Budget(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, to_field="username")
+    user = models.ForeignKey(CustomUser,
+                             on_delete=models.CASCADE,
+                             to_field="username")
     month = models.DateField()
     income_target = models.DecimalField(max_digits=10, decimal_places=2)
     expense_target = models.DecimalField(max_digits=10, decimal_places=2)
@@ -328,3 +334,16 @@ class Budget(models.Model):
 
     class Meta:
         db_table = "budget"
+
+
+class TwoFactorAuthRecord(models.Model):
+    id = models.AutoField(primary_key=True)  # 流水號，自動生成
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, to_field="username")  # 關聯到帳號
+    login_date = models.DateTimeField(auto_now_add=True)  # 登入日期和時間
+    ip_address = models.GenericIPAddressField()  # 用戶 IP 地址
+
+    def save(self, *args, **kwargs):
+        super(TwoFactorAuthRecord, self).save(*args, **kwargs)
+
+    class Meta:
+        db_table = 'two_factor_auth_record'  # 添加數據庫中的模型表名
