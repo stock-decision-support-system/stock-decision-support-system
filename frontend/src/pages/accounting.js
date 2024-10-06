@@ -5,10 +5,12 @@ import 'antd/dist/reset.css'; // 引入 Ant Design 样式
 import { Modal, Button, Select } from 'antd'; // 引入 Ant Design 組件
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'font-awesome/css/font-awesome.min.css';
+import Sidebar from '../components/sidebar.js'; // 引入 Sidebar 組件
 import '../assets/css/Accounting.css';
-import listIcon from '../assets/images/list.webp';
 import { config } from "../config";
 import { AccountingRequest } from '../api/request/accountingRequest.js'; // 引入AccountingRequest API請求模組
+import { useAccounting } from '../context/AccountingContext'; // 引入 useAccounting 來更新全局總資產
+
 
 const { Option } = Select; // Ant Design 的 Select 組件
 const BASE_URL = config.API_URL;
@@ -21,7 +23,7 @@ const AccountingForm = () => {
   const [accountingName, setAccountingName] = useState('現金'); // 支付方式，默認為現金
   const [content, setContent] = useState(''); // 描述/備註
   const [consumeTypeId, setConsumeTypeId] = useState('1'); // 消費類型，1為收入，2為支出
-  const [totalAmount, setTotalAmount] = useState(0); // 總金額
+  // const [totalAmount, setTotalAmount] = useState(0); // 總金額
   const [limit, setLimit] = useState(3000); // 金額上限
   const [tradeHistory, setTradeHistory] = useState([]); // 交易歷史
   const [monthlyData, setMonthlyData] = useState([]); // 月度數據
@@ -33,10 +35,15 @@ const AccountingForm = () => {
 
   const [isModalVisible, setIsModalVisible] = useState(false); // 控制 Ant Design Modal 狀態
 
+  const { totalAmount, setTotalAmount } = useAccounting(); // 使用 useAccounting 來取得和更新總資產
+
+
   useEffect(() => {
     fetchTradeHistory(); // 獲取交易歷史
     fetchTotalAmount(); // 獲取總金額
+    // fetchMonthlyData(); // 獲取每月數據，原先要做月度數據
   }, []); // 只有在初次渲染時執行
+  
 
   const fetchTradeHistory = () => {
     // 獲取交易歷史的API請求
@@ -47,9 +54,9 @@ const AccountingForm = () => {
         // 只顯示最近的 maxTrades 筆交易
         setTradeHistory(sortedHistory.slice(0, maxTrades));
 
-        // 計算月度數據
-        const calculatedMonthlyData = calculateMonthlyData(sortedHistory);
-        setMonthlyData(calculatedMonthlyData); // 更新月度數據
+        // // 計算月度數據
+        // const calculatedMonthlyData = calculateMonthlyData(sortedHistory);
+        // setMonthlyData(calculatedMonthlyData); // 更新月度數據
 
       })
       .catch((error) => {
@@ -67,6 +74,43 @@ const AccountingForm = () => {
         alert(error.message); // 錯誤處理
       });
   };
+
+// 原先要做月度數據
+//   const fetchMonthlyData = () => {
+//     const currentYear = new Date().getFullYear();
+//     const promises = [];
+
+//     for (let month = 0; month < 12; month++) {
+//       const startDate = new Date(currentYear, month, 1).toISOString().split('T')[0]; // 每月的第一天
+//       const endDate = new Date(currentYear, month + 1, 0).toISOString().split('T')[0]; // 每月的最後一天
+
+//       // 調用 API 並傳入 start_date 和 end_date
+//       const promise = AccountingRequest.getFinancialSummary({
+//         start_date: startDate,
+//         end_date: endDate,
+//         model_type: 'assets'
+//       });
+
+//       promises.push(promise);  // 將所有的請求放入 promises 中
+//     }
+
+//     // 等待所有 API 請求完成
+//   Promise.all(promises)
+//   .then(results => {
+//     const data = results.map((result, index) => {
+//       console.log(`Month: ${index + 1}, Response Data: `, result);  // 檢查API回應數據
+
+//       return {
+//         month: index + 1,
+//         totalAmount: result.data || 0  // 確保讀取 `data` 的值
+//       };
+//     });
+//     setMonthlyData(data);  // 更新月度數據
+//   })
+//   .catch(error => {
+//     console.error('Error fetching monthly data:', error.message);
+//   });
+// };
 
 
   const handleSubmit = (event) => {
@@ -98,16 +142,18 @@ const AccountingForm = () => {
           return updatedHistory;
         });
 
-        // 根據收入或支出類型來更新 totalAmount
-        if (consumeTypeId === '1') {
-          setTotalAmount(totalAmount + parseFloat(amount)); // 如果是收入，則增加金額
-        } else {
-          setTotalAmount(totalAmount - parseFloat(amount)); // 如果是支出，則減少金額
-        }
+        // 重新獲取並更新總資產
+        AccountingRequest.getFinancialSummary()
+          .then(response => {
+            setTotalAmount(response.data); // 更新 AccountingContext 的總資產
+          })
+          .catch((error) => {
+            alert(error.message); // 錯誤處理
+          });
 
-        // 更新月度數據
-        const updatedMonthlyData = calculateMonthlyData([newTrade, ...tradeHistory]);
-        setMonthlyData(updatedMonthlyData);
+        // // 更新月度數據
+        // const updatedMonthlyData = calculateMonthlyData([newTrade, ...tradeHistory]);
+        // setMonthlyData(updatedMonthlyData);
 
 
         // 提交後刷新頁面，這裡可以選擇性移除這行以避免刷新整個頁面
@@ -118,28 +164,28 @@ const AccountingForm = () => {
       });
   };
 
-  const calculateMonthlyData = (tradeHistory) => {
-    const monthlyData = {};
+  // const calculateMonthlyData = (tradeHistory) => {
+  //   const monthlyData = {};
 
-    tradeHistory.forEach(trade => {
-      const month = new Date(trade.transactionDate).toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit' });
+  //   tradeHistory.forEach(trade => {
+  //     const month = new Date(trade.transactionDate).toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit' });
 
-      if (!monthlyData[month]) {
-        monthlyData[month] = 0;
-      }
+  //     if (!monthlyData[month]) {
+  //       monthlyData[month] = 0;
+  //     }
 
-      if (trade.consumeType_id === '1') { // 收入
-        monthlyData[month] += trade.amount;
-      } else { // 支出
-        monthlyData[month] -= trade.amount;
-      }
-    });
+  //     if (trade.consumeType_id === '1') { // 收入
+  //       monthlyData[month] += trade.amount;
+  //     } else { // 支出
+  //       monthlyData[month] -= trade.amount;
+  //     }
+  //   });
 
-    return Object.keys(monthlyData).map(month => ({
-      month,
-      totalAmount: monthlyData[month]
-    }));
-  };
+  //   return Object.keys(monthlyData).map(month => ({
+  //     month,
+  //     totalAmount: monthlyData[month]
+  //   }));
+  // };
 
   {/*const handleSetLimit = () => {
       const newLimit = prompt('請輸入新的上限');
@@ -220,33 +266,8 @@ const AccountingForm = () => {
   return (
     <div className="accounting-kv w-100">
       <div className="accounting-container-all">
-        <div className={`accounting-container-left ${isSidebarActive ? 'active' : ''}`}>
-          <nav id="accounting-sliderbar" className={isSidebarActive ? 'active' : ''}>
-            <button type="button" id="accounting-collapse" className="accounting-collapse-btn" onClick={toggleSidebar}>
-              <img src={listIcon} alt="" width="40px" />
-            </button>
-            <ul className="accounting-list-unstyled">
-              <h2 className="accounting-totalamounttitle">您的總資產</h2>
-              <div className="accounting-totalamount">
-                $ <span id="totalAmountDisplay">{totalAmount.toFixed(2)}</span>
-              </div>
-              <li>
-                <a href="#">記帳</a>
-              </li>
-              <li>
-                <a href="#sublist" data-bs-toggle="collapse" id="dropdown">報表查詢</a>
-                <ul id="sublist" className="list-unstyled collapse">
-                  <li>
-                    <a href='/generalreport'>總資產</a>
-                  </li>
-                  <li>
-                    <a href="#">當日資產</a>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-          </nav>
-        </div>
+          {/* 使用 Sidebar 組件 */}
+        <Sidebar isSidebarActive={isSidebarActive} toggleSidebar={toggleSidebar} />
         <div className={`accounting-container-right ${isSidebarActive ? 'collapsed' : ''}`}>
           <div className="accounting-account-form">
             <div className="accounting-account-form-container">
