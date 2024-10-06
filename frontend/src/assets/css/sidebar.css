@@ -1,0 +1,86 @@
+/* 以下是側拉式選單 */
+#accounting-sliderbar {
+    width: 250px;
+    height: 100%;
+    background-color: #464e68;
+    color: white;
+    transition: margin-left 0.3s;
+  }
+  
+  .accounting-collapse-btn {
+    position: relative;
+    top: 1%;
+    left: 195px;
+    background-color: #464e68;
+    color: white;
+    border: none;
+    font-size: 30px;
+  }
+  
+  .accounting-collapse-btn:hover {
+    background-color: antiquewhite;
+    transition: 0.4s;
+  }
+  
+  #accounting-sliderbar ul li a {
+    white-space: nowrap;  /* 防止文字換行 */
+    width: 100%;          /* 確保佔滿整個父元素的寬度 */
+    margin-left: -20px;
+    padding: 10px;
+    font-size: 20px;
+    display: block;
+    text-decoration: none;
+    color: white;
+  }
+  
+  #accounting-sliderbar ul li a:hover {
+    color: antiquewhite;
+    background: skyblue;
+  }
+  
+  #accounting-sliderbar ul ul {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .collapse.show {
+    display: block !important;
+  }
+  
+  .collapse {
+    display: none !important;
+  }
+  
+  #accounting-sliderbar.active {
+    margin-left: -200px;
+  }
+  
+  .accounting-list-unstyled {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .accounting-totalamounttitle {
+    margin-top: 0;
+    margin-left: -20px;
+    font-size: 24px;
+    color: #ffffff;
+  }
+  
+  .accounting-totalamount {
+    background-color: #f8f9fa;
+    width: 180px;
+    height: 100px;
+    margin-top: 10px;
+    margin-left: -20px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: #333;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
