@@ -1,9 +1,10 @@
 @import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
-  padding-top:75px;
+  padding-top: 75px;
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -22,70 +23,8 @@ html, body {
 .accounting-container-all {
   display: flex;
   align-items: stretch;
-  height: calc(100% - 56px); /* 減去 navbar 的高度 */
-}
-
-/* 以下是側拉式選單 */
-#accounting-sliderbar {
-  width: 250px;
-  height: 100%;
-  background-color: #464e68;
-  color: white;
-  transition: margin-left 0.3s;
-}
-
-.accounting-collapse-btn {
-  position: relative;
-  top: 1%;
-  left: 195px;
-  background-color: #464e68;
-  color: white;
-  border: none;
-  font-size: 30px;
-}
-
-.accounting-collapse-btn:hover {
-  background-color: antiquewhite;
-  transition: 0.4s;
-}
-
-#accounting-sliderbar ul li a {
-  white-space: nowrap;  /* 防止文字換行 */
-  width: 100%;          /* 確保佔滿整個父元素的寬度 */
-  margin-left: -20px;
-  padding: 10px;
-  font-size: 20px;
-  display: block;
-  text-decoration: none;
-  color: white;
-}
-
-#accounting-sliderbar ul li a:hover {
-  color: antiquewhite;
-  background: skyblue;
-}
-
-#accounting-sliderbar ul ul {
-  display: flex;
-  flex-direction: column;
-}
-
-.collapse.show {
-  display: block !important;
-}
-
-.collapse {
-  display: none !important;
-}
-
-#accounting-sliderbar.active {
-  margin-left: -200px;
-}
-
-.accounting-list-unstyled {
-  padding: 30px;
-  display: flex;
-  flex-direction: column;
+  height: calc(100% - 56px);
+  /* 減去 navbar 的高度 */
 }
 
 .accounting-container-right {
@@ -115,7 +54,7 @@ html, body {
   flex: 1;
 }
 
-.form-type-buttons{
+.form-type-buttons {
   margin-left: -10px;
   margin-bottom: 20px;
 }
@@ -124,29 +63,6 @@ html, body {
   flex: 1;
   display: flex;
   flex-direction: column;
-}
-
-.accounting-totalamounttitle {
-  margin-top: 0;
-  margin-left: -20px;
-  font-size: 24px;
-  color: #ffffff;
-}
-
-.accounting-totalamount {
-  background-color: #f8f9fa;
-  width: 180px;
-  height: 100px;
-  margin-top: 10px;
-  margin-left: -20px;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 36px;
-  color: #333;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .accounting-progress-container {
@@ -209,7 +125,8 @@ html, body {
   border-bottom: 2px solid #ccc;
 }
 
-.table th, .table td {
+.table th,
+.table td {
   border: none;
   text-align: center;
   vertical-align: middle;
@@ -257,7 +174,8 @@ html, body {
   background-color: #2980b9;
 }
 
-.category-wrapper, .payment-wrapper {
+.category-wrapper,
+.payment-wrapper {
   display: flex;
   align-items: center;
 }
@@ -287,5 +205,6 @@ html, body {
 }
 
 #accountForm button[type="submit"] {
-  margin-top: -20px; /* 調整這個值來提高按鈕 */
+  margin-top: -20px;
+  /* 調整這個值來提高按鈕 */
 }

@@ -4,11 +4,14 @@ import 'font-awesome/css/font-awesome.min.css';
 import '../assets/css/generalreport.css';
 import listIcon from '../assets/images/list.webp';
 import { Line } from '@ant-design/charts';
+import Sidebar from '../components/sidebar'; // 引入 Sidebar 組件
+import { useAccounting } from '../context/AccountingContext'; // 引入 useAccounting 來獲取和更新總資產
 
 const GeneralReport = () => {
     const [category, setCategory] = useState('全年');
     const [isSidebarActive, setIsSidebarActive] = useState(false);
-    const [totalAmount, setTotalAmount] = useState(0);
+    const { totalAmount } = useAccounting(); // 從全局上下文中獲取總資產
+
 
     const toggleSidebar = () => {
         setIsSidebarActive(!isSidebarActive);
@@ -62,38 +65,14 @@ const GeneralReport = () => {
             },
             min: 0,
         },
+        autoFit: true, // 禁用自動適應
     };
 
     return (
         <div className="generalreport-kv w-100">
             <div className="generalreport-container-all">
-                <div className={`generalreport-container-left ${isSidebarActive ? 'active' : ''}`}>
-                    <nav id="generalreport-sidebar" className={isSidebarActive ? 'active' : ''}>
-                        <button type="button" id="collapse" className="generalreport-collapse-btn" onClick={toggleSidebar}>
-                            <img src={listIcon} alt="" width="40px" />
-                        </button>
-                        <ul className="generalreport-list-unstyled">
-                            <h2 className="generalreport-totalamounttitle">您的總資產</h2>
-                            <div className="generalreport-totalamount">
-                                $ <span id="totalAmountDisplay">{totalAmount.toFixed(2)}</span>
-                            </div>
-                            <li>
-                                <a href="/accounting">記帳</a>
-                            </li>
-                            <li>
-                                <a href="#generalreport-sublist" data-bs-toggle="collapse" id="generalreport-dropdown">報表查詢</a>
-                                <ul id="generalreport-sublist" className="list-unstyled collapse">
-                                    <li>
-                                        <a href='/generalreport'>總資產</a>
-                                    </li>
-                                    <li>
-                                        <a href="#">當日資產</a>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
+          {/* 使用 Sidebar 組件 */}
+          <Sidebar isSidebarActive={isSidebarActive} toggleSidebar={toggleSidebar} />
 
                 <div className="generalreport-container-right">
                     <div className="generalreport-account-form">
@@ -106,8 +85,10 @@ const GeneralReport = () => {
                             </select>
                         </div>
                         <div className="generalreport-report-container">
-                            {/* 用 Ant Design Charts 的 Line 組件來顯示折線圖 */}
-                            <Line {...config} />
+                            <div className="chart-container">
+                                {/* 用 Ant Design Charts 的 Line 組件來顯示折線圖 */}
+                                <Line {...config} />
+                            </div>
                         </div>
                     </div>
                 </div>
