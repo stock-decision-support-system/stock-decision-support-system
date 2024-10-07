@@ -39,7 +39,6 @@ urlpatterns = [
     path('send_verification_code/', views.send_verification_code, name='send_verification_code'),
     path('verify_code/', views.verify_code, name='verify_code'),
 
-
     # 登出 URL
     path('logout/', views.logout_view, name='logout'),
 
@@ -75,19 +74,16 @@ urlpatterns = [
     #股票查詢
     path('stock/get/<str:id>/', stockViews.get_stock_detail, name='get-stock-detail'),
     path('stock/kbar/<str:id>/', stockViews.get_kbars, name='get-kbar'),
-    path('api/stocks/', get_all_stocks, name='get_all_stocks'),
+    path('investment/stocks/', get_all_stocks, name='get_all_stocks'),
     path('stock/twfif/', stockViews.get_tw_stocks, name='get-tw-stocks'),
 
     #投資組合
-    path('api/portfolios/', stockViews.get_portfolios, name='get_portfolios'),
-    path('api/portfolios/create/', stockViews.create_portfolio, name='create_portfolio'),
-    path('api/portfolios/<int:id>/investments/', stockViews.add_investment, name='add_investment'),
-    path('api/portfolios/<int:portfolio_id>/delete/', stockViews.delete_portfolio, name='delete_portfolio'),
-    path('api/stock_price/<str:symbol>/', stockViews.get_stock_price, name='get_stock_price'),
-    path('api/portfolios/<int:portfolio_id>/', stockViews.get_portfolio_detail, name='get_portfolio_detail'),
-
-
-
+    path('investment/portfolios/', stockViews.get_portfolios, name='get_portfolios'),
+    path('investment/portfolios/create/', stockViews.create_portfolio, name='create_portfolio'),
+    path('investment/portfolios/<int:id>/investments/', stockViews.add_investment, name='add_investment'),
+    path('investment/portfolios/<int:portfolio_id>/delete/', stockViews.delete_portfolio, name='delete_portfolio'),
+    path('investment/stock_price/<str:symbol>/', stockViews.get_stock_price, name='get_stock_price'),
+    path('investment/portfolios/<int:portfolio_id>/', stockViews.get_portfolio_detail, name='get_portfolio_detail'),
 
     #資產負債查詢
     path('users/<username>/financial-summary/', views.financial_summary, name='financial-summary'),

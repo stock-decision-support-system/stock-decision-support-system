@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // 假設你使用 react-router-dom 進行導航
 import iconImage from '../assets/images/logo.png';
 import '../assets/css/navbar.css';
-import { Button, Dropdown, Space, Avatar } from 'antd';
+import { Dropdown } from 'antd';
 import headIcon from '../assets/images/account.png';
 import axios from 'axios';
 import { useUser } from '../userContext'; // 確保正確導入 useUser
@@ -144,7 +144,7 @@ const Navbar = () => {
               {token ? (
                 // 如果用戶已登入，顯示用戶名稱
                 <li className="nav-item">
-                  <span className="nav-link ms-4 justify-content-center d-flex align-items-center" style={{ height: '37px' }}>
+                  <span className="nav-link ms-4 justify-content-center d-flex align-items-center no-underline" style={{ height: '37px' }}>
                     {avatar ? (
                       <img
                         src={`${BASE_URL}${avatar}`}
@@ -169,7 +169,7 @@ const Navbar = () => {
                   <li className="nav-item">
                     <div className='justify-content-center d-flex align-items-center'>
                       <a
-                        className="nav-link me-3 justify-content-center d-flex align-items-center bbb"
+                        className="nav-link me-3 justify-content-center d-flex align-items-center bbb no-underline"
                         href="/login" // 使用路由路徑，確保已 '/' 開頭
                         id="btnb"
                         style={{ width: 100, height: 37 }}
@@ -181,7 +181,7 @@ const Navbar = () => {
                   <li className="nav-item">
                     <div className='justify-content-center d-flex align-items-center'>
                       <a
-                        className="nav-link justify-content-center d-flex align-items-center ms-3 aaa"
+                        className="nav-link justify-content-center d-flex align-items-center ms-3 aaa no-underline"
                         href="/signUp" // 使用路由路徑，確保已 '/' 開頭
                         id="btnb"
                         style={{ backgroundColor: "#E8B4BC", width: 200, height: 38 }}

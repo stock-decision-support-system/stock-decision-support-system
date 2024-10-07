@@ -91,7 +91,7 @@ const BankDialog = ({ isEdit, initialData, onClose }) => {
     <>
       <Modal
         title={<h2>{isEdit ? '編輯使用者資料' : '使用者資料'}</h2>}
-        visible={isModalOpen}
+        open={isModalOpen}
         onCancel={handleCancel}
         footer={[
           <Button key="submit" type="primary" onClick={handleOk}>
@@ -135,7 +135,7 @@ const BankDialog = ({ isEdit, initialData, onClose }) => {
               onChange={e => setFormData({ ...formData, account: e.target.value })}
             />
             <div className="mt-2">永豐金api授權
-              <a href="https://www.sinotrade.com.tw/ec/20191125/Main/index.aspx#pag4" target="_blank">参考文件</a>
+              <a href="https://www.sinotrade.com.tw/ec/20191125/Main/index.aspx#pag4" target="_blank" rel="noopener noreferrer">参考文件</a>
             </div>
             <Input.Password
               placeholder="金鑰"
@@ -173,7 +173,7 @@ const BankDialog = ({ isEdit, initialData, onClose }) => {
                 onChange={e => setFormData({ ...formData, account: e.target.value })}
               />
               <div className="mt-2">永豐金api授權
-                <a href="https://www.sinotrade.com.tw/ec/20191125/Main/index.aspx#pag4" target="_blank">参考文件</a>
+                <a href="https://www.sinotrade.com.tw/ec/20191125/Main/index.aspx#pag4" target="_blank" rel="noopener noreferrer">参考文件</a>
               </div>
               <Input
                 placeholder="金鑰"

@@ -11,29 +11,56 @@
   left: 0;
   z-index: 1030;
   background: linear-gradient(to right, rgba(255, 214, 204, 1), rgba(255, 241, 235, 1));
-  /* 高于一般元素，低于 modal 等元素 */
+  /* 高於一般元素，低於 modal 等元素 */
 }
 
 body {
   padding-top: 57.5px;
-  /* 假设导航栏高度为 56px */
+  /* 假設導航欄高度為 56px */
 }
 
-.nav-link,
-.link {
+.navbar-nav .nav-item .nav-link {
+  position: relative;
+  display: inline-block;
+  text-decoration: none;
   color: #D282A6 !important;
   font-size: 18px !important;
   font-weight: normal;
   margin-top: 15px;
-
-
 }
 
-.nav-link:hover,
-.link:hover {
+/* 底線動畫效果 */
+.navbar-nav .nav-item .nav-link:not(.no-underline)::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px; /* 底線的高度 */
+  background-color: #E8B4BC; /* 底線顏色與字體顏色相同 */
+  bottom: -5px; /* 底線與文字的間距 */
+  left: 0;
+  transition: width 0.3s ease-in-out; /* 添加動畫效果 */
+}
+
+.navbar-nav .nav-item .nav-link:not(.no-underline):hover::after {
+  width: 100%; /* 滑鼠懸停時底線延伸到整個元素寬度 */
+}
+
+/* 懸停時字體顏色變化 */
+.navbar-nav .nav-item .nav-link:hover {
+  color: #E8B4BC !important; /* 更改懸停時的字體顏色 */
+}
+
+/* 帳號相關項目不帶底線動畫 */
+.navbar-nav .nav-item .nav-link.no-underline {
+  color: #D282A6 !important;
+  /* 可以額外調整字體樣式 */
+}
+
+.navbar-nav .nav-item .nav-link.no-underline:hover {
   color: #E8B4BC !important;
 }
 
+/* 其他樣式 */
 .bbb {
   color: #dd87a8 !important;
   font-weight: lighter;
@@ -56,7 +83,7 @@ body {
   width: 100px;
   height: 37px;
   background-color: transparent;
-  /* 默认背景透明 */
+  /* 默認背景透明 */
   border-radius: 10px;
 }
 
@@ -80,13 +107,13 @@ body {
 .input-group .form-control,
 .input-group .input-group-text {
   border-radius: 0;
-  /* 移除输入框的圆角 */
+  /* 移除輸入框的圓角 */
   border-color: #ced4da;
 }
 
 .input-group .input-group-text {
   background-color: #ffffff;
-  /* 设置为与input相同的背景颜色 */
+  /* 設置為與input相同的背景顏色 */
   border-right: 0;
-  /* 移除图标包裹span右侧的边框 */
+  /* 移除圖標包裹span右側的邊框 */
 }

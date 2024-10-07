@@ -1,5 +1,5 @@
 import React from 'react';
-import '../assets/css/BankDialog.css';
+import '../assets/css/bankDialog.css';
 import { Button, Modal } from 'antd';
 
 class BankItem extends React.Component {

@@ -1,13 +1,12 @@
 from rest_framework import serializers
 from .models import (
+    AccountType,
     CustomUser,
     Accounting,
     ConsumeType,
     APICredentials,
     InvestmentPortfolio,
     Investment,
-    Asset,
-    Liability,
     Budget,
 )
 
@@ -23,15 +22,50 @@ class ConsumeTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ConsumeType
-        fields = "__all__"
+        fields = [
+            "id",
+            "icon",
+            "name",
+        ]
+
+    def create(self, validated_data):
+        validated_data["createdId"] = self.context["request"].user
+        return super().create(validated_data)
+
+
+class AccountTypeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AccountType
+        fields = [
+            "id",
+            "icon",
+            "name",
+        ]
+
+    def create(self, validated_data):
+        validated_data["createdId"] = self.context["request"].user
+        return super().create(validated_data)
 
 
 class AccountingSerializer(serializers.ModelSerializer):
-    consumeType = ConsumeTypeSerializer(read_only=True)
 
     class Meta:
         model = Accounting
-        fields = "__all__"
+        fields = [
+            "id",  # 主鍵
+            "accountingName",  # 記帳名稱
+            "amount",  # 金額
+            "accountType",  # 帳戶類型
+            "consumeType",  # 消費類型 (外鍵)
+            "assetType",  # 資產類型
+            "transactionDate",  # 交易日期
+            "content",  # 交易內容
+        ]
+
+    def create(self, validated_data):
+        validated_data["createdId"] = self.context["request"].user
+        return super().create(validated_data)
 
 
 class APICredentialsSerializer(serializers.ModelSerializer):
@@ -57,6 +91,7 @@ class APICredentialsSerializer(serializers.ModelSerializer):
 
 
 class InvestmentSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Investment
         fields = ["symbol", "shares", "buy_price", "available"]  # 確保包含必要的欄位
@@ -68,11 +103,14 @@ class InvestmentPortfolioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InvestmentPortfolio
-        fields = ["id", "name", "description", "available", "user", "investments"]
+        fields = [
+            "id", "name", "description", "available", "user", "investments"
+        ]
 
     def create(self, validated_data):
         investments_data = validated_data.pop("investments", [])  # 獲取投資數據
-        portfolio = InvestmentPortfolio.objects.create(**validated_data)  # 創建投資組合
+        portfolio = InvestmentPortfolio.objects.create(
+            **validated_data)  # 創建投資組合
 
         # 保存每一個投資項目
         for investment_data in investments_data:
@@ -81,23 +119,16 @@ class InvestmentPortfolioSerializer(serializers.ModelSerializer):
         return portfolio
 
 
-class AssetSerializer(serializers.ModelSerializer):
-    transactions = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-
-    class Meta:
-        model = Asset
-        fields = "__all__"
-
-
-class LiabilitySerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Liability
-        fields = "__all__"
-
-
 class BudgetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Budget
-        fields = "__all__"
+        fields = [
+            'id',
+            'start_date',
+            'target'
+        ]
+
+    def create(self, validated_data):
+        validated_data["createdId"] = self.context["request"].user
+        return super().create(validated_data)

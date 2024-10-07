@@ -3,14 +3,14 @@ import { Table, Checkbox } from 'antd';
 import { Link } from 'react-router-dom';
 import '../assets/css/stockTable.css';
 
-const StockTable = ({ data, onCheckboxChange }) => {
+const StockTable = ({ data, onCheckboxChange, selectedCodes }) => {
   const columns = [
     {
       title: '',
       key: 'checkbox',
       render: (text, record) => (
         <Checkbox
-          value={record.code}
+          checked={selectedCodes.includes(record.code)} // 判斷是否選中
           onChange={(e) => onCheckboxChange(e, record.code)}
         />
       ),
@@ -100,7 +100,12 @@ const StockTable = ({ data, onCheckboxChange }) => {
       String(date.getSeconds()).padStart(2, '0');
   };
 
-  return <Table className="stock-table" columns={columns} dataSource={data} pagination={false} />;
+  return <Table
+    className="stock-table"
+    scroll={{ y: 700 }}
+    columns={columns}
+    dataSource={data.map(item => ({ ...item, key: item.code }))}
+    pagination={false} />;
 };
 
 export default StockTable;
