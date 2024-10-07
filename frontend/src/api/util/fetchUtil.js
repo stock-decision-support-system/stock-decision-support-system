@@ -51,7 +51,7 @@ export class FetchUtil {
     };
     return await this.getPromise(url, requestOptions);
   }
-  
+
   static async postFileFormDataAPI(url, data) {
     const requestOptions = {
       method: POST,
@@ -86,7 +86,7 @@ export class FetchUtil {
     };
     return await this.getPromise(url, requestOptions);
   }
-  
+
   static async putFileFormDataAPI(url, data) {
     const requestOptions = {
       method: PUT,
@@ -188,6 +188,18 @@ export class FetchUtil {
   }
 
   static handleResponse(response) {
+    if (response.code === "token_not_valid") {
+      alert('token已經過期，請重新登入')
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      localStorage.removeItem('is_superuser');
+      localStorage.removeItem('is_staff');
+      localStorage.removeItem('is_login');
+      localStorage.removeItem('avatar');
+      window.location.href = "/login";
+      return;
+    }
+    
     if (response.status) {
       return {
         message: response.message,

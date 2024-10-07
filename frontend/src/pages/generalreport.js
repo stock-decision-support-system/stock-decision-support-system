@@ -2,16 +2,13 @@ import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'font-awesome/css/font-awesome.min.css';
 import '../assets/css/generalreport.css';
-import listIcon from '../assets/images/list.webp';
 import { Line } from '@ant-design/charts';
-import Sidebar from '../components/sidebar'; // 引入 Sidebar 組件
-import { useAccounting } from '../context/AccountingContext'; // 引入 useAccounting 來獲取和更新總資產
+import AccountingSidebar from '../components/accountingSidebar.js'; // 引入 Sidebar 組件
 
 const GeneralReport = () => {
     const [category, setCategory] = useState('全年');
     const [isSidebarActive, setIsSidebarActive] = useState(false);
-    const { totalAmount } = useAccounting(); // 從全局上下文中獲取總資產
-
+    const [totalAmount, setTotalAmount] = useState(0)
 
     const toggleSidebar = () => {
         setIsSidebarActive(!isSidebarActive);
@@ -69,11 +66,10 @@ const GeneralReport = () => {
     };
 
     return (
-        <div className="generalreport-kv w-100">
+        <div className="generalreport-kv w-100" style={{ height: '80%', display: 'flex' }}>
+            <AccountingSidebar totalAmount={totalAmount} selectedKey={'2'}/>
             <div className="generalreport-container-all">
-          {/* 使用 Sidebar 組件 */}
-          <Sidebar isSidebarActive={isSidebarActive} toggleSidebar={toggleSidebar} />
-
+                {/* 使用 Sidebar 組件 */}
                 <div className="generalreport-container-right">
                     <div className="generalreport-account-form">
                         <div className="generalreport-dropdown-container">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Stock } from '@ant-design/plots';
-import { Radio } from 'antd';
+import { Radio, Spin, Flex } from 'antd';  // 引入 Spin 組件
+import { LoadingOutlined } from '@ant-design/icons';
 import { config } from "../config";
 import axios from 'axios';
 
@@ -9,6 +10,7 @@ const API_URL = config.API_URL;
 const KBar = ({ id }) => {
     const [data, setData] = useState([]);
     const [type, setType] = useState('2');
+    const [isLoading, setIsLoading] = useState(false);  // 新增加載狀態
 
     const typeChange = (e) => {
         setType(e.target.value);
@@ -30,6 +32,7 @@ const KBar = ({ id }) => {
     };
 
     const fetchStockData = async (changeType) => {
+        setIsLoading(true);  // 開始加載
         try {
             const response = await axios.get(`${API_URL}/stock/kbar/${id}/?type=${changeType}`);
             const kbarData = response.data.data;
@@ -39,11 +42,12 @@ const KBar = ({ id }) => {
         } catch (error) {
             alert(error.message);
         }
+        setIsLoading(false);
     };
 
     useEffect(() => {
         fetchStockData(type);
-    }, []);
+    }, [type]);
 
     const getDate = (ts) => {
         const millisecondsTimestamp = ts / 1e6;
@@ -54,7 +58,7 @@ const KBar = ({ id }) => {
             String(date.getHours()).padStart(2, '0') + ':' +
             String(date.getMinutes()).padStart(2, '0') + ':' +
             String(date.getSeconds()).padStart(2, '0');
-        return getDay
+        return getDay;
     };
 
     const config = {
@@ -88,14 +92,18 @@ const KBar = ({ id }) => {
         <>
             <div className="clearfix">
                 <div className="float-end mb-2">
-                    <Radio.Group>
+                    <Radio.Group value={type} onChange={typeChange}>
                         <Radio.Button value="0">月</Radio.Button>
                         <Radio.Button value="1">週</Radio.Button>
                         <Radio.Button value="2">日</Radio.Button>
                     </Radio.Group>
                 </div>
             </div>
-            <Stock {...config} />
+            <Flex gap="middle" vertical>
+                <Spin spinning={isLoading} indicator={<LoadingOutlined spin />} size="large" >
+                    <Stock {...config} />
+                </Spin >
+            </Flex>
         </>
     );
 };

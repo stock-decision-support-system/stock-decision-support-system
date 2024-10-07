@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import yaml
+
+# 讀取配置文件
+with open("config.yaml", "r") as file:
+    config = yaml.safe_load(file)  # 讀取 YAML 配置檔案
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +32,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-APPEND_SLASH=False
+APPEND_SLASH = False
 # Application definition
 
 INSTALLED_APPS = [
@@ -70,7 +75,6 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "username",
 }
 
-
 CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'myProject.urls'
@@ -99,10 +103,11 @@ WSGI_APPLICATION = 'myProject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': '113-robotAdvisor',
-        'USER': 'ntubRobotAdvisor',
-        'PASSWORD': '0Chen7920!',
-        'HOST': '140.131.114.242',
+        'NAME': config["database"]["name"],
+        'USER': config["database"]["user"],
+        'PASSWORD': config["database"]["password"],
+        'HOST': config["database"]["host"],
+        "PORT": config["database"]["port"],
     }
 }
 

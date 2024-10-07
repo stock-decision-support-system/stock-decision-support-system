@@ -46,69 +46,112 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 # 股票資料查詢 (使用訂閱模式)
+# 這個端點根據股票 ID 獲取股票的詳細資料
 @api_view(["GET"])
 def get_stock_detail(request, id):
     try:
+        # 根據傳入的股票 ID，從 API 獲取對應的股票合約
         stock_contract = api.Contracts.Stocks[id]
+
+        # 創建一個合約列表 (在這裡僅包含一個合約)
         contracts = [stock_contract]
+
+        # 使用 API 獲取指定合約的快照數據
         snapshots = api.snapshots(contracts)
+
+        # 將快照數據轉換為字典格式，便於返回給前端
         data = vars(snapshots[0])
+
+        # 在返回的數據中附加股票名稱
         data["name"] = stock_contract.name
 
+        # 返回成功的響應，包含股票詳細資料
         return Response(
-            {"status": "success", "data": data},
+            {
+                "status": "success",
+                "data": data
+            },
             status=status.HTTP_200_OK,
         )
 
     except Exception as e:
+        # 如果出現錯誤，返回錯誤信息
         return Response(
-            {"status": "error", "message": str(e)},
+            {
+                "status": "error",
+                "message": str(e)  # 返回錯誤的詳細信息
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+
+# K線圖資料查詢
+# 這個端點根據股票 ID 和時間範圍（傳入類型）獲取股票的 K 線圖資料
 @api_view(["GET"])
 def get_kbars(request, id):
     try:
-        # 根據不同的時間範圍設置請求的參數
+        # 根據傳入的 'type' 參數來判斷時間範圍（月、週、日）
         kbar_type = request.GET.get('type')
 
+        # 取得當前日期
         today = datetime.today()
 
-        # 根據不同的時間範圍設置日期
-        if kbar_type == "0":  # 月
+        # 根據傳入的 'type' 來設置開始和結束日期
+        if kbar_type == "0":  # 月資料
             start_date = today - timedelta(days=30)
             end_date = today
-        elif kbar_type == "1":  # 週
+        elif kbar_type == "1":  # 週資料
             start_date = today - timedelta(days=7)
             end_date = today
-        elif kbar_type == "2":  # 日
-            start_date = today - timedelta(days=1)
-            end_date = today
+        elif kbar_type == "2":  # 日資料
+            snapshots = api.snapshots([api.Contracts.Stocks[id]])
+            ts = snapshots[0].ts
+            # 將時間戳轉換為秒並轉換為 datetime
+            end_date = datetime.fromtimestamp(ts / 1_000_000_000)
+            start_date = end_date - timedelta(days=1)
         else:
+            # 如果傳入的類型無效，返回錯誤信息
             return Response(
-                {"status": "error", "message": "無效的傳入，傳入只能是月、週、日"},
+                {
+                    "status": "error",
+                    "message": "無效的傳入，傳入只能是月、週、日"  # 提示正確的傳入類型
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
         start_str = start_date.strftime("%Y-%m-%d")
         end_str = end_date.strftime("%Y-%m-%d")
-        kbars = api.kbars(
-            contract=api.Contracts.Stocks[id], start=start_str, end=end_str
-        )
+        kbars = api.kbars(contract=api.Contracts.Stocks[id],
+                          start=start_str,
+                          end=end_str)
+        # 將返回的 K 線圖資料轉換為 Pandas DataFrame 格式
         df = pd.DataFrame({**kbars})
 
+        # 返回成功的響應，並將資料進行轉置以便於前端顯示
         return Response(
-            {"status": "success", "data": df.T},
+            {
+                "status": "success",
+                "data": df.T  # 將 DataFrame 進行轉置
+            },
             status=status.HTTP_200_OK,
         )
 
     except Exception as e:
+        # 如果出現錯誤（如查詢不到資料），返回錯誤信息
         return Response(
-            {"status": "error", "message": "查無資料"},
+            {
+                "status": "error",
+                "message": "查無資料"  # 提示查詢不到資料
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
-    
+
+
+# 獲取特定台股股票的快照資料
+# 這個端點返回多支指定台股股票的即時快照資料
 @api_view(["GET"])
 def get_tw_stocks(request):
+    # 定義一組股票合約，包括台灣市場上的幾支主要股票
     contracts = [
         api.Contracts.Stocks['1101'],  # 台泥
         api.Contracts.Stocks['1216'],  # 統一
@@ -162,48 +205,69 @@ def get_tw_stocks(request):
         api.Contracts.Stocks['6669'],  # 緯穎
     ]
     try:
+        # 使用 API 獲取上述所有股票的快照資料
         snapshots = api.snapshots(contracts)
-        
-        # 將每個快照的股票名稱加進去
+
+        # 遍歷每個快照並將股票名稱附加到結果中
         for i, snapshot in enumerate(snapshots):
             snapshots[i] = {**vars(snapshot), "name": contracts[i].name}
 
+        # 返回成功響應，包含股票快照資料
         return Response(
-            {"status": "success", "data": snapshots},
+            {
+                "status": "success",
+                "data": snapshots
+            },
             status=status.HTTP_200_OK,
         )
 
     except Exception as e:
+        # 出現異常時返回錯誤信息
         return Response(
-            {"status": "error", "message": str(e)},
+            {
+                "status": "error",
+                "message": str(e)
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+
+# 獲取所有股票合約
+# 這個端點返回所有股票的名稱和代碼
 @api_view(["GET"])
 def get_all_stocks(request):
     try:
-        # 獲取所有股票合約
+        # 獲取所有股票的合約資料
         stocks = api.Contracts.Stocks
 
-        # 初始化股票列表
+        # 初始化一個列表來存儲股票資料
         stock_list = []
 
-        # 遍歷所有板塊中的股票合約
+        # 遍歷所有市場中的股票合約
         for market, contracts in stocks.__dict__.items():
             if isinstance(contracts, dict):  # 確保 contracts 是字典
                 for stock in contracts.values():
-                    # 確認每個股票合約具有 'code' 和 'name' 屬性
+                    # 只添加具有 'code' 和 'name' 屬性的股票合約
                     if hasattr(stock, "code") and hasattr(stock, "name"):
-                        stock_list.append({"symbol": stock.code, "name": stock.name})
+                        stock_list.append({
+                            "symbol": stock.code,  # 股票代碼
+                            "name": stock.name  # 股票名稱
+                        })
 
-        # # 添加日誌輸出以便於檢查
-        # logger.info(f"Total stocks fetched: {len(stock_list)}")
-        # logger.debug(f"Stocks data: {stock_list[:5]}...")  # 只顯示前5個以簡化輸出
-
-        return JsonResponse({"status": "success", "stocks": stock_list}, status=200)
+        # 返回成功響應，包含所有股票的資料
+        return JsonResponse({
+            "status": "success",
+            "data": stock_list
+        },
+                            status=status.HTTP_200_OK)
     except Exception as e:
+        # 記錄錯誤並返回錯誤信息
         logger.error(f"Error fetching stocks: {str(e)}")
-        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        },
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
 # 定義一個全局變數來存儲即時行情數據
@@ -221,6 +285,7 @@ def tick_callback(exchange, tick):
 api.quote.set_on_tick_fop_v1_callback(tick_callback)
 
 
+# 獲取指定股票即時價格
 @api_view(["GET"])
 def get_stock_price(request, symbol):
     global last_price
@@ -228,13 +293,14 @@ def get_stock_price(request, symbol):
         # 清空之前的價格
         last_price = None
 
-        # 查詢即時行情
+        # 查詢即時行情合約
         contract = api.Contracts.Stocks.get(symbol)
         if not contract:
-            return JsonResponse({"error": "無法找到指定股票合約"}, status=404)
+            return JsonResponse({"error": "無法找到指定股票合約"},
+                                status=status.HTTP_404_NOT_FOUND)
 
-        # 股票名稱
-        stock_name = contract.name  # 從合約中提取股票名稱
+        # 股票名稱從合約中提取
+        stock_name = contract.name
 
         # 訂閱即時行情
         api.quote.subscribe(
@@ -243,72 +309,85 @@ def get_stock_price(request, symbol):
             version=sj.constant.QuoteVersion.v1,
         )
 
-        # # 等待數據回來（這裡使用一個簡單的等待機制）
-        # for _ in range(1):  # 最多等待 10 次
-        #     if last_price is not None:
-        #         break
-        #     time.sleep(0.1)  # 每次等待 1 秒
-
-        # 如果即時價格未能獲取，嘗試使用收盤價
+        # 嘗試獲取收盤價作為備用
         if last_price is None:
             snap = api.snapshots([contract])
             last_price = snap[0].close if snap else None
 
-        # 返回即時價格或收盤價和股票名稱
+        # 返回即時價格或收盤價，並附加股票名稱
         if last_price is not None:
             response_data = {
                 "symbol": symbol,
-                "name": stock_name,  # 返回股票名稱
+                "name": stock_name,
                 "price": last_price,
             }
-            return JsonResponse(response_data, status=200)
+            return JsonResponse({
+                "status": "success",
+                "data": response_data
+            },
+                                status=status.HTTP_200_OK)
         else:
-            return JsonResponse({"error": "未能獲取即時價格或收盤價"}, status=400)
+            return JsonResponse({"error": "未能獲取即時價格或收盤價"},
+                                status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
         logger.error(f"Error fetching stock price for {symbol}: {str(e)}")
-        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        },
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
 # 獲取當前用戶的所有投資組合
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])  # 只有已認證用戶可以訪問
+@permission_classes([IsAuthenticated])  # 需要認證用戶才能訪問
 def get_portfolios(request):
-    portfolios = InvestmentPortfolio.objects.filter(user=request.user).prefetch_related(
-        "investments"
-    )
+    portfolios = InvestmentPortfolio.objects.filter(
+        user=request.user).prefetch_related("investments")
     response_data = []
 
     for portfolio in portfolios:
+        # 計算投資組合的總市值和總投資金額
         total_value = portfolio.calculate_portfolio_value()
         total_invested = sum(
             investment.shares * investment.buy_price
-            for investment in portfolio.investments.filter(available=True)
-        )
-        performance = (
-            (total_value - total_invested) / total_invested * 100
-            if total_invested
-            else 0
-        )
+            for investment in portfolio.investments.filter(available=True))
 
+        # 計算投資組合的績效（%）
+        performance = ((total_value - total_invested) / total_invested *
+                       100 if total_invested else 0)
+
+        # 整理每個投資組合的詳細資訊
         portfolio_data = {
-            "id": portfolio.id,
-            "name": portfolio.name,
-            "description": portfolio.description,
-            "performance": round(performance, 2),
-            "marketValue": total_value,
-            "annualReturn": performance / (portfolio.investments.count() or 1),
-            "dayChange": "+0.00",
-            "investments": InvestmentSerializer(
-                portfolio.investments.all(), many=True
-            ).data,
+            "id":
+            portfolio.id,
+            "name":
+            portfolio.name,
+            "description":
+            portfolio.description,
+            "performance":
+            round(performance, 2),
+            "marketValue":
+            total_value,
+            "annualReturn":
+            performance / (portfolio.investments.count() or 1),  # 簡單平均年回報
+            "dayChange":
+            "+0.00",  # 當日變動暫設為 0
+            "investments":
+            InvestmentSerializer(portfolio.investments.all(),
+                                 many=True).data,  # 投資明細
         }
 
-        # 調試輸出 investments 確保 name 被包含
+        # 調試：確認 investments 列表中的 name 是否正確包含
         print(portfolio_data["investments"])
         response_data.append(portfolio_data)
 
-    return Response(response_data)
+    return Response({
+        "status": "success",
+        "data": response_data
+    },
+                    status=status.HTTP_200_OK)
 
 
 # 創建新的投資組合
@@ -316,20 +395,32 @@ def get_portfolios(request):
 @permission_classes([IsAuthenticated])  # 確保只有已認證用戶可以訪問
 def create_portfolio(request):
     user = request.user
-    print(f"Authenticated user: {user}")  # 檢查後端是否識別到用戶
+    print(f"Authenticated user: {user}")  # 調試：檢查後端是否識別到用戶
     serializer = InvestmentPortfolioSerializer(data=request.data)
 
     if serializer.is_valid():
-        portfolio = serializer.save(user=user)  # 保存用戶相關的數據
-        print(f"Portfolio created: {portfolio}")
-        # 檢查投資數據是否傳遞
-        for investment in request.data.get("investments", []):
-            print(f"Investment: {investment}")  # 這裡應該打印出來每個投資項目的資料
+        # 保存投資組合並將用戶與其關聯
+        portfolio = serializer.save(user=user)
+        print(f"Portfolio created: {portfolio}")  # 調試：確認創建的投資組合
 
-        return Response(serializer.data, status=201)
+        # 檢查是否傳遞了投資資料並進行調試輸出
+        for investment in request.data.get("investments", []):
+            print(f"Investment: {investment}")  # 調試：打印每個投資項目的資料
+
+        # 返回成功響應與創建的投資組合資料
+        return Response({
+            "status": "success",
+            "data": serializer.data
+        },
+                        status=status.HTTP_201_CREATED)
     else:
-        print(f"Serializer errors: {serializer.errors}")  # 輸出錯誤信息
-    return Response(serializer.errors, status=400)
+        print(f"Serializer errors: {serializer.errors}")  # 調試：輸出序列化過程中的錯誤
+    return Response({
+        "status": "error",
+        "message": serializer.errors
+    },
+                    status=status.HTTP_400_BAD_REQUEST)
+
 
 # 獲取特定投資組合的詳細資料
 @api_view(['GET'])
@@ -337,41 +428,70 @@ def create_portfolio(request):
 def get_portfolio_detail(request, portfolio_id):
     try:
         # 獲取投資組合並確認是否屬於當前用戶
-        portfolio = InvestmentPortfolio.objects.get(id=portfolio_id, user=request.user)
+        portfolio = InvestmentPortfolio.objects.get(id=portfolio_id,
+                                                    user=request.user)
         serializer = InvestmentPortfolioSerializer(portfolio)
-        return Response(serializer.data, status=200)
+        return Response({
+            "status": "success",
+            "data": serializer.data
+        },
+                        status=status.HTTP_200_OK)
     except InvestmentPortfolio.DoesNotExist:
-        return Response({"error": "未找到投資組合"}, status=404)
+        return Response({"error": "未找到投資組合"}, status=status.HTTP_404_NOT_FOUND)
 
 
-# 用於向某個投資組合中添加新的投資
+# 向指定投資組合中添加新的投資
 @api_view(["POST"])
 def add_investment(request, portfolio_id):
+    # 根據ID獲取對應的投資組合
     portfolio = InvestmentPortfolio.objects.get(id=portfolio_id)
+
+    # 序列化並驗證提交的投資數據
     serializer = InvestmentSerializer(data=request.data)
     if serializer.is_valid():
+        # 保存新投資並與投資組合關聯
         serializer.save(portfolio=portfolio)
-        return Response(serializer.data, status=201)
-    return Response(serializer.errors, status=400)
+
+        # 返回成功響應與新增的投資資料
+        return Response({
+            "status": "success",
+            "data": serializer.data
+        },
+                        status=status.HTTP_201_CREATED)
+    return Response({
+        "status": "error",
+        "message": serializer.errors
+    },
+                    status=status.HTTP_400_BAD_REQUEST)
 
 
-# 刪除
+# 刪除指定的投資組合
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated])  # 確保只有認證的用戶可以訪問
+@permission_classes([IsAuthenticated])  # 確保只有認證用戶可以刪除投資組合
 def delete_portfolio(request, portfolio_id):
     try:
-        # 確保投資組合是該用戶的
-        portfolio = InvestmentPortfolio.objects.get(id=portfolio_id, user=request.user)
-        portfolio.delete()  # 刪除投資組合
-        return Response({"message": "投資組合已刪除"}, status=status.HTTP_200_OK)
+        # 確認該投資組合屬於當前用戶
+        portfolio = InvestmentPortfolio.objects.get(id=portfolio_id,
+                                                    user=request.user)
+
+        # 刪除該投資組合
+        portfolio.delete()
+        return Response({
+            "status": "success",
+            "message": "投資組合已刪除"
+        },
+                        status=status.HTTP_200_OK)
     except InvestmentPortfolio.DoesNotExist:
-        return Response(
-            {"error": "未找到投資組合或您無權限刪除此投資組合"},
-            status=status.HTTP_404_NOT_FOUND,
-        )
+        # 如果未找到投資組合或用戶無權限，返回404錯誤
+        return Response({
+            "status": "error",
+            "message": "未找到投資組合或您無權限刪除此投資組合"
+        },
+                        status=status.HTTP_404_NOT_FOUND)
 
 
+# 一個簡單的受保護視圖，只有已認證用戶可以訪問
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])  # 確保只有認證用戶可以訪問
 def some_protected_view(request):
-    return JsonResponse({"message": "已通過身份驗證"})
+    return JsonResponse({"message": "已通過身份驗證"})  # 返回簡單的成功信息

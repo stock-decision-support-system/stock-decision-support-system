@@ -2,11 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Table, Button, Modal, Form, Select, Input, Popover } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';  // 用於顯示圖示
-import axios from 'axios';  // 用於 API 調用
 import '../assets/css/investmentList.css';
-import { config } from "../config";
-
-const BASE_URL = config.API_URL;
+import { InvestmentRequest } from '../api/request/investmentRequest.js';
 
 const { Option } = Select;
 
@@ -21,14 +18,9 @@ const InvestmentList = () => {
 
   // 獲取股票選項
   useEffect(() => {
-    axios.get(`${BASE_URL}/api/stocks/`)
+    InvestmentRequest.getAllStocks()
       .then(response => {
-        if (response.data.status === 'success') {
-          console.log('獲取到的股票數據:', response.data.stocks);  // 調試用日誌
-          setStockOptions(response.data.stocks);  // 成功後設置股票選項
-        } else {
-          console.error('獲取股票列表失敗:', response.data.message);
-        }
+        setStockOptions(response.data);  // 成功後設置股票選項
       })
       .catch(error => {
         console.error('無法獲取股票列表:', error);
@@ -40,13 +32,9 @@ const InvestmentList = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.get(`${BASE_URL}/api/portfolios/`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      })
+      InvestmentRequest.getPortfolios()
         .then(response => {
-          console.log('後端返回的投資組合資料:', response.data);
           const portfolios = response.data.map(item => ({ ...item, key: item.id }));
-
           // 查詢所有投資組合中的股票價格和名稱
           portfolios.forEach(portfolio => {
             portfolio.investments.forEach(stock => {
@@ -68,7 +56,7 @@ const InvestmentList = () => {
   // 查詢股票即時價格或收盤價
   const fetchStockPrice = (symbol) => {
     if (!stockPrices[symbol]) {  // 如果價格還未查詢過，才發送請求
-      axios.get(`${BASE_URL}/api/stock_price/${symbol}/`)
+      InvestmentRequest.getStockPrice(symbol)
         .then(response => {
           setStockPrices(prevPrices => ({
             ...prevPrices,
@@ -99,12 +87,7 @@ const InvestmentList = () => {
 
         const token = localStorage.getItem('token');
         if (token) {
-          axios.post(`${BASE_URL}/api/portfolios/create/`, newPortfolio, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            }
-          })
+          InvestmentRequest.createPortfolio(newPortfolio)
             .then(response => {
               setInvestmentData([...investmentData, { ...response.data, key: response.data.id }]);
               setIsModalVisible(false);
@@ -129,11 +112,7 @@ const InvestmentList = () => {
   const handleDelete = (id) => {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.delete(`${BASE_URL}/api/portfolios/${id}/delete/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }
-      })
+      InvestmentRequest.deletePortfolio(id)
         .then(() => {
           setInvestmentData(investmentData.filter(item => item.id !== id));
         })
@@ -282,8 +261,6 @@ const InvestmentList = () => {
       ),
     }
   ];
-
-
 
   return (
     <div className='container'>

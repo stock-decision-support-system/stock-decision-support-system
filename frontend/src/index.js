@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './assets/css/index.css';
@@ -20,23 +19,21 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'jquery/dist/jquery.min.js';
 import 'bootstrap/dist/js/bootstrap.min.js';
 import { UserProvider } from './userContext';
-import { AccountingProvider } from './context/AccountingContext'; // 引入 AccountingProvider
 import AccountingForm from './pages/accounting';
 import Stock from './pages/stock';
 import GeneralReport from './pages/generalreport';
 import StockList from './pages/stockList';
-import TwoFactorAuthPage from './pages/TwoFactorAuthPage';
+import TwoFactorAuthPage from './pages/twoFactorAuthPage';
 import TradeHistory from './pages/tradeHistory';
-
 
 const root = createRoot(document.getElementById('root'));
 
 root.render(
   <UserProvider>
-    <AccountingProvider> {/* 包裹在這裡以確保共享的數據能夠在所有相關頁面使用 */}
-      <Router>
-        <React.StrictMode>
-          <Navbar />
+    <Router>
+      <React.StrictMode>
+        <Navbar />
+        <div className='d-flex justify-content-center align-items-center vh-100'>
           <Routes>
             <Route path="/" element={<App />} />
             <Route path="/bankForm" element={<AddBankForm />} />
@@ -57,18 +54,8 @@ root.render(
             <Route path="/stockList" element={<StockList />} />
             <Route path="/tradeHistory" element={<TradeHistory />} />
           </Routes>
-        </React.StrictMode>
-      </Router>
-    </AccountingProvider>
-
+        </div>
+      </React.StrictMode>
+    </Router>
   </UserProvider>
 );
-
-// const rootScriptElement = document.createElement('div');
-// rootScriptElement.id = 'root-script';
-// document.body.appendChild(rootScriptElement);
-
-// ReactDOM.render(
-//   null,
-//   document.getElementById('root-script')
-// );
