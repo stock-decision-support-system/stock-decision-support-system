@@ -25,6 +25,11 @@
   font-weight: bold;
 }
 
+html, body {
+  height: 100%;
+  overflow: auto !important;/* 確保頁面可以滾動 */
+}
+
 .selected-button:hover,
 .unselected-button:hover {
   background-color: #d16b8f !important;

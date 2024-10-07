@@ -1,102 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Select, Button, Row, Col, Card, Descriptions, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
+import axios from 'axios';
 import '../assets/css/investmentPerformance.css';
 import { ArrowUpOutlined, ArrowDownOutlined, RightOutlined } from '@ant-design/icons';
 
-
 const { Option } = Select;
-
-const data = {
-  taiwan50: {
-    buyAndHold: [
-      { date: '2023-01-01', value: 100 },
-      { date: '2023-01-02', value: 105 },
-      { date: '2023-01-03', value: 110 },
-      { date: '2023-01-04', value: 115 },
-      { date: '2023-01-05', value: 120 },
-    ],
-    naive: [
-      { date: '2023-01-01', value: 100 },
-      { date: '2023-01-02', value: 102 },
-      { date: '2023-01-03', value: 104 },
-      { date: '2023-01-04', value: 106 },
-      { date: '2023-01-05', value: 108 },
-    ],
-  },
-  techSector: {
-    buyAndHold: [
-      { date: '2023-01-01', value: 100 },
-      { date: '2023-01-02', value: 108 },
-      { date: '2023-01-03', value: 116 },
-      { date: '2023-01-04', value: 124 },
-      { date: '2023-01-05', value: 132 },
-    ],
-    naive: [
-      { date: '2023-01-01', value: 100 },
-      { date: '2023-01-02', value: 104 },
-      { date: '2023-01-03', value: 108 },
-      { date: '2023-01-04', value: 112 },
-      { date: '2023-01-05', value: 116 },
-    ],
-  },
-  top10: {
-    buyAndHold: [
-      { date: '2023-01-01', value: 100 },
-      { date: '2023-01-02', value: 107 },
-      { date: '2023-01-03', value: 114 },
-      { date: '2023-01-04', value: 121 },
-      { date: '2023-01-05', value: 128 },
-    ],
-    naive: [
-      { date: '2023-01-01', value: 100 },
-      { date: '2023-01-02', value: 103 },
-      { date: '2023-01-03', value: 106 },
-      { date: '2023-01-04', value: 109 },
-      { date: '2023-01-05', value: 112 },
-    ],
-  },
-};
-
-const stats = {
-  taiwan50: {
-    totalReturn: 20,
-    annualReturn: 4.8,
-    maxDrawdown: 10,
-    volatility: 5,
-    startDate: '2023-01-01',
-    endDate: '2023-05-01'
-  },
-  techSector: {
-    totalReturn: 32,
-    annualReturn: 7.5,
-    maxDrawdown: 8,
-    volatility: 6,
-    startDate: '2023-01-01',
-    endDate: '2023-05-01'
-  },
-  top10: {
-    totalReturn: 28,
-    annualReturn: 6.2,
-    maxDrawdown: 9,
-    volatility: 5.5,
-    startDate: '2023-01-01',
-    endDate: '2023-05-01'
-  },
-};
-
-const tooltips = {
-  totalReturn: "總回報率：投資期內的總收益率。",
-  annualReturn: "年化回報率：年均收益率，考慮了複利效果。",
-  maxDrawdown: "最大回撤：投資期內最大資金回撤比例。",
-  volatility: "波動率：投資期內收益的波動程度。"
-};
 
 const Performance = ({ value, percentage }) => {
   const isGain = value >= 0;
-
   return (
     <span className={isGain ? 'gain' : 'loss'}>
       {isGain ? <ArrowUpOutlined className="arrow-up" /> : <ArrowDownOutlined className="arrow-down" />} 
@@ -106,9 +20,45 @@ const Performance = ({ value, percentage }) => {
 };
 
 const InvestmentPerformance = () => {
+  const [portfolioData, setPortfolioData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('taiwan50');
   const [algorithm, setAlgorithm] = useState('buyAndHold');
+  const { id } = useParams();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchPortfolioData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`http://127.0.0.1:8000/api/portfolios/${id}/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setPortfolioData(response.data);
+      } catch (err) {
+        setError('無法獲取投資組合詳細信息');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPortfolioData();
+  }, []);
+
+  if (loading) {
+    return <div>加載中...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (!portfolioData || !portfolioData.investments || portfolioData.investments.length === 0) {
+    return <div>無法加載投資組合數據</div>;
+  }
 
   const handleCategoryChange = (value) => {
     setSelectedCategory(value);
@@ -118,22 +68,15 @@ const InvestmentPerformance = () => {
     setAlgorithm(algo);
   };
 
-  const currentData = data[selectedCategory][algorithm];
-  const lastDataPoint = currentData[currentData.length - 1];
-  const secondLastDataPoint = currentData[currentData.length - 2];
-  const dailyChange = ((lastDataPoint.value - secondLastDataPoint.value) / secondLastDataPoint.value * 100).toFixed(2);
-  const totalReturn = ((lastDataPoint.value / currentData[0].value - 1) * 100).toFixed(2);
-
-  useEffect(() => {
-    document.body.style.overflow = 'auto';
-    return () => {
-      document.body.style.overflow = 'hidden';
-    };
-  }, []);
+  const currentData = portfolioData.investments || []; // 使用後端數據並增加防錯處理
+  const lastDataPoint = currentData.length > 0 ? currentData[currentData.length - 1] : null;
+  const secondLastDataPoint = currentData.length > 1 ? currentData[currentData.length - 2] : null;
+  const dailyChange = lastDataPoint && secondLastDataPoint ? ((lastDataPoint.value - secondLastDataPoint.value) / secondLastDataPoint.value * 100).toFixed(2) : 0;
+  const totalReturn = lastDataPoint ? ((lastDataPoint.value / currentData[0].value - 1) * 100).toFixed(2) : 0;
 
   return (
     <div className="container invback" style={{ padding: 20 }}>
-      <h1 className="title">台灣前50大公司</h1>
+      <h1 className="title">投資組合：{portfolioData.name}</h1>
       <Row gutter={16} style={{ marginBottom: 20 }}>
         <Col span={12} className='d-flex justify-content-center'>
           <Button className={algorithm === 'buyAndHold' ? 'selected-button' : 'unselected-button'}
@@ -170,17 +113,17 @@ const InvestmentPerformance = () => {
       </ResponsiveContainer>
       <Card title="投資績效數據" className="stats-card" style={{ marginTop: 20 }}>
         <Descriptions bordered column={1}>
-          <Descriptions.Item label={<span>總回報率<Tooltip title={tooltips.totalReturn}><QuestionCircleOutlined style={{ marginLeft: 8 }}/></Tooltip></span>}>
-            {stats[selectedCategory].totalReturn}%
+          <Descriptions.Item label={<span>總回報率</span>}>
+            {portfolioData.totalReturn}%
           </Descriptions.Item>
-          <Descriptions.Item label={<span>年化回報率<Tooltip title={tooltips.annualReturn}><QuestionCircleOutlined style={{ marginLeft: 8 }}/></Tooltip></span>}>
-            {stats[selectedCategory].annualReturn}%
+          <Descriptions.Item label={<span>年化回報率</span>}>
+            {portfolioData.annualReturn}%
           </Descriptions.Item>
-          <Descriptions.Item label={<span>最大回撤<Tooltip title={tooltips.maxDrawdown}><QuestionCircleOutlined style={{ marginLeft: 8 }}/></Tooltip></span>}>
-            {stats[selectedCategory].maxDrawdown}%
+          <Descriptions.Item label={<span>最大回撤</span>}>
+            {portfolioData.maxDrawdown}%
           </Descriptions.Item>
-          <Descriptions.Item label={<span>波動率<Tooltip title={tooltips.volatility}><QuestionCircleOutlined style={{ marginLeft: 8 }}/></Tooltip></span>}>
-            {stats[selectedCategory].volatility}%
+          <Descriptions.Item label={<span>波動率</span>}>
+            {portfolioData.volatility}%
           </Descriptions.Item>
         </Descriptions>
         <div className='' style={{display: 'flex', justifyContent: 'end'}}>
@@ -191,28 +134,25 @@ const InvestmentPerformance = () => {
       </Card>
       <Card title="投資組合項目" className="stats-card" style={{ marginTop: 20 }}>
         <Descriptions bordered column={1}>
-          <Descriptions.Item
-            label={<span>台積電 2330</span>}
-            contentStyle={{ textAlign: 'right' }}
-          >
-            總價值: 100,000.00 <span style={{ color: 'red' }}>▲ 2000.00 (2.37%)</span>
-          </Descriptions.Item>
-          <Descriptions.Item
-            label={<span>永豐金 2890</span>}
-            contentStyle={{ textAlign: 'right' }}
-          >
-            總價值: 5,000.00 <span style={{ color: 'green' }}>▼ 4.00 (0.21%)</span>
-          </Descriptions.Item>
+          {portfolioData.investments.map(stock => (
+            <Descriptions.Item
+              key={stock.symbol}
+              label={<span>{stock.name} ({stock.symbol})</span>}
+              contentStyle={{ textAlign: 'right' }}
+            >
+              總價值: {stock.totalValue ? stock.totalValue.toFixed(2) : 'N/A'} <span style={{ color: 'red' }}>▲ {stock.change ? stock.change.toFixed(2) : 'N/A'}</span>
+            </Descriptions.Item>
+          ))}
         </Descriptions>
       </Card>
       <div className="button-container" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3%' }}>
-  <Button type="link" className="back-button" onClick={() => navigate(-1)}>
-    返回上頁
-  </Button>
-  <Button type="link" className="back-button">
-      新增至自選投資組合 <RightOutlined className='icon-right' />
-  </Button>
-</div>
+        <Button type="link" className="back-button" onClick={() => navigate(-1)}>
+          返回上頁
+        </Button>
+        <Button type="link" className="back-button">
+          新增至自選投資組合 <RightOutlined className='icon-right' />
+        </Button>
+      </div>
     </div>
   );
 };

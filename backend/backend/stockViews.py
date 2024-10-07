@@ -331,6 +331,18 @@ def create_portfolio(request):
         print(f"Serializer errors: {serializer.errors}")  # 輸出錯誤信息
     return Response(serializer.errors, status=400)
 
+# 獲取特定投資組合的詳細資料
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  # 確保只有已認證用戶可以訪問
+def get_portfolio_detail(request, portfolio_id):
+    try:
+        # 獲取投資組合並確認是否屬於當前用戶
+        portfolio = InvestmentPortfolio.objects.get(id=portfolio_id, user=request.user)
+        serializer = InvestmentPortfolioSerializer(portfolio)
+        return Response(serializer.data, status=200)
+    except InvestmentPortfolio.DoesNotExist:
+        return Response({"error": "未找到投資組合"}, status=404)
+
 
 # 用於向某個投資組合中添加新的投資
 @api_view(["POST"])

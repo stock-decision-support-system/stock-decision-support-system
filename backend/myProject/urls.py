@@ -84,6 +84,8 @@ urlpatterns = [
     path('api/portfolios/<int:id>/investments/', stockViews.add_investment, name='add_investment'),
     path('api/portfolios/<int:portfolio_id>/delete/', stockViews.delete_portfolio, name='delete_portfolio'),
     path('api/stock_price/<str:symbol>/', stockViews.get_stock_price, name='get_stock_price'),
+    path('api/portfolios/<int:portfolio_id>/', stockViews.get_portfolio_detail, name='get_portfolio_detail'),
+
 
 
 

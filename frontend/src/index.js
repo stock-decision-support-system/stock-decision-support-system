@@ -47,7 +47,7 @@ root.render(
             <Route path="/changePassword" element={<ChangePassword />} />
             <Route path="/manageUsers" element={<ManageUsers />} />
             <Route path="/reset-password/:uid/:token" element={<ResetPasswordPage />} />
-            <Route path='/investmentPerformance' element={<InvestmentPerformance />} />
+            <Route path="/portfolio/:id" element={<InvestmentPerformance />} />
             <Route path='/investmentList' element={<InvestmentList />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/accounting" element={<AccountingForm />} />
@@ -60,6 +60,7 @@ root.render(
         </React.StrictMode>
       </Router>
     </AccountingProvider>
+
   </UserProvider>
 );
 
