@@ -19,8 +19,8 @@ const AccountDialog = ({ onClose }) => {
   const handleOk = async () => {
     try {
       const values = await form.validateFields(); // 驗證表單並獲取表單值
-      if (!values.name.trim()) {
-        alert("請輸入類別名稱！");
+      if (!values.account_name.trim()) {
+        message.error("請輸入類別名稱！");
         return;
       }
       AccountTypeRequest.addAccountType({ ...values, icon }) // 傳遞表單的值和 icon

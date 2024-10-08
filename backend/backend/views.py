@@ -651,7 +651,7 @@ def accounting_list_for_user(request):
 
         # 構建查詢集，先過濾出可用的記帳紀錄
         accountings = Accounting.objects.filter(
-            createdId=user.username, available=True  # 使用 User 物件而不是 username
+            createdId=user, available=True  # 使用 User 物件而不是 username
         ).select_related(
             "consumeType"
         )  # 預加載相關的 consumeType
@@ -681,7 +681,7 @@ def accounting_list_for_user(request):
             data=request.data, context={"request": request}
         )  # 使用請求數據進行序列化
         if serializer.is_valid():  # 驗證數據
-            accounting_record = serializer.save(createDate=timezone.now())  # 保存並設置創建者
+            accounting_record = serializer.save(createDate=timezone.now(), createdId=user)  # 保存並設置創建者
             try:
                 accounting_record.accountType.calculate_balance()
             except AccountType.DoesNotExist:
