@@ -111,6 +111,9 @@ class ConsumeType(models.Model):
     )
     createDate = models.DateTimeField(auto_now_add=True)  # 創建日期
 
+    def __str__(self):
+        return self.name
+    
     class Meta:
         db_table = "consume_type"  # 資料表名稱
 
@@ -154,6 +157,10 @@ class AccountType(models.Model):
 
         self.save(update_fields=["balance"])
 
+
+    def __str__(self):
+        return self.account_name
+    
     class Meta:
         db_table = "account_type"
 

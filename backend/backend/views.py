@@ -1,5 +1,6 @@
 import time
 from datetime import datetime
+from django.forms import model_to_dict
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.contrib.auth.hashers import check_password, make_password
@@ -653,8 +654,8 @@ def accounting_list_for_user(request):
         accountings = Accounting.objects.filter(
             createdId=user, available=True  # 使用 User 物件而不是 username
         ).select_related(
-            "consumeType"
-        )  # 預加載相關的 consumeType
+            "consumeType", "accountType"
+        )  # 預加載相關的 consumeType, accountType
 
         # 根據 account 過濾，如果 account_filter 有值
         if account_type_filter:
@@ -671,8 +672,19 @@ def accounting_list_for_user(request):
         # 序列化記帳紀錄
         serializer = AccountingSerializer(accountings, many=True)
 
+        data = serializer.data
+
+        for i, accounting in enumerate(data):
+            data[i] = {
+                **accounting,
+                "accountTypeName": str(accountings[i].accountType.account_name),
+                "accountTypeIcon": str(accountings[i].accountType.icon),
+                "consumeTypeName": str(accountings[i].consumeType.name),
+                "consumeTypeIcon": str(accountings[i].consumeType.icon),
+            }
+        
         return Response(
-            {"status": "success", "data": serializer.data}, status=status.HTTP_200_OK
+            {"status": "success", "data": data}, status=status.HTTP_200_OK
         )
 
     elif request.method == "POST":
