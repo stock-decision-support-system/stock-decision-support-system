@@ -104,7 +104,11 @@ class ConsumeType(models.Model):
     icon = models.TextField(max_length=20, null=True)  # 顯示的圖示
     name = models.CharField(max_length=20)  # 消費類別的名稱
     available = models.BooleanField(default=True)  # 是否可用
-    createdId = models.CharField(max_length=20)  # 創建者ID
+    createdId = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        db_column="createdId",  # 在資料庫中的列名
+    )
     createDate = models.DateTimeField(auto_now_add=True)  # 創建日期
 
     class Meta:
@@ -124,8 +128,6 @@ class AccountType(models.Model):
     username = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
-        related_name="account",  # 與CustomUser的反向關聯
-        to_field="username",  # 使用CustomUser的username字段
         db_column="username",  # 在資料庫中的列名
     )
     # 帳戶名稱，由使用者自訂
@@ -135,7 +137,22 @@ class AccountType(models.Model):
                                   decimal_places=2,
                                   default=0.00)
     # 資料創建時間，當新增資料時自動填入當前時間
-    created_at = models.DateTimeField(auto_now_add=True)
+    createDate = models.DateTimeField(auto_now_add=True)
+    available = models.BooleanField(default=True)  # 是否可用
+
+    def calculate_balance(self):
+        # 計算收入總和，assetType 為 '0' 表示收入
+        total_income = Accounting.objects.filter(assetType='0', accountType=self.id).aggregate(
+                total_income=Sum('amount'))['total_income'] or 0
+
+        # 計算支出總和，assetType 為 '1' 表示支出
+        total_expenses = Accounting.objects.filter(assetType='1', accountType=self.id).aggregate(
+                total_expenses=Sum('amount'))['total_expenses'] or 0
+
+        # 計算淨資產
+        self.balance = total_income - total_expenses
+
+        self.save(update_fields=["balance"])
 
     class Meta:
         db_table = "account_type"
@@ -147,7 +164,9 @@ class Accounting(models.Model):
     accountingName = models.CharField(max_length=50)  # 記帳名稱
     amount = models.DecimalField(max_digits=10, decimal_places=2,
                                  null=True)  # 金額，用於收入、支出、轉帳
-    accountType = models.IntegerField()
+    accountType = models.ForeignKey(AccountType,
+                                      on_delete=models.CASCADE,
+                                      db_column="accountType")  # 外鍵，關聯到消費帳戶
     consumeType = models.ForeignKey(ConsumeType,
                                       on_delete=models.CASCADE,
                                       db_column="consumeType")  # 外鍵，關聯到消費類別
@@ -160,8 +179,6 @@ class Accounting(models.Model):
     createdId = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
-        related_name="accounting",  # 與CustomUser的反向關聯
-        to_field="username",  # 使用CustomUser的username字段
         db_column="createdId",  # 在資料庫中的列名
     )
     createDate = models.DateTimeField(auto_now_add=True)  # 創建日期

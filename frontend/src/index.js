@@ -47,11 +47,10 @@ root.render(
             <Route path="/portfolio/:id" element={<InvestmentPerformance />} />
             <Route path='/investmentList' element={<InvestmentList />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/accounting" element={<AccountingForm />} />
-            <Route path="/two-factor-auth" element={<TwoFactorAuthPage />} />
             <Route path="/stock/:code" element={<Stock />} />
-            <Route path="/generalreport" element={<GeneralReport />} />
             <Route path="/stockList" element={<StockList />} />
+            <Route path="/accounting" element={<AccountingForm />} />
+            <Route path="/generalreport" element={<GeneralReport />} />
             <Route path="/tradeHistory" element={<TradeHistory />} />
           </Routes>
         </div>

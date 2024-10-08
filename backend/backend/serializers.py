@@ -40,7 +40,7 @@ class AccountTypeSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "icon",
-            "name",
+            "account_name",
         ]
 
     def create(self, validated_data):

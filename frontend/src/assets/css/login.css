@@ -18,6 +18,22 @@ body {
   /* 假設導航欄高度為 56px */
 }
 
+.button1 {
+  font-weight: bolder;
+  color: #ffffff !important; /* 確保文字顏色不被覆蓋 */
+  background: linear-gradient(to right, #996666, #cc9999) !important; /* 確保背景色 hover 生效 */
+  border: 0px;
+  border-radius: 10px;
+  box-shadow: none !important; /* 禁止 Ant Design 預設的陰影 */
+}
+
+.button1:hover {
+  box-shadow: 2px 4px 10px #cc9999 !important; /* 更高優先級的陰影樣式 */
+  background: linear-gradient(to right, #e6ccb2, #f7d1b0) !important; /* 左邊皮膚色，右邊淺米色 */
+  transform: translateY(-2px) !important; /* 確保懸浮效果 */
+  transition: all 0.3s ease-in-out !important; /* 禁止任何與預設衝突的過渡效果 */
+}
+
 .button2 {
   font-weight: bolder;
   color: #ffffff !important; /* 確保文字顏色不被覆蓋 */

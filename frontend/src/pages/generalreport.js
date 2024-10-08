@@ -1,17 +1,25 @@
-import React, { useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'font-awesome/css/font-awesome.min.css';
-import '../assets/css/generalreport.css';
+import React, { useState, useEffect } from 'react';
+import { message } from 'antd';
 import { Line } from '@ant-design/charts';
+import { AccountingRequest } from '../api/request/accountingRequest';
 import AccountingSidebar from '../components/accountingSidebar.js'; // 引入 Sidebar 組件
 
 const GeneralReport = () => {
     const [category, setCategory] = useState('全年');
-    const [isSidebarActive, setIsSidebarActive] = useState(false);
     const [totalAmount, setTotalAmount] = useState(0)
 
-    const toggleSidebar = () => {
-        setIsSidebarActive(!isSidebarActive);
+    useEffect(() => {
+        fetchTotalAmount();
+    }, []);
+
+    const fetchTotalAmount = async () => {
+        AccountingRequest.getFinancialSummary()
+            .then(response => {
+                setTotalAmount(response.data.total_assets);
+            })
+            .catch((error) => {
+                message.error(error.message);
+            });
     };
 
     // 假資料，用於折線圖

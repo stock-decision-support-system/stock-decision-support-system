@@ -108,6 +108,10 @@ DATABASES = {
         'PASSWORD': config["database"]["password"],
         'HOST': config["database"]["host"],
         "PORT": config["database"]["port"],
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'collation': 'utf8mb4_0900_ai_ci',
+        }
     }
 }
 

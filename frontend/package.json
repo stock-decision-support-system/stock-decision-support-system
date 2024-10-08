@@ -12,6 +12,7 @@
     "antd": "^5.16.1",
     "axios": "^1.6.8",
     "bootstrap": "^5.3.3",
+    "emoji-picker-react": "^4.12.0",
     "flatpickr": "^4.6.13",
     "font-awesome": "^4.7.0",
     "jquery": "^3.7.1",
