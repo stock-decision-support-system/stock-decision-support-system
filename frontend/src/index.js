@@ -27,7 +27,8 @@ import GeneralReport from './pages/generalreport';
 import BalanceReport from './pages/balanceReport';
 import ConsumeReport from './pages/consumeReport';
 import StockList from './pages/stockList';
-import TwoFactorAuthPage from './pages/twoFactorAuthPage';
+import TwoFactorAuthPage from './pages/TwoFactorAuthPage';
+import DefaultInvestment from './pages/defaultInvestment'
 import TradeHistory from './pages/tradeHistory';
 
 const root = createRoot(document.getElementById('root'));
@@ -50,6 +51,7 @@ root.render(
             <Route path="/reset-password/:uid/:token" element={<ResetPasswordPage />} />
             <Route path="/portfolio/:id" element={<InvestmentPerformance />} />
             <Route path='/investmentList' element={<InvestmentList />} />
+            <Route path='/defaultInvestment' element={<DefaultInvestment />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/stock/:code" element={<Stock />} />
             <Route path="/stockList" element={<StockList />} />

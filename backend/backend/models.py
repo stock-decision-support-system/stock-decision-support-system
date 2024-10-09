@@ -277,6 +277,17 @@ class Investment(models.Model):
     class Meta:
         db_table = "investment"  # 在資料庫中的表名
 
+class DefaultInvestmentPortfolio(models.Model):
+    name = models.CharField(max_length=100)  # 投資組合名稱
+    investment_threshold = models.DecimalField(max_digits=12, decimal_places=2)  # 投資門檻
+
+    class Meta:
+        db_table = "default_investment_portfolio"  # 在資料庫中的表名
+
+    def __str__(self):
+        return self.name
+
+
 
 # 目標模型
 class Budget(models.Model):

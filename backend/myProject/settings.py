@@ -146,7 +146,7 @@ AUTH_USER_MODEL = 'backend.CustomUser'
 
 LANGUAGE_CODE = 'zh-hant'
 
-TIME_ZONE = 'Asia/Taipei'
+TIME_ZONE = 'UTC'
 
 USE_I18N = True
 

@@ -8,6 +8,7 @@ from .models import (
     InvestmentPortfolio,
     Investment,
     Budget,
+    DefaultInvestmentPortfolio,
 )
 
 
@@ -133,3 +134,9 @@ class BudgetSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data["username"] = self.context["request"].user
         return super().create(validated_data)
+    
+class DefaultInvestmentPortfolioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DefaultInvestmentPortfolio
+        fields = ['id', 'name', 'investment_threshold']  # 只包括這兩個欄位
+

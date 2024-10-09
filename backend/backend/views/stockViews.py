@@ -7,8 +7,8 @@ import logging
 
 from rest_framework import status  # 新增這行導入
 from rest_framework.response import Response
-from ..models import InvestmentPortfolio, Investment
-from ..serializers import InvestmentPortfolioSerializer, InvestmentSerializer
+from ..models import InvestmentPortfolio, Investment, DefaultInvestmentPortfolio
+from ..serializers import InvestmentPortfolioSerializer, InvestmentSerializer, DefaultInvestmentPortfolioSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.decorators import (
@@ -230,6 +230,42 @@ def get_tw_stocks(request):
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
+    
+@api_view(['GET', 'POST'])
+def default_investment_portfolios(request):
+    print(request.data)  # 用於檢查接收到的數據
+
+    if 'name' not in request.data or 'investment_threshold' not in request.data:
+        return Response({'error': '缺少必要參數'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == 'GET':
+        # 查詢所有投資組合
+        portfolios = DefaultInvestmentPortfolio.objects.all()
+        serializer = DefaultInvestmentPortfolioSerializer(portfolios, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        # 根據投資組合名稱更新或創建投資門檻
+        portfolio_name = request.data.get('name')
+        investment_threshold = request.data.get('investment_threshold')
+
+        try:
+            portfolio, created = DefaultInvestmentPortfolio.objects.get_or_create(
+                name=portfolio_name,  # 根據名稱查詢或創建
+                defaults={'investment_threshold': investment_threshold}
+            )
+
+            if not created:
+                # 如果已存在，則更新門檻
+                portfolio.investment_threshold = investment_threshold
+                portfolio.save()
+
+            serializer = DefaultInvestmentPortfolioSerializer(portfolio)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 # 獲取所有股票合約
