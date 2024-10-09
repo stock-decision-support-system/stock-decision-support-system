@@ -1,6 +1,10 @@
 from datetime import timedelta
+
+import openai
+from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from rest_framework.views import APIView
 
 from ..models import (
     AccountType,
@@ -10,7 +14,7 @@ from ..models import (
     ConsumeType,
 )
 
-from django.db.models import Sum, Case, When, F
+from django.db.models import Sum, Case, When, F, Q
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -27,6 +31,8 @@ import yaml
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 import logging
+
+from myProject import settings
 
 # 設置日誌
 logger = logging.getLogger(__name__)
@@ -695,3 +701,65 @@ def budget_operations(request, id=None):
                 {"status": "error", "message": "紀錄不存在"},  # 如果找不到，返回404
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+class FinancialAnalysisView(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def get(self, request, username):
+        user = get_object_or_404(CustomUser, username=username)
+
+        # 獲取過濾參數
+        account_type_filter = request.query_params.get("accountType")
+        asset_type_filter = request.query_params.get("assetType")
+
+        # 構建查詢集，按月分組
+        accountings = Accounting.objects.filter(
+            createdId=user, available=True
+        ).annotate(month=TruncMonth('transactionDate')).order_by('month')
+
+        if account_type_filter:
+            accountings = accountings.filter(accountType=account_type_filter)
+
+        if asset_type_filter:
+            accountings = accountings.filter(assetType=asset_type_filter)
+
+        # 計算每月的總收入和總支出
+        summary = accountings.values('month').annotate(
+            total_income=Sum('amount', filter=Q(assetType='0')),
+            total_expense=Sum('amount', filter=Q(assetType='1'))
+        )
+
+        # 生成建議
+        advice = self.generate_financial_advice(summary)
+
+        return Response({
+            "status": "success",
+            "data": list(summary),
+            "advice": advice
+        })
+    def generate_financial_advice(self, summary):
+        openai.api_key = settings.OPENAI_API_KEY
+        advice = []
+        for month_data in summary:
+            prompt = ""
+            if month_data['total_expense'] > month_data['total_income']:
+                prompt = f"在 {month_data['month'].strftime('%Y年%m月')}，支出超過收入 {month_data['total_expense'] - month_data['total_income']:.2f} 元。請問有什麼方法可以減少支出或增加收入？"
+            elif month_data['total_income'] > month_data['total_expense']:
+                prompt = f"在 {month_data['month'].strftime('%Y年%m月')}，收入超過支出 {month_data['total_income'] - month_data['total_expense']:.2f} 元。請問有什麼方法可以優化儲蓄或投資策略？"
+
+            if prompt:  # 如果有生成提示問題
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",  # 使用 chat 模型
+                    messages=[
+                        {"role": "system", "content": "你是一個精通財務管理的專家，能夠給出理財建議。"},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=150,
+                    temperature=0.7,
+                )
+                advice_text = response['choices'][0]['message']['content'].strip()
+                advice.append({
+                    "month": month_data['month'].strftime('%Y-%m'),
+                    "advice": advice_text
+                })
+        return advice
