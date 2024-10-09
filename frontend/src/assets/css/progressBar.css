@@ -1,0 +1,11 @@
+.ant-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 添加輕微的陰影 */
+}
+
+.ant-card-body {
+    transition: transform 0.2s; /* 添加平滑過渡效果 */
+}
+
+.ant-card:hover .ant-card-body {
+    transform: scale(1.02); /* 懸停時放大 */
+}

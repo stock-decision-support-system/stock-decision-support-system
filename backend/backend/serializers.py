@@ -126,9 +126,10 @@ class BudgetSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'start_date',
+            'end_date',
             'target'
         ]
 
     def create(self, validated_data):
-        validated_data["createdId"] = self.context["request"].user
+        validated_data["username"] = self.context["request"].user
         return super().create(validated_data)

@@ -1,32 +1,93 @@
 import React, { useState, useEffect } from 'react';
-import { Button, message, Spin, Card, Radio, List, Typography, Row, Col } from 'antd';
+import { message, Spin, Card, Radio, List, Typography, Row, Col, Pagination } from 'antd';
 import AccountingSidebar from '../components/accountingSidebar';
+import AccountingList from '../components/accountingList';
 import { AccountingRequest } from '../api/request/accountingRequest';
+import { CategoryRequest } from '../api/request/categoryRequest';
+import { Pie } from '@ant-design/plots';
 
 const TradeHistory = () => {
     const [loading, setLoading] = useState(false);
     const [totalAmount, setTotalAmount] = useState(0)
-    const [accountingList, setAccountingList] = useState([])
+    const [netAmount, setNetAmount] = useState(0)
+    const [incomeData, setIncomeData] = useState([])
+    const [expenseData, setExpenseData] = useState([])
+    const [totalPages, setTotalPages] = useState(null);
+
+    const incomeConfig = {
+        appendPadding: 10,
+        data: incomeData,
+        angleField: 'value',
+        colorField: 'name',
+        radius: 0.7,
+        label: {
+            type: 'outer',
+            content: '{name} {percentage}',
+        },
+        interactions: [
+            {
+                type: 'pie-legend-active',
+            },
+            {
+                type: 'element-active',
+            },
+        ],
+    };
+
+    const expenseConfig = {
+        appendPadding: 10,
+        data: expenseData,
+        angleField: 'value',
+        colorField: 'name',
+        radius: 0.7,
+        label: {
+            type: 'outer',
+            content: '{name} {percentage}',
+        },
+        interactions: [
+            {
+                type: 'pie-legend-active',
+            },
+            {
+                type: 'element-active',
+            },
+        ],
+    };
 
     useEffect(() => {
+        fetchAccountingPage();
+        fetchAccountChart();
         fetchTotalAmount();
-        fetchAccountingList()
     }, []);
 
-    const fetchTotalAmount = async () => {
-        AccountingRequest.getFinancialSummary()
+    const fetchAccountingPage = async () => {
+        AccountingRequest.getAccountingTotalPages()
             .then(response => {
-                setTotalAmount(response.data.total_assets);
+                setTotalPages(response.data.totalPages); // 更新 totalPages 狀態
             })
             .catch((error) => {
                 message.error(error.message);
             });
     };
 
-    const fetchAccountingList = async () => {
-        AccountingRequest.getAccountingList()
+    const fetchTotalAmount = async () => {
+        setLoading(true);
+        AccountingRequest.getFinancialSummary()
             .then(response => {
-                setAccountingList(response.data);
+                setTotalAmount(response.data.total_assets);
+                setNetAmount(response.data.net_assets);
+            })
+            .catch((error) => {
+                message.error(error.message);
+            });
+        setLoading(false);
+    };
+
+    const fetchAccountChart = async () => {
+        CategoryRequest.getConsumeTypeChart()
+            .then(response => {
+                setIncomeData(response.data.income);
+                setExpenseData(response.data.expense);
             })
             .catch((error) => {
                 message.error(error.message);
@@ -35,56 +96,32 @@ const TradeHistory = () => {
 
     return (
         <div className="accounting-kv w-100" style={{ height: '80%', display: 'flex' }}>
-            <AccountingSidebar totalAmount={totalAmount} selectedKey={'4'} />
-            <Card style={{ marginLeft: '2rem', width: '50%' }}>
-                <Spin spinning={loading}>
-                    <List
-                        itemLayout="horizontal"
-                        dataSource={accountingList}
-                        renderItem={(item) => {
-                            const formattedAmount =
-                                item.assetType === '0'
-                                    ? `+${item.amount}`
-                                    : `-${item.amount}`;
-                            const amountStyle =
-                                item.assetType === '0' ? { color: 'blue', fontSize: '16px' } : { color: 'red', fontSize: '16px' };
-                            const displayContent =
-                                item.content && item.content.length > 8
-                                    ? item.content.substring(0, 8) + '...'
-                                    : item.content || ' ';
-                            return (
-                                <List.Item style={{ padding: '10px 0' }}>
-                                    <Row style={{ width: '100%', alignItems: 'center' }}>
-                                        <Col span={4} style={{ fontSize: '16px' }}>
-                                            {item.transactionDate.substring(0, 10)}
-                                        </Col>
-                                        <Col span={12} style={{ display: 'flex', flexDirection: 'column', paddingLeft: '16px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', fontSize: '16px', marginBottom: '8px' }}>
-                                                <span style={{ fontSize: '20px' }}>{item.consumeTypeIcon}</span>
-                                                <Typography.Text style={{ marginLeft: '8px', fontSize: '16px' }}>
-                                                    {item.accountingName}
-                                                </Typography.Text>
-                                            </div>
-                                            <Typography.Text style={{ color: 'gray', fontSize: '14px' }}>
-                                                {displayContent}
-                                            </Typography.Text>
-                                        </Col>
-                                        <Col span={8} style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                                            <span style={{ fontSize: '20px' }}>{item.accountTypeIcon}</span>
-                                            <Typography.Text style={amountStyle} strong>
-                                                {formattedAmount}
-                                            </Typography.Text>
-                                        </Col>
-                                    </Row>
-                                </List.Item>
-                            );
-                        }}
-                    />
-                </Spin>
-            </Card>
+            <AccountingSidebar totalAmount={totalAmount} netAmount={netAmount} selectedKey={'2'} />
+            <AccountingList totalPages={totalPages * 8} /> {/*8是size */}
             <Card style={{ marginLeft: '2rem', width: '30%' }}>
                 <Spin spinning={loading}>
-
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                        {incomeData.length > 0 ? (
+                            <>
+                                <Typography.Title level={3} style={{ textAlign: 'center' }}>收入圖表</Typography.Title>
+                                <div style={{ height: '200px', width: '100%', marginBottom: '10rem' }}>  {/* 設置圓餅圖的容器高度和底部間距 */}
+                                    <Pie {...incomeConfig} />
+                                </div>
+                            </>
+                        ) : (
+                            <Typography.Text>暫無收入圖表數據</Typography.Text>
+                        )}
+                        {expenseData.length > 0 ? (
+                            <>
+                                <Typography.Title level={3} style={{ textAlign: 'center' }}>支出圖表</Typography.Title>
+                                <div style={{ height: '200px', width: '100%' }}>  {/* 設置圓餅圖的容器高度 */}
+                                    <Pie {...expenseConfig} />
+                                </div>
+                            </>
+                        ) : (
+                            <Typography.Text>暫無支出圖表數據</Typography.Text>
+                        )}
+                    </div>
                 </Spin>
             </Card>
         </div>

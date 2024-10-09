@@ -1,6 +1,7 @@
 import { FetchUtil } from "../util/fetchUtil";
 
 const BASE_URL = "/consume-type";
+const CHART_URL = "/chart";
 
 export class CategoryRequest {
     static searchConsumeType() {
@@ -17,5 +18,8 @@ export class CategoryRequest {
     }
     static deleteConsumeType(id) {
         return FetchUtil.deleteAPI(`${BASE_URL}/${id}`);
+    }
+    static getConsumeTypeChart() {
+        return FetchUtil.getAPI(`${BASE_URL}${CHART_URL}`);
     }
 }

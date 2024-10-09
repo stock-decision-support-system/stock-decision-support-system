@@ -16,17 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from backend import views
 from django.conf import settings
 from django.conf.urls.static import static
-from backend.stockViews import get_all_stocks
-from backend import stockViews
+from backend.views import views
+from backend.views import stockViews
+from backend.views import accountingViews
 
 urlpatterns = [
-    #django後台
+    # django後台
     path('admin/', admin.site.urls),
 
-    #資料庫轉換為json後的資料
+    # 資料庫轉換為json後的資料
     path('users/', views.UserList.as_view(), name="anything"),
 
     # 註冊 URL
@@ -59,27 +59,35 @@ urlpatterns = [
     # 修改個人資料 URL
     path('edit-profile/', views.edit_profile, name='profile'),
 
-    path('accounting/user/', views.accounting_list_for_user, name='accounting-list-user'),
-    path('accounting/admin/', views.accounting_list_for_admin, name='accounting-list-admin'),
-    path('consume-type/', views.consume_type_operations, name='consume_type_list'),
-    path('consume-type/<int:id>/', views.consume_type_operations, name='consume_type_detail'),
-    path('account-type/', views.account_type_operations, name='account_type_list'),
-    path('account-type/<int:id>/', views.account_type_operations, name='account_type_detail'),
+    # 記帳
+    path('accounting/user/', accountingViews.accounting_list_for_user, name='accounting-list-user'),
+    path('accounting/page/', accountingViews.get_accounting_total_pages, name='accounting-list-page'),
+    path('accounting/admin/', accountingViews.accounting_list_for_admin, name='accounting-list-admin'),
+    path('consume-type/', accountingViews.consume_type_operations, name='consume_type_list'),
+    path('consume-type/<int:id>/', accountingViews.consume_type_operations, name='consume_type_detail'),
+    path('account-type/', accountingViews.account_type_operations, name='account_type_list'),
+    path('account-type/<int:id>/', accountingViews.account_type_operations, name='account_type_detail'),
+    path('account-type/chart/', accountingViews.account_charts_user, name='accounting_charts_user'),
+    path('consume-type/chart/', accountingViews.consume_charts_user, name='consume_charts_user'),
 
-    #銀行資料
+    # 儲蓄目標
+    path('budget/', accountingViews.budget_operations, name='budget_operations'),
+    path('budget/<int:id>/', accountingViews.budget_operations, name='budget_detail'),
+
+    # 銀行資料
     path('bank-profile/add/', views.add_bank_profile, name='add-bank-profile'),
     path('bank-profile/update/<int:id>/', views.update_bank_profile, name='update-bank-profile'),
     path('bank-profile/delete/<int:id>/', views.delete_bank_profile, name='delete-bank-profile'),
     path('bank-profile/list/', views.get_bank_profile_list, name='get-bank-profile-list'),
     path('bank-profile/get/<int:id>/', views.get_bank_profile, name='get-bank-profile'),
     
-    #股票查詢
+    # 股票查詢
     path('stock/get/<str:id>/', stockViews.get_stock_detail, name='get-stock-detail'),
     path('stock/kbar/<str:id>/', stockViews.get_kbars, name='get-kbar'),
-    path('investment/stocks/', get_all_stocks, name='get_all_stocks'),
+    path('investment/stocks/', stockViews.get_all_stocks, name='get_all_stocks'),
     path('stock/twfif/', stockViews.get_tw_stocks, name='get-tw-stocks'),
 
-    #投資組合
+    # 投資組合
     path('investment/portfolios/', stockViews.get_portfolios, name='get_portfolios'),
     path('investment/portfolios/create/', stockViews.create_portfolio, name='create_portfolio'),
     path('investment/portfolios/<int:id>/investments/', stockViews.add_investment, name='add_investment'),
@@ -87,8 +95,8 @@ urlpatterns = [
     path('investment/stock_price/<str:symbol>/', stockViews.get_stock_price, name='get_stock_price'),
     path('investment/portfolios/<int:portfolio_id>/', stockViews.get_portfolio_detail, name='get_portfolio_detail'),
 
-    #資產負債查詢
-    path('users/<username>/financial-summary/', views.financial_summary, name='financial-summary'),
+    # 資產負債查詢
+    path('users/<username>/financial-summary/', accountingViews.financial_summary, name='financial-summary'),
 ]
 
 if settings.DEBUG:

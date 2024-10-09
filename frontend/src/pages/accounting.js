@@ -6,12 +6,14 @@ import { AccountTypeRequest } from '../api/request/accountTypeRequest';
 import { CategoryRequest } from '../api/request/categoryRequest';
 import CategoryDialog from '../components/categoryDialog';
 import AccountDialog from '../components/accountDialog';
+import moment from 'moment';
 
 const { Option } = Select;
 
 const AccountingForm = () => {
   const [form] = Form.useForm(); // 使用 Ant Design 表單
   const [totalAmount, setTotalAmount] = useState(0)
+  const [netAmount, setNetAmount] = useState(0)
   const [tradeHistory, setTradeHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [assetType, setAssetType] = useState('0');
@@ -52,6 +54,7 @@ const AccountingForm = () => {
     AccountingRequest.getFinancialSummary()
       .then(response => {
         setTotalAmount(response.data.total_assets);
+        setNetAmount(response.data.net_assets);
       })
       .catch((error) => {
         message.error(error.message);
@@ -74,6 +77,7 @@ const AccountingForm = () => {
 
   const handleSubmit = async (values) => {
     setLoading(true);
+    values["transactionDate"] = moment(values.transactionDate).format("YYYY-MM-DD")
     const newData = { ...values, assetType, consumeType, accountType }
     AccountingRequest.addAccountingData(newData)
       .then(response => {
@@ -85,14 +89,6 @@ const AccountingForm = () => {
         message.error(error.message);
       });
     setLoading(false);
-  };
-
-  const onDateChange = (date, dateString) => {
-    console.log(date, dateString);
-  };
-
-  const onRadioChange = (e) => {
-    console.log(`radio checked:${e.target.value}`);
   };
 
   const handleConsumeClick = () => {
@@ -113,12 +109,12 @@ const AccountingForm = () => {
 
   return (
     <div className="accounting-kv w-100" style={{ height: '80%', display: 'flex' }}>
-      <AccountingSidebar totalAmount={totalAmount} selectedKey={'1'} />
+      <AccountingSidebar totalAmount={totalAmount} netAmount={netAmount} selectedKey={'1'} />
       <Card style={{ marginLeft: '2rem', width: '80%' }}>
         <Spin spinning={loading}>
           <Form form={form} onFinish={handleSubmit}>
             <Form.Item name="transactionDate" label="交易日期" rules={[{ required: true, message: '請選擇日期' }]}>
-              <DatePicker onChange={onDateChange} locale />
+              <DatePicker locale />
             </Form.Item>
             <Form.Item name="accountingName" label="消費名稱" rules={[{ required: true, message: '請簡述消費行為' }]}>
               <Input />

@@ -281,13 +281,15 @@ class Investment(models.Model):
 # 目標模型
 class Budget(models.Model):
     id = models.AutoField(primary_key=True)  # 自動生成的主鍵
-    user = models.ForeignKey(CustomUser,
+    username = models.ForeignKey(CustomUser,
                              on_delete=models.CASCADE,
                              to_field="username")  # 關聯到CustomUser的username字段
     start_date = models.DateField(auto_now_add=True)  # 目標起始日期
-    end_date = models.DateField()  # 設定預設值為今天加30天
+    end_date = models.DateField(null=True)
+    name = models.CharField(max_length=20)  # 名稱
     target = models.DecimalField(max_digits=10, decimal_places=2)  # 目標
-    is_successful = models.BooleanField(default=True)  # 是否達成
+    current = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))  # 目前金額
+    is_successful = models.BooleanField(default=False)  # 是否達成
     available = models.BooleanField(default=True)  # 是否有效
 
     class Meta:

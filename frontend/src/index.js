@@ -4,6 +4,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './assets/css/index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from './components/navbar';
+import BudgetDialog from './components/budgetDialog';
+import GoalProgressBar from './components/goalProgressBar';
 import App from './pages/app';
 import Login from './pages/login';
 import SignUp from './pages/signUp';
@@ -22,6 +24,8 @@ import { UserProvider } from './userContext';
 import AccountingForm from './pages/accounting';
 import Stock from './pages/stock';
 import GeneralReport from './pages/generalreport';
+import BalanceReport from './pages/balanceReport';
+import ConsumeReport from './pages/consumeReport';
 import StockList from './pages/stockList';
 import TwoFactorAuthPage from './pages/twoFactorAuthPage';
 import TradeHistory from './pages/tradeHistory';
@@ -51,9 +55,13 @@ root.render(
             <Route path="/stockList" element={<StockList />} />
             <Route path="/accounting" element={<AccountingForm />} />
             <Route path="/generalreport" element={<GeneralReport />} />
+            <Route path="/balancereport" element={<BalanceReport />} />
+            <Route path="/consumereport" element={<ConsumeReport />} />
             <Route path="/tradeHistory" element={<TradeHistory />} />
           </Routes>
         </div>
+        <GoalProgressBar/>
+        <BudgetDialog />
       </React.StrictMode>
     </Router>
   </UserProvider>

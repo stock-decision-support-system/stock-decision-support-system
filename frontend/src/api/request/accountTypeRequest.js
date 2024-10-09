@@ -1,6 +1,7 @@
 import { FetchUtil } from "../util/fetchUtil";
 
 const BASE_URL = "/account-type";
+const CHART_URL = "/chart"
 
 export class AccountTypeRequest {
     static searchAccountType() {
@@ -17,5 +18,8 @@ export class AccountTypeRequest {
     }
     static deleteAccountType(id) {
         return FetchUtil.deleteAPI(`${BASE_URL}/${id}`);
+    }
+    static getAccountTypeChart() {
+        return FetchUtil.getAPI(`${BASE_URL}${CHART_URL}`);
     }
 }

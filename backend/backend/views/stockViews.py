@@ -7,8 +7,8 @@ import logging
 
 from rest_framework import status  # 新增這行導入
 from rest_framework.response import Response
-from .models import InvestmentPortfolio, Investment
-from .serializers import InvestmentPortfolioSerializer, InvestmentSerializer
+from ..models import InvestmentPortfolio, Investment
+from ..serializers import InvestmentPortfolioSerializer, InvestmentSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.decorators import (
