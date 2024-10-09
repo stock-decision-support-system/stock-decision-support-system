@@ -190,3 +190,5 @@ EMAIL_HOST_PASSWORD = 'qesr hpzy anid oytr'
 
 #recaptcha密鑰
 RECAPTCHA_SECRET_KEY = '6LdmwcgpAAAAAFkprWdUSzzAZ8dE-1obmzqLK3Nf'
+
+OPENAI_API_KEY = ''
