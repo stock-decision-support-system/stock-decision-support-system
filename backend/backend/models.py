@@ -238,6 +238,7 @@ class InvestmentPortfolio(models.Model):
     name = models.CharField(max_length=100)  # 投資組合名稱
     description = models.TextField()  # 投資組合描述
     available = models.BooleanField(default=True)  # 是否有效
+    quota = models.IntegerField(null=True)  # 定期金額
 
     # 計算投資組合的當前總市值（使用買入價格）
     def calculate_portfolio_value(self):
@@ -300,9 +301,6 @@ class DefaultStockList(models.Model):
 
     def __str__(self):
         return self.stock_symbol
-
-
-
 
 
 # 目標模型
