@@ -177,7 +177,7 @@ class Accounting(models.Model):
     consumeType = models.ForeignKey(ConsumeType,
                                       on_delete=models.CASCADE,
                                       db_column="consumeType")  # 外鍵，關聯到消費類別
-    assetType = models.CharField(max_length=20,
+    assetType = models.CharField(max_length=1,
                                  choices=ASSET_TYPE,
                                  default='0')
     transactionDate = models.DateTimeField(null=True)  # 交易日期
@@ -261,6 +261,13 @@ class InvestmentPortfolio(models.Model):
         db_table = "investment_portfolio"  # 在資料庫中的表名
 
 
+BUY_TYPE = [
+    ('0', 'buy and hold'),
+    ('1', 'naive'),
+    ('2', 'custom'),
+]
+
+
 # 投資模型
 class Investment(models.Model):
     portfolio = models.ForeignKey(
@@ -270,6 +277,9 @@ class Investment(models.Model):
     symbol = models.CharField(max_length=10)  # 股票代碼或資產標誌
     shares = models.IntegerField()  # 持有股票的數量
     buy_price = models.DecimalField(max_digits=10, decimal_places=2)  # 買入價格
+    buyType = models.CharField(max_length=1,
+                                 choices=BUY_TYPE,
+                                 default='0')
     available = models.BooleanField(default=True)  # 是否仍然有效
 
     def __str__(self):
