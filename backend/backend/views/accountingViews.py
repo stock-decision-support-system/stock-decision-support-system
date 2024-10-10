@@ -751,7 +751,7 @@ class FinancialAnalysisView(APIView):
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",  # 使用 chat 模型
                     messages=[
-                        {"role": "system", "content": "你是一個精通財務管理的專家，能夠給出理財建議。"},
+                        {"role": "system", "content": "你是一個精通財務管理的專家，能夠給出適用於學生的理財及儲蓄建議。"},
                         {"role": "user", "content": prompt}
                     ],
                     max_tokens=150,
