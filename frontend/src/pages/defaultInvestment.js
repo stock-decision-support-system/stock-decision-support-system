@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Select, Input } from 'antd';
 import axios from 'axios'; // 使用 axios 來發送 API 請求
 import { InvestmentRequest } from '../api/request/investmentRequest.js'; // 假設有這個 API
+import { useNavigate } from 'react-router-dom';  // 新增這行
 
 const { Option } = Select;
 
@@ -14,6 +15,8 @@ const DefaultInvestment = () => {
   const [stockPrices, setStockPrices] = useState({});  // 儲存股票的價格
   const [isModalOpen, setIsModalOpen] = useState(false);  // 使用新的 `open` 屬性
   const [form] = Form.useForm();
+  const navigate = useNavigate();  // 使用 navigate 來進行路由導航
+
 
   // 檢查是否是管理員
   useEffect(() => {
@@ -133,6 +136,10 @@ const DefaultInvestment = () => {
     // 這裡可以加入額外邏輯來處理儲蓄目標
   };
 
+  const handleNavigateToDetail = (portfolioId) => {
+    navigate(`/investment/${portfolioId}`);  // 根據 portfolioId 進行導航
+  };
+
   const columns = [
     {
       title: '投資組合',
@@ -148,8 +155,8 @@ const DefaultInvestment = () => {
       title: '儲蓄目標',
       key: 'action',
       render: (text, record) => (
-        <Button onClick={() => handleSetSavingsGoal(record)}>
-          設定儲蓄目標
+        <Button onClick={() => handleNavigateToDetail(record.id)}>
+          查看詳細
         </Button>
       ),
     },

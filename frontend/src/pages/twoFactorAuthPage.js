@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import TwoFactorAuth from '../components/twoFactorAuth';
+import TwoFactorAuth from '../components/TwoFactorAuth';
 import { useUser } from '../userContext';  // 引入 useUser 钩子
 
 const TwoFactorAuthPage = () => {

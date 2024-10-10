@@ -98,6 +98,7 @@ urlpatterns = [
     path('investment/stock_price/<str:symbol>/', stockViews.get_stock_price, name='get_stock_price'),
     path('investment/portfolios/<int:portfolio_id>/', stockViews.get_portfolio_detail, name='get_portfolio_detail'),
     path('investment/default-investment-portfolios/', stockViews.default_investment_portfolios, name='default-investment-portfolios'),
+    path('investment/default-investment-portfolios/<int:portfolio_id>/', stockViews.get_portfolio_detaila, name='portfolio-detail'),
 
 
 

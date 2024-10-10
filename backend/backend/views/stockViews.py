@@ -284,6 +284,20 @@ def default_investment_portfolios(request):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+def get_portfolio_detaila(request, portfolio_id):
+    logger.info(f"Request received for portfolio ID: {portfolio_id}")
+    logger.info("This is an info log message")
+
+    try:
+        portfolio = DefaultInvestmentPortfolio.objects.get(id=portfolio_id)
+        logger.info(f"Portfolio found: {portfolio}")
+        serializer = DefaultInvestmentPortfolioSerializer(portfolio)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except DefaultInvestmentPortfolio.DoesNotExist:
+        logger.error("Portfolio not found")
+        return Response({'error': 'Portfolio not found'}, status=status.HTTP_404_NOT_FOUND)
+
 
 
 
