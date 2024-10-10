@@ -16,17 +16,22 @@ const AddBankForm = () => {
         fetchBankProfiles();
     }, []);
 
-    const fetchBankProfiles = () => {
+    const fetchBankProfiles = async () => {
         setIsLoading(true);
-        BankProfileRequest.getBankProfileList()
-            .then(response => {
+        try {
+            const response = await BankProfileRequest.getBankProfileList();
+
+            if (response && response.data) {
                 setBanks(response.data);
-            })
-            .catch((error) => {
-                alert(error.message);
-            });
-        setIsLoading(false);
+            }
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
+
+
 
     const handleAddClick = () => {
         setIsEdit(false);
@@ -62,17 +67,15 @@ const AddBankForm = () => {
     };
 
     return (
-        <div className="d-flex justify-content-center align-items-center vh-100">
+        <div className="d-flex justify-content-center align-items-center vh-100 w-50">
             <Card
                 title={<h1 className='pt-2 mt-1'>銀行資料</h1>}
                 extra={<Button type="primary" className="ms-auto button2" onClick={handleAddClick}>新增銀行資料</Button>}
-                className='h-75 w-50'
+                className='h-75 w-100'
             >
                 <Flex gap="middle" vertical>
                     <Spin spinning={isLoading} indicator={<LoadingOutlined spin />} size="large" >
-                        {banks.length === 0 ? (
-                            <Empty description="沒有銀行資料" />
-                        ) : (
+                        {banks.length > 0 ? (
                             <div
                                 style={{
                                     height: 'auto',
@@ -116,6 +119,8 @@ const AddBankForm = () => {
                                     )}
                                 </VirtualList>
                             </div>
+                        ) : (
+                            <Empty description="沒有銀行資料" />
                         )}
                     </Spin >
                 </Flex>

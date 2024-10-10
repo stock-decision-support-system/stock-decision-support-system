@@ -1,4 +1,5 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
+from decimal import Decimal
 
 import openai
 from django.db.models.functions import TruncMonth
@@ -549,7 +550,7 @@ def consume_charts_user(request):
         )
         .select_related("consumeType")  # 預加載相關的 consumeType
         .values(
-            "consumeType__icon", "consumeType__name"
+            "consumeType__id", "consumeType__icon", "consumeType__name"
         )  # 獲取 consumeType 的 icon 和 name
         .annotate(
             income=Sum(
@@ -576,12 +577,14 @@ def consume_charts_user(request):
 
     for data in accounting_datas:
         income_data = {
+            "id": data["consumeType__id"],
             "name": data["consumeType__icon"]
             + " "
             + data["consumeType__name"],  # 獲取 icon name
             "value": data["income"],  # 獲取收入總金額
         }
         expense_data = {
+            "id": data["consumeType__id"],
             "name": data["consumeType__icon"]
             + " "
             + data["consumeType__name"],  # 獲取 icon name
@@ -605,14 +608,19 @@ def consume_charts_user(request):
 @api_view(["GET", "POST", "PUT", "DELETE"])
 @permission_classes([IsAuthenticated])  # 需要認證
 def budget_operations(request, id=None):
+    user = request.user  # 獲取當前登入者
     if request.method == "GET":
         # 獲取儲蓄目標
-        user = request.user  # 獲取當前登入者
         if id is not None:
             # 根據主鍵獲取特定儲蓄目標
             try:
                 budget = Budget.objects.get(id=id)  # 根據主鍵查找
                 serializer = BudgetSerializer(budget)  # 序列化單個儲蓄目標
+
+                return Response(
+                    {"status": "success", "data": serializer.data},
+                    status=status.HTTP_200_OK,
+                )
             except Budget.DoesNotExist:
                 return Response(
                     {"status": "error", "message": "紀錄不存在"},
@@ -620,20 +628,29 @@ def budget_operations(request, id=None):
                 )
         else:
             # 獲取當前登入者的所有儲蓄目標
-            budget = Budget.objects.filter(
+            budget = Budget.objects.get(
                 username=user, available=True
             )  # 根據主鍵查找並篩選 available 為 true
-            serializer = BudgetSerializer(budget, many=True)  # 序列化多個儲蓄目標
-        return Response(
-            {"status": "success", "data": serializer.data}, status=status.HTTP_200_OK
-        )
+            # 將 budget 的屬性轉換為字典
+            data = {
+                "id": budget.id,
+                "name": budget.name,
+                "target": budget.target,
+                "current": budget.current,
+                "start_date": budget.start_date,
+                "end_date": budget.end_date,
+            }
+
+            return Response(
+                {"status": "success", "data": data}, status=status.HTTP_200_OK
+            )
 
     elif request.method == "POST":
         data = request.data.copy()  # 複製請求數據，以便進行修改
         end_date = data.get("end_date")  # 獲取 end_date
 
         # 檢查是否存在未達成的目標
-        if Budget.objects.filter(username=user, is_successful=False).exists():
+        if Budget.objects.filter(username=user, available=True).exists():
             return Response(
                 {"status": "error", "message": "你有尚未達成的目標"},  # 返回錯誤信息
                 status=status.HTTP_400_BAD_REQUEST,
@@ -661,7 +678,6 @@ def budget_operations(request, id=None):
 
     elif request.method == "PUT":
         # 更新現有的儲蓄目標
-        id = request.GET.get("id")  # 從查詢參數獲取儲蓄目標 ID
         try:
             budget = Budget.objects.get(id=id)  # 根據儲蓄目標 ID 查找
             serializer = BudgetSerializer(
@@ -681,26 +697,182 @@ def budget_operations(request, id=None):
 
     elif request.method == "DELETE":
         # 刪除儲蓄目標（將其標記為不可用）
-        id = request.GET.get("id")  # 從查詢參數獲取儲蓄目標 ID
+        if not id:
+            return Response(
+                {"status": "error", "message": "缺少ID參數"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
-            # 使用 .update() 對查詢集進行標記為不可用
-            updated = Budget.objects.filter(id=id).update(available=False)
-            if updated:  # 如果更新成功
-                return Response(
-                    {"status": "success", "message": "紀錄已被刪除"},  # 返回成功信息
-                    status=status.HTTP_200_OK,
-                )
-            else:
-                # 如果沒有任何更新，則說明儲蓄目標不存在
-                return Response(
-                    {"status": "error", "message": "紀錄不存在"},  # 返回404
-                    status=status.HTTP_404_NOT_FOUND,
-                )
+            # 先嘗試取得該目標
+            budget = Budget.objects.get(id=id)
+
+            # 標記為不可用
+            budget.available = False
+            budget.save()
+
+            return Response(
+                {"status": "success", "message": "紀錄已被刪除"},
+                status=status.HTTP_200_OK,
+            )
+
         except Budget.DoesNotExist:
             return Response(
-                {"status": "error", "message": "紀錄不存在"},  # 如果找不到，返回404
+                {"status": "error", "message": "紀錄不存在"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+from collections import defaultdict
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])  # 需要認證
+def assets_change_chart(request):
+    user = request.user  # 獲取當前登入者
+
+    # 獲取自訂起訖日期
+    start_date_str = request.query_params.get("start_date")
+    end_date_str = request.query_params.get("end_date")
+
+    # 如果沒有提供起訖日期，則默認為今天到前七天（共七天）
+    if not start_date_str and not end_date_str:
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=6)  # 前七天
+    else:
+        # 如果提供了日期，則解析它們
+        try:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+        except ValueError:
+            return Response(
+                {"status": "error", "message": "Invalid date format."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    # 確保 end_date 是在 start_date 之後
+    if end_date < start_date:
+        return Response(
+            {"status": "error", "message": "End date must be after start date."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # 計算日期範圍
+    date_difference = (end_date - start_date).days
+
+    # 準備標籤和數據
+    labels = []
+    data = []
+
+    # 根據不同的日期範圍選擇按日、月或年分組
+    if date_difference <= 30 * 4:  # 30天 * 4 = 120天
+        # 按日分組
+        current_date = start_date
+        daily_records = {}
+
+        while current_date <= end_date:
+            date_key = current_date.strftime("%Y-%m-%d")
+            daily_records[date_key] = {
+                "total_income": Decimal(0),
+                "total_expense": Decimal(0),
+            }
+            current_date += timedelta(days=1)
+
+        records = Accounting.objects.filter(
+            createdId=user,
+            available=True,
+            transactionDate__gte=start_date,
+            transactionDate__lte=end_date,
+        )
+
+        for record in records:
+            date_key = record.transactionDate.strftime("%Y-%m-%d")
+
+            if record.assetType == "0":  # 收入
+                daily_records[date_key]["total_income"] += record.amount
+            elif record.assetType == "1":  # 支出
+                daily_records[date_key]["total_expense"] += record.amount
+
+        labels = list(daily_records.keys())
+        data = [
+            {
+                "date": label,
+                "total_assets": daily_records[label]["total_income"],
+                "net_assets": daily_records[label]["total_income"]
+                - daily_records[label]["total_expense"],
+            }
+            for label in labels
+        ]
+
+    elif date_difference <= 30 * 23:  # 30天 * 23 = 690天
+        # 按月分組
+        monthly_records = defaultdict(
+            lambda: {"total_income": Decimal(0), "total_expense": Decimal(0)}
+        )
+
+        records = Accounting.objects.filter(
+            createdId=user,
+            available=True,
+            transactionDate__gte=start_date,
+            transactionDate__lte=end_date,
+        )
+
+        for record in records:
+            month_key = record.transactionDate.strftime("%Y-%m")
+            if record.assetType == "0":  # 收入
+                monthly_records[month_key]["total_income"] += record.amount
+            elif record.assetType == "1":  # 支出
+                monthly_records[month_key]["total_expense"] += record.amount
+
+        labels = list(monthly_records.keys())
+        data = [
+            {
+                "date": label,
+                "total_assets": monthly_records[label]["total_income"],
+                "net_assets": monthly_records[label]["total_income"]
+                - monthly_records[label]["total_expense"],
+            }
+            for label in labels
+        ]
+
+    else:
+        # 按年分組
+        yearly_records = defaultdict(
+            lambda: {"total_income": Decimal(0), "total_expense": Decimal(0)}
+        )
+
+        records = Accounting.objects.filter(
+            createdId=user,
+            available=True,
+            transactionDate__gte=start_date,
+            transactionDate__lte=end_date,
+        )
+
+        for record in records:
+            year_key = record.transactionDate.strftime("%Y")
+            if record.assetType == "0":  # 收入
+                yearly_records[year_key]["total_income"] += record.amount
+            elif record.assetType == "1":  # 支出
+                yearly_records[year_key]["total_expense"] += record.amount
+
+        labels = list(yearly_records.keys())
+        data = [
+            {
+                "date": label,
+                "total_assets": yearly_records[label]["total_income"],
+                "net_assets": yearly_records[label]["total_income"]
+                - yearly_records[label]["total_expense"],
+            }
+            for label in labels
+        ]
+
+    return Response(
+        {
+            "status": "success",
+            "data": data,
+        },
+        status=status.HTTP_200_OK,
+    )
 
 
 class FinancialAnalysisView(APIView):
@@ -745,9 +917,9 @@ class FinancialAnalysisView(APIView):
 
             # 合併資料
             merged_entry = {
-                "month": month_data["month"],
-                "total_income": month_data["total_income"],
-                "total_expense": month_data["total_expense"],
+                "date": month_data["month"],
+                "total_assets": month_data["total_income"],
+                "net_assets": month_data["total_income"] - month_data["total_expense"],
             }
             if month_advice:  # 如果有建議，將其添加到合併的資料中
                 merged_entry["advice"] = month_advice
@@ -770,8 +942,11 @@ class FinancialAnalysisView(APIView):
                 response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",  # 使用 chat 模型
                     messages=[
-                        {"role": "system", "content": "你是一個精通財務管理的專家，能夠給出適用於學生的理財及儲蓄建議。"},
-                        {"role": "user", "content": prompt}
+                        {
+                            "role": "system",
+                            "content": "你是一個精通財務管理的專家，能夠給出適用於學生的理財及儲蓄建議。",
+                        },
+                        {"role": "user", "content": prompt},
                     ],
                     max_tokens=150,
                     temperature=0.7,

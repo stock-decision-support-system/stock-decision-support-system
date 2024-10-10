@@ -135,7 +135,7 @@ const Navbar = () => {
             <li className="nav-item">
               <a
                 className="nav-link me-5 justify-content-center d-flex align-items-center"
-                onClick={() => handleNavigation('/reports')}
+                onClick={() => handleNavigation('/generalreport')}
                 style={{ height: '37px', cursor: 'pointer' }}
               >
                 報表

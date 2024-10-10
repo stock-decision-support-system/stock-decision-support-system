@@ -98,7 +98,7 @@ const TradeHistory = () => {
         <div className="accounting-kv w-100" style={{ height: '80%', display: 'flex' }}>
             <AccountingSidebar totalAmount={totalAmount} netAmount={netAmount} selectedKey={'2'} />
             <AccountingList totalPages={totalPages * 8} /> {/*8是size */}
-            <Card style={{ marginLeft: '2rem', width: '30%' }}>
+            <Card style={{ marginLeft: '2rem', width: '28%' }}>
                 <Spin spinning={loading}>
                     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                         {incomeData.length > 0 ? (

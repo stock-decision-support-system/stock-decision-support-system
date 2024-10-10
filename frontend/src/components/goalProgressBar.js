@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Progress, Typography, message, Modal } from 'antd';
 import '../assets/css/progressBar.css';
-import { LeftCircleOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'; // 引入所需的 Ant Design 圖標
+import { LeftCircleOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { BudgetRequest } from '../api/request/budgetRequest.js';
-import { SmileOutlined } from '@ant-design/icons';  // 用於 Modal 的圖標
+import { SmileOutlined } from '@ant-design/icons';
+import BudgetEditDialog from './budgetEditDialog';
+import BudgetDeleteDialog from './budgetDeleteDialog';
 
 const { Title, Text } = Typography;
 
@@ -20,10 +22,12 @@ const GoalProgressBar = () => {
         const fetchBudgetData = async () => {
             BudgetRequest.searchBudget()
                 .then(response => {
-                    setIsData(true);
                     setData(response.data);
+                    if (response.data.length != 0) {
+                        setIsData(true);
+                    }
                     if (response.data.is_successful) {
-                        setShowModal(true);  // 如果 is_successful 是 true，顯示 Modal
+                        setShowModal(true);
                         setIsData(false);
                     }
                 })
@@ -37,13 +41,6 @@ const GoalProgressBar = () => {
         }
     }, [token]);
 
-    const handleDelete = async (id) => {
-    };
-
-    const handleEdit = async (id) => {
-    };
-
-
     // 計算花費的天數
     const calculateDaysSpent = () => {
         const startDate = new Date(data.start_date);
@@ -52,96 +49,138 @@ const GoalProgressBar = () => {
         const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24)); // 轉換為天
         return daysDifference;
     };
-    {/*<>{isData&&()}</>*/ }
 
     return (
         <>
             {token && (
-                <div
-                    style={{
-                        position: 'fixed',
-                        top: '10%', // 控制卡片的垂直位置
-                        right: '0', // 卡片初始在右側
-                        zIndex: 1000,
-                        transition: 'transform 0.3s ease', // 為平滑過渡設置動畫效果
-                        transform: isHovered ? 'translateX(0%)' : 'translateX(90%)', // 懸停時進入畫面，否則在畫面外
-                    }}
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
-                >
-                    <div style={{
-                        position: 'relative',
-                        width: '450px', // 卡片的寬度
-                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                        backgroundColor: '#fff',
-                        borderRadius: '8px',
-                        padding: '20px',
-                        display: 'flex', // 使用 flexbox 來排列圖標和內容
-                        alignItems: 'center',
-                    }}>
-                        <div style={{
-                            position: 'absolute',
-                            top: '10px',
-                            right: '10px',
-                            display: 'flex',
-                            gap: '10px', // 設置按鈕之間的間距
-                        }}>
-                            <button
-                                style={{
-                                    border: 'none',
-                                    background: 'none',
-                                    cursor: 'pointer',
-                                }}
-                                onClick={() => handleEdit(data.id)} // 假設你的目標資料有一個 id
-                            >
-                                <EditOutlined style={{ color: '#1890ff', fontSize: '20px' }} />
-                            </button>
-                            <button
-                                style={{
-                                    border: 'none',
-                                    background: 'none',
-                                    cursor: 'pointer',
-                                }}
-                                onClick={() => handleDelete(data.id)} // 假設你的目標資料有一個 id
-                            >
-                                <DeleteOutlined style={{ color: '#ff4d4f', fontSize: '20px' }} />
-                            </button>
-                        </div>
-                        <div style={{ marginRight: '10px' }}>
-                            <LeftCircleOutlined style={{ fontSize: '24px', color: '#1890ff' }} /> {/* 圖標 */}
-                        </div>
+                <>
+                    {isData ? (  // 檢查 isData 是否為 true
                         <div
                             style={{
-                                flex: 1, // 讓卡片填滿剩餘的空間
-                                backgroundColor: 'transparent', // 背景透明以便與外部背景融合
-                                border: 'none', // 去掉邊框
+                                position: 'fixed',
+                                top: '10%',
+                                right: '0',
+                                zIndex: 1000,
+                                transition: 'transform 0.3s ease',
+                                transform: isHovered ? 'translateX(0%)' : 'translateX(90%)',
                             }}
-                            hoverable
-                            bodyStyle={{ padding: '0' }} // 移除內部填充
+                            onMouseEnter={() => setIsHovered(true)}
+                            onMouseLeave={() => setIsHovered(false)}
                         >
-                            <Title level={4} style={{ marginBottom: 10 }}>
-                                {data.name}
-                            </Title>
-                            <Progress
-                                percent={Math.min((data.current / data.target) * 100, 100)}
-                                strokeColor={{
-                                    from: '#108ee9',
-                                    to: '#87d068',
-                                }}
-                                trailColor="#f0f0f0"
-                                style={{ marginTop: '10px' }}
-                            />
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
-                                <Text>
-                                    目前/目標金額: <strong>${data.current}</strong> / <strong>${data.target}</strong>
-                                </Text>
-                                <Text style={{ color: '#888' }}>
-                                    截止日期: <strong>{data.end_date}</strong>
-                                </Text>
+                            <div style={{
+                                position: 'relative',
+                                width: '450px',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                                backgroundColor: '#fff',
+                                borderRadius: '8px',
+                                padding: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                            }}>
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '10px',
+                                    right: '10px',
+                                    display: 'flex',
+                                    gap: '10px',
+                                }}>
+                                    <button
+                                        style={{
+                                            border: 'none',
+                                            background: 'none',
+                                            cursor: 'pointer',
+                                        }}
+                                        onClick={() => setShowEditModal(true)} // 打開編輯對話框
+                                    >
+                                        <EditOutlined style={{ color: '#1890ff', fontSize: '20px' }} />
+                                    </button>
+                                    <button
+                                        style={{
+                                            border: 'none',
+                                            background: 'none',
+                                            cursor: 'pointer',
+                                        }}
+                                        onClick={() => setShowDeleteModal(true)} // 打開刪除對話框
+                                    >
+                                        <DeleteOutlined style={{ color: '#ff4d4f', fontSize: '20px' }} />
+                                    </button>
+                                </div>
+                                <div style={{ marginRight: '10px' }}>
+                                    <LeftCircleOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+                                </div>
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        backgroundColor: 'transparent',
+                                        border: 'none',
+                                    }}
+                                    hoverable
+                                    bodyStyle={{ padding: '0' }}
+                                >
+                                    <Title level={4} style={{ marginBottom: 10 }}>
+                                        {data.name}
+                                    </Title>
+                                    <Progress
+                                        percent={Math.min((data.current / data.target) * 100, 100)}
+                                        strokeColor={{
+                                            from: '#108ee9',
+                                            to: '#87d068',
+                                        }}
+                                        trailColor="#f0f0f0"
+                                        style={{ marginTop: '10px' }}
+                                    />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
+                                        <Text>
+                                            目前/目標金額: <strong>${data.current}</strong> / <strong>${data.target}</strong>
+                                        </Text>
+                                        <Text style={{ color: '#888' }}>
+                                            截止日期: <strong>{data.end_date}</strong>
+                                        </Text>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    ) : (
+                        <div
+                            style={{
+                                position: 'fixed',
+                                top: '10%',
+                                right: '0',
+                                zIndex: 1000,
+                                transition: 'transform 0.3s ease',
+                                transform: isHovered ? 'translateX(0%)' : 'translateX(90%)',
+                            }}
+                            onMouseEnter={() => setIsHovered(true)}
+                            onMouseLeave={() => setIsHovered(false)}
+                        >
+                            <div style={{
+                                position: 'relative',
+                                width: '450px',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                                backgroundColor: '#fff',
+                                borderRadius: '8px',
+                                padding: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                            }}>
+                                <div style={{ marginRight: '10px' }}>
+                                    <LeftCircleOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+                                </div>
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        backgroundColor: 'transparent',
+                                        border: 'none', alignItems: 'center'
+                                    }}
+                                    hoverable
+                                    bodyStyle={{ padding: '0' }}
+                                >
+                                    <Title level={3} style={{ textAlign: 'center' }}>尚未新增儲蓄目標</Title>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
             <Modal
                 open={showModal}
@@ -153,13 +192,40 @@ const GoalProgressBar = () => {
                 onOk={() => setShowModal(false)}
                 onCancel={() => setShowModal(false)}
                 footer={null}
-                style={{ textAlign: 'center' }} // 這裡將內容置中
-                bodyStyle={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }} // 內容也置中
+                style={{ textAlign: 'center' }}
+                bodyStyle={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
             >
                 <p>🎉 恭喜您已成功達成儲蓄目標！</p>
                 <p>花費的天數: <strong>{calculateDaysSpent()} 天</strong></p>
                 <p>目前的金額: <strong>${data.current}</strong></p>
             </Modal>
+
+            {showEditModal &&
+                <BudgetEditDialog
+                    id={data.id} // 傳遞預算的 ID
+                    name={data.name}
+                    start_date={data.start_date}
+                    end_date={data.end_date}
+                    target={data.target}
+                    onEdit={() => {
+                        setShowEditModal(false);
+                        // 這裡可以添加邏輯以更新預算列表或觸發重新加載
+                    }}
+                />
+            }
+
+            {showDeleteModal &&
+                <BudgetDeleteDialog
+                    id={data.id} // 傳遞預算的 ID
+                    end_date={data.end_date}
+                    target={data.target}
+                    current_amount={data.current}
+                    onDelete={() => {
+                        setShowDeleteModal(false);
+                        // 這裡可以添加邏輯以更新預算列表或觸發重新加載
+                    }}
+                />
+            }
         </>
     );
 };

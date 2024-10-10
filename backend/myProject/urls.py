@@ -99,10 +99,9 @@ urlpatterns = [
     path('investment/portfolios/<int:portfolio_id>/', stockViews.get_portfolio_detail, name='get_portfolio_detail'),
     path('investment/default-investment-portfolios/', stockViews.default_investment_portfolios, name='default-investment-portfolios'),
 
-
-
     # 資產負債查詢
     path('users/<username>/financial-summary/', accountingViews.financial_summary, name='financial-summary'),
+    path('asset-change/', accountingViews.assets_change_chart, name='assets_change_chart'),
 ]
 
 if settings.DEBUG:

@@ -10,7 +10,7 @@ const { Option } = Select;
 const BankDialog = ({ isEdit, initialData, onClose }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
-    bank_name: '',
+    bank_name: '永豐商業銀行',
     region: '',
     branch: '',
     account: '',
