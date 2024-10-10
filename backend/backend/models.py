@@ -227,6 +227,13 @@ class APICredentials(models.Model):
         db_table = "api_credentials"  # 在資料庫中的表名
 
 
+BUY_TYPE = [
+    ('0', 'buy and hold'),
+    ('1', 'naive'),
+    ('2', 'custom'),
+]
+
+
 # 投資組合模型
 class InvestmentPortfolio(models.Model):
     user = models.ForeignKey(
@@ -239,6 +246,9 @@ class InvestmentPortfolio(models.Model):
     description = models.TextField()  # 投資組合描述
     available = models.BooleanField(default=True)  # 是否有效
     quota = models.IntegerField(null=True)  # 定期金額
+    buyType = models.CharField(max_length=1,
+                                 choices=BUY_TYPE,
+                                 default='0')
 
     # 計算投資組合的當前總市值（使用買入價格）
     def calculate_portfolio_value(self):
@@ -261,13 +271,6 @@ class InvestmentPortfolio(models.Model):
         db_table = "investment_portfolio"  # 在資料庫中的表名
 
 
-BUY_TYPE = [
-    ('0', 'buy and hold'),
-    ('1', 'naive'),
-    ('2', 'custom'),
-]
-
-
 # 投資模型
 class Investment(models.Model):
     portfolio = models.ForeignKey(
@@ -277,9 +280,6 @@ class Investment(models.Model):
     symbol = models.CharField(max_length=10)  # 股票代碼或資產標誌
     shares = models.IntegerField()  # 持有股票的數量
     buy_price = models.DecimalField(max_digits=10, decimal_places=2)  # 買入價格
-    buyType = models.CharField(max_length=1,
-                                 choices=BUY_TYPE,
-                                 default='0')
     available = models.BooleanField(default=True)  # 是否仍然有效
 
     def __str__(self):
