@@ -1,115 +1,41 @@
-.generalreport-kv {
-    height: 100vh;
-} 
-
-.generalreport-container-all {
-    display: flex;
-    align-items: stretch;
-    height: calc(100% - 56px);
-    /* 減去 navbar 的高度 */
+.typewriter {
+  width: '80%';
+  overflow: hidden;
+  border-right: .15em solid black;
+  white-space: nowrap;
+  margin: 0 auto;
+  letter-spacing: .15em;
+  animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end 3.5s;
+  /* 停止閃爍光標3.5秒後消失 */
+  animation-fill-mode: forwards; /* 保持打字效果結束時的狀態 */
 }
 
-.generalreport-container-right {
-    background-image: url(../images/loginback.png);
-    background-size: cover;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    overflow-y: auto;
-}
+/* 停止光標閃爍3.5秒後消失 */
+@keyframes typing {
+  from {
+    width: 0;
+  }
 
-.generalreport-container-right.collapsed {
-    padding-left: 50px;
-}
-
-.generalreport-account-form {
-    flex: 2;
-}
-
-.generalreport-account-form-container {
-    margin: 20px;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    flex: 1;
-}
-
-.generalreport-dropdown-container {
-    margin-bottom: 20px;
-    width: 20%;
-}
-
-.generalreport-dropdown-menu.show {
-    display: block;
-}
-
-.generalreport-report-container {
-    flex: 1;
-    background-color: #f0f0f0;
+  to {
     width: 100%;
-    min-width: 1400px;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    overflow-x: auto;
-    /* 確保容器在需要時能水平滾動 */
+  }
 }
 
-.chart-container {
-    width: 100%;
-    /* 讓容器的寬度與父元素一樣寬 */
-    height: 100%;
-    min-width: 100%;
-    overflow-x: auto;
-    /* 允許水平滾動 */
+@keyframes blink-caret {
+  from,
+  to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: black;
+  }
 }
 
-#lineChart {
-    min-width: 100%;
-    /* 設定一個最小寬度，確保圖表不會被壓縮太小 */
+.ant-card {
+  transition: none; /* 移除卡片的過渡效果 */
 }
 
-
-
-
-@media (max-width: 768px) {
-    .generalreport-container-all {
-        flex-direction: column;
-        overflow-y: auto;
-    }
-
-    #generalreport-sidebar {
-        width: 100%;
-        height: auto;
-    }
-
-    .generalreport-collapse-btn {
-        position: static;
-        width: 100%;
-        text-align: center;
-        display: block;
-    }
-
-    #generalreport-sidebar.active {
-        margin-top: -200px;
-    }
-
-    .generalreport-container-right {
-        padding: 10px;
-        overflow-y: auto;
-    }
-
-    .generalreport-dropdown-container {
-        width: 25%;
-    }
-}
-
-#generalreport-sublist {
-    display: none;
-}
-
-#generalreport-sublist.active {
-    display: block;
+.ant-card:hover {
+  box-shadow: none; /* 移除 hover 時的陰影效果 */
+  transform: none; /* 移除 hover 時的縮放或其他效果 */
 }

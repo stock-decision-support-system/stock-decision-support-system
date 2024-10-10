@@ -27,7 +27,7 @@ import GeneralReport from './pages/generalreport';
 import BalanceReport from './pages/balanceReport';
 import ConsumeReport from './pages/consumeReport';
 import StockList from './pages/stockList';
-import TwoFactorAuthPage from './pages/TwoFactorAuthPage';
+import TwoFactorAuthPage from './pages/twoFactorAuthPage';
 import DefaultInvestment from './pages/defaultInvestment'
 import TradeHistory from './pages/tradeHistory';
 

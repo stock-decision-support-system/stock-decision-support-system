@@ -638,7 +638,7 @@ def budget_operations(request, id=None):
                 {"status": "error", "message": "你有尚未達成的目標"},  # 返回錯誤信息
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         # 檢查 end_date 是否為 null
         if end_date is None:
             # 設置 end_date 為今天 + 30 天
@@ -702,20 +702,23 @@ def budget_operations(request, id=None):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+
 class FinancialAnalysisView(APIView):
     # permission_classes = [IsAuthenticated]
 
-    def get(self, request, username):
-        user = get_object_or_404(CustomUser, username=username)
+    def get(self, request):
+        user = request.user  # 獲取當前登入者
 
         # 獲取過濾參數
         account_type_filter = request.query_params.get("accountType")
         asset_type_filter = request.query_params.get("assetType")
 
         # 構建查詢集，按月分組
-        accountings = Accounting.objects.filter(
-            createdId=user, available=True
-        ).annotate(month=TruncMonth('transactionDate')).order_by('month')
+        accountings = (
+            Accounting.objects.filter(createdId=user, available=True)
+            .annotate(month=TruncMonth("transactionDate"))
+            .order_by("month")
+        )
 
         if account_type_filter:
             accountings = accountings.filter(accountType=account_type_filter)
@@ -724,27 +727,43 @@ class FinancialAnalysisView(APIView):
             accountings = accountings.filter(assetType=asset_type_filter)
 
         # 計算每月的總收入和總支出
-        summary = accountings.values('month').annotate(
-            total_income=Sum('amount', filter=Q(assetType='0')),
-            total_expense=Sum('amount', filter=Q(assetType='1'))
+        summary = accountings.values("month").annotate(
+            total_income=Sum("amount", filter=Q(assetType="0")),
+            total_expense=Sum("amount", filter=Q(assetType="1")),
         )
 
         # 生成建議
         advice = self.generate_financial_advice(summary)
 
-        return Response({
-            "status": "success",
-            "data": list(summary),
-            "advice": advice
-        })
+        # 將建議合併到對應的月份資料中
+        merged_data = []
+        for month_data in summary:
+            month_str = month_data["month"].strftime("%Y-%m")  # 格式化月份字符串
+            month_advice = next(
+                (adv["advice"] for adv in advice if adv["month"] == month_str), None
+            )  # 尋找對應的建議
+
+            # 合併資料
+            merged_entry = {
+                "month": month_data["month"],
+                "total_income": month_data["total_income"],
+                "total_expense": month_data["total_expense"],
+            }
+            if month_advice:  # 如果有建議，將其添加到合併的資料中
+                merged_entry["advice"] = month_advice
+
+            merged_data.append(merged_entry)
+
+        return Response({"status": "success", "data": merged_data})
+
     def generate_financial_advice(self, summary):
         openai.api_key = settings.OPENAI_API_KEY
         advice = []
         for month_data in summary:
             prompt = ""
-            if month_data['total_expense'] > month_data['total_income']:
+            if month_data["total_expense"] > month_data["total_income"]:
                 prompt = f"在 {month_data['month'].strftime('%Y年%m月')}，支出超過收入 {month_data['total_expense'] - month_data['total_income']:.2f} 元。請問有什麼方法可以減少支出或增加收入？"
-            elif month_data['total_income'] > month_data['total_expense']:
+            elif month_data["total_income"] > month_data["total_expense"]:
                 prompt = f"在 {month_data['month'].strftime('%Y年%m月')}，收入超過支出 {month_data['total_income'] - month_data['total_expense']:.2f} 元。請問有什麼方法可以優化儲蓄或投資策略？"
 
             if prompt:  # 如果有生成提示問題
@@ -757,9 +776,11 @@ class FinancialAnalysisView(APIView):
                     max_tokens=150,
                     temperature=0.7,
                 )
-                advice_text = response['choices'][0]['message']['content'].strip()
-                advice.append({
-                    "month": month_data['month'].strftime('%Y-%m'),
-                    "advice": advice_text
-                })
+                advice_text = response["choices"][0]["message"]["content"].strip()
+                advice.append(
+                    {
+                        "month": month_data["month"].strftime("%Y-%m"),
+                        "advice": advice_text,
+                    }
+                )
         return advice

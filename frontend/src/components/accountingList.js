@@ -33,6 +33,7 @@ const AccountingList = ({ totalPages }) => {
         }
         setLoading(false);
     };
+    
     return (
         <Card style={{ marginLeft: '2rem', width: '50%' }}>
             <Spin spinning={loading}>

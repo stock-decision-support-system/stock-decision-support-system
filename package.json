@@ -11,7 +11,5 @@
     "concurrently": "^8.2.2"
   },
   "dependencies": {
-    "antd": "^5.16.4",
-    "pandas": "^0.0.3"
   }
 }

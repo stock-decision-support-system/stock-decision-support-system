@@ -71,7 +71,7 @@ urlpatterns = [
     path('account-type/<int:id>/', accountingViews.account_type_operations, name='account_type_detail'),
     path('account-type/chart/', accountingViews.account_charts_user, name='accounting_charts_user'),
     path('consume-type/chart/', accountingViews.consume_charts_user, name='consume_charts_user'),
-    path('financial-analysis/<str:username>/', FinancialAnalysisView.as_view(), name='financial-analysis'),
+    path('financial-analysis/', FinancialAnalysisView.as_view(), name='financial-analysis'),
 
     # 儲蓄目標
     path('budget/', accountingViews.budget_operations, name='budget_operations'),

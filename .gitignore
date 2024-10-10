@@ -37,6 +37,7 @@ backend/config.yaml
 frontend/node_modules
 frontend/.pnp
 frontend/.pnp.js
+frontend/package-lock.json
 
 # testing
 frontend/coverage
@@ -61,3 +62,4 @@ node_modules
 backend/myProject/settings.py
 
 my-project-8423-1685343098922-1fed5b68860e.json
+package-lock.json

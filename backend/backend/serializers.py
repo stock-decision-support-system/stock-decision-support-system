@@ -126,6 +126,7 @@ class BudgetSerializer(serializers.ModelSerializer):
         model = Budget
         fields = [
             'id',
+            'name',
             'start_date',
             'end_date',
             'target'
