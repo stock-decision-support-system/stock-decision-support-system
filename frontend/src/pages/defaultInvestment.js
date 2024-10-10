@@ -1,128 +1,136 @@
 import React, { useState, useEffect } from 'react';
-import { Table } from 'antd';
+import { Table, Button, Modal, Form, Select, Input } from 'antd';
 import axios from 'axios'; // 使用 axios 來發送 API 請求
 import { InvestmentRequest } from '../api/request/investmentRequest.js'; // 假設有這個 API
 
-const portfolios = [
-  { key: 'taiwan50', name: '台灣50' },
-  { key: 'tsmc', name: '台積電' },
-];
+const { Option } = Select;
 
 const DefaultInvestment = () => {
-  const [thresholds, setThresholds] = useState({
-    taiwan50: 0, // 台灣50門檻
-    tsmc: 0,     // 台積電門檻
-  });
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [investmentData, setInvestmentData] = useState([]);  // 用來存儲投資組合
+  const [stockOptions, setStockOptions] = useState([]);  // 用於儲存股票選項
+  const [selectedStocks, setSelectedStocks] = useState([]);  // 用於儲存選擇的股票
+  const [stockQuantities, setStockQuantities] = useState({});  // 儲存每個股票的股數
+  const [stockPrices, setStockPrices] = useState({});  // 儲存股票的價格
+  const [isModalOpen, setIsModalOpen] = useState(false);  // 使用新的 `open` 屬性
+  const [form] = Form.useForm();
 
+  // 檢查是否是管理員
   useEffect(() => {
-    let totalTaiwan50 = 0;
-    const taiwan50Stocks = [
-      { symbol: '3037', name: '欣興' },
-      { symbol: '6669', name: '緯穎' },
-      { symbol: '2382', name: '廣達' },
-      { symbol: '3231', name: '緯創' },
-      { symbol: '2317', name: '鴻海' },
-      { symbol: '2345', name: '智邦' },
-      { symbol: '1590', name: '亞德客-KY' },
-      { symbol: '2454', name: '聯發科' },
-      { symbol: '2395', name: '研華' },
-      { symbol: '2379', name: '瑞昱' },
-      { symbol: '2330', name: '台積電' },
-      { symbol: '2301', name: '光寶科' },
-      { symbol: '4938', name: '和碩' },
-      { symbol: '3711', name: '日月光投控' },
-      { symbol: '1216', name: '統一' },
-      { symbol: '3045', name: '台灣大' },
-      { symbol: '2884', name: '玉山金' },
-      { symbol: '3034', name: '聯詠' },
-      { symbol: '2912', name: '統一超' },
-      { symbol: '2882', name: '國泰金' },
-      { symbol: '3661', name: '世芯-KY' },
-      { symbol: '2880', name: '華南金' },
-      { symbol: '2412', name: '中華電' },
-      { symbol: '2357', name: '華碩' },
-      { symbol: '2308', name: '台達電' },
-      { symbol: '4904', name: '遠傳' },
-      { symbol: '2885', name: '元大金' },
-      { symbol: '2327', name: '國巨' },
-      { symbol: '5880', name: '合庫金' },
-      { symbol: '2886', name: '兆豐金' },
-      { symbol: '2887', name: '台新金' },
-      { symbol: '2892', name: '第一金' },
-      { symbol: '2883', name: '開發金' },
-      { symbol: '2891', name: '中信金' },
-      { symbol: '2881', name: '富邦金' },
-      { symbol: '3017', name: '奇鋐' },
-      { symbol: '5876', name: '上海商銀' },
-      { symbol: '2303', name: '聯電' },
-      { symbol: '3008', name: '大立光' },
-      { symbol: '2890', name: '永豐金' },
-      { symbol: '1101', name: '台泥' },
-      { symbol: '1326', name: '台化' },
-      { symbol: '2207', name: '和泰車' },
-      { symbol: '1303', name: '南亞' },
-      { symbol: '1301', name: '台塑' },
-      { symbol: '6446', name: '藥華藥' },
-      { symbol: '2603', name: '長榮' },
-      { symbol: '5871', name: '中租-KY' },
-      { symbol: '6505', name: '台塑化' },
-      { symbol: '2002', name: '中鋼' },
-    ];
+    const isStaff = localStorage.getItem('is_staff') === 'true';
+    const isSuperuser = localStorage.getItem('is_superuser') === 'true';
+    if (isStaff && isSuperuser) {
+      setIsAdmin(true);
+    }
+  }, []);
 
-    const stockPromises = taiwan50Stocks.map(stock =>
-      InvestmentRequest.getStockPrice(stock.symbol)
-        .then(response => response.data.price || 0)
-        .catch(error => {
-          console.error(`無法獲取股票 ${stock.symbol} 的價格:`, error);
-          return 0;
-        })
-    );
-
-    Promise.all(stockPromises).then(prices => {
-      totalTaiwan50 = prices.reduce((total, price) => total + price, 0);
-
-      const calculatedThreshold = Math.ceil(totalTaiwan50);
-
-      // 確保只發送一次請求
-      setThresholds(prevThresholds => ({
-        ...prevThresholds,
-        taiwan50: calculatedThreshold
-      }));
-
-      updateThresholdInDatabase('台灣50', calculatedThreshold);
-    });
-
-    // 獲取台積電的即時價格
-    InvestmentRequest.getStockPrice('2330') // 台積電的股票代號是 2330
+  // 每次頁面加載時從後端抓取投資組合資料
+  useEffect(() => {
+    axios.get('http://localhost:8000/investment/default-investment-portfolios/')
       .then(response => {
-        const tsmcPrice = response.data.price || 0;
-        const calculatedTsmcPrice = Math.ceil(tsmcPrice);
-
-        setThresholds(prevThresholds => ({
-          ...prevThresholds,
-          tsmc: calculatedTsmcPrice
-        }));
-
-        updateThresholdInDatabase('台積電', calculatedTsmcPrice);
+        setInvestmentData(response.data);  // 成功後將資料設置到狀態中
       })
       .catch(error => {
-        console.error('無法獲取台積電的價格:', error);
+        console.error('無法獲取投資組合資料:', error);
+      });
+  }, []);  // 空依賴陣列，確保只在頁面初次加載時執行
+
+  // 獲取股票選項
+  useEffect(() => {
+    InvestmentRequest.getAllStocks()
+      .then(response => {
+        setStockOptions(response.data);  // 成功後設置股票選項
+      })
+      .catch(error => {
+        console.error('無法獲取股票列表:', error);
       });
   }, []);
 
-  const updateThresholdInDatabase = (portfolioName, threshold) => {
-    console.log(`即將發送至後端的數據: {name: '${portfolioName}', investment_threshold: ${threshold}}`);
-    
-    axios.post('http://localhost:8000/investment/default-investment-portfolios/', {
-      name: portfolioName,
-      investment_threshold: threshold
-    })
-    .then(response => {
-      console.log("Threshold updated successfully:", response);
-    })
-    .catch(error => {
-      console.error(`無法將 ${portfolioName} 的門檻更新至伺服器:`, error);
+  const handleAddPortfolio = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleOk = () => {
+    form.validateFields()
+      .then(values => {
+        const newPortfolio = {
+          name: values.portfolioName,  // 投資組合名稱
+          stocks: selectedStocks.map(stockSymbol => ({
+            stock_symbol: stockSymbol,
+            stock_name: stockOptions.find(stock => stock.symbol === stockSymbol)?.name || '',
+            quantity: stockQuantities[stockSymbol] || 1,  // 使用者設定的股數，若無則預設為 1
+          })),
+          investment_threshold: calculateInvestmentThreshold(), // 計算投資門檻
+        };
+
+        console.log('即將發送至後端的數據:', newPortfolio);
+
+        axios.post('http://localhost:8000/investment/default-investment-portfolios/', newPortfolio)
+          .then(response => {
+            setInvestmentData([...investmentData, response.data]);  // 新增成功後將資料添加到表格
+            setIsModalOpen(false);
+            form.resetFields();
+            setSelectedStocks([]);
+            setStockQuantities({});
+            setStockPrices({});
+          })
+          .catch(error => {
+            console.error('新增投資組合失敗:', error.response?.data || error.message);
+          });
+      })
+      .catch(error => {
+        console.error('表單驗證失敗:', error);
+      });
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+    form.resetFields();
+    setSelectedStocks([]);
+    setStockQuantities({});
+    setStockPrices({});
+  };
+
+  const handleStocksChange = (value) => {
+    setSelectedStocks(value);
+
+    // 查詢所選股票的即時價格或收盤價
+    value.forEach(stockSymbol => {
+      if (!stockPrices[stockSymbol]) {  // 如果價格還未查詢過，才發送請求
+        InvestmentRequest.getStockPrice(stockSymbol)
+          .then(response => {
+            setStockPrices(prevPrices => ({
+              ...prevPrices,
+              [stockSymbol]: response.data.price || 0,
+            }));
+          })
+          .catch(error => {
+            console.error(`無法獲取股票 ${stockSymbol} 的價格:`, error);
+          });
+      }
     });
+  };
+
+  const handleQuantityChange = (stockSymbol, quantity) => {
+    setStockQuantities(prevQuantities => ({
+      ...prevQuantities,
+      [stockSymbol]: quantity,
+    }));
+  };
+
+  // 計算投資門檻
+  const calculateInvestmentThreshold = () => {
+    return selectedStocks.reduce((total, stockSymbol) => {
+      const price = stockPrices[stockSymbol] || 0;
+      const quantity = stockQuantities[stockSymbol] || 1;
+      return total + (price * quantity);
+    }, 0);
+  };
+
+  const handleSetSavingsGoal = (portfolio) => {
+    // 設置儲蓄目標的操作邏輯
+    console.log(`設置儲蓄目標: ${portfolio.name}，門檻: ${portfolio.investment_threshold}`);
+    // 這裡可以加入額外邏輯來處理儲蓄目標
   };
 
   const columns = [
@@ -133,26 +141,84 @@ const DefaultInvestment = () => {
     },
     {
       title: '投資門檻 (NT$)',
-      key: 'threshold',
-      render: (text, record) => {
-        const portfolioKey = record.key;
-        const threshold = thresholds[portfolioKey] || 0;
-        return `NT$ ${threshold.toLocaleString()}`;
-      },
+      key: 'investment_threshold',
+      render: (text, record) => `NT$ ${record.investment_threshold.toLocaleString()}`,
+    },
+    {
+      title: '儲蓄目標',
+      key: 'action',
+      render: (text, record) => (
+        <Button onClick={() => handleSetSavingsGoal(record)}>
+          設定儲蓄目標
+        </Button>
+      ),
     },
   ];
 
   return (
-    <div className='container' style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
-      <h1 className="title">投資門檻總覽</h1>
-      <Table
-        columns={columns}
-        dataSource={portfolios}
-        pagination={false}
-        bordered
-        rowKey="key"
-        style={{ textAlign: 'center' }}
-      />
+    <div className='container'>
+      <h1 className="title">投資組合總覽</h1>
+
+      {isAdmin && (
+        <Button type="primary" onClick={handleAddPortfolio} style={{ marginBottom: '20px' }}>
+          新增預設投資組合
+        </Button>
+      )}
+
+      <Table columns={columns} dataSource={investmentData} rowKey="id" />
+
+      <Modal
+        title="新增投資組合"
+        open={isModalOpen}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        okText="確認"
+        cancelText="取消"
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="portfolioName"
+            label="投資組合名稱"
+            rules={[{ required: true, message: '請輸入投資組合名稱' }]}
+          >
+            <Input placeholder="請輸入投資組合名稱" />
+          </Form.Item>
+          <Form.Item
+            name="stocks"
+            label="選擇股票"
+            rules={[{ required: true, message: '請選擇至少一支股票' }]}
+          >
+            <Select
+              mode="multiple"
+              placeholder="選擇股票"
+              onChange={handleStocksChange}
+              style={{ width: '100%' }}
+            >
+              {stockOptions.map(stock => (
+                <Option key={stock.symbol} value={stock.symbol}>
+                  {stock.name} ({stock.symbol})
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          {/* 根據選擇的股票顯示股數輸入框 */}
+          {selectedStocks.map(stockSymbol => (
+            <Form.Item
+              key={stockSymbol}
+              label={`${stockSymbol} 股數`}
+            >
+              <Input
+                type="number"
+                defaultValue={1}
+                onChange={(e) => handleQuantityChange(stockSymbol, e.target.value)}
+                min={1}
+                placeholder="輸入股數"
+              />
+            </Form.Item>
+          ))}
+        </Form>
+      </Modal>
     </div>
   );
 };

@@ -277,6 +277,7 @@ class Investment(models.Model):
     class Meta:
         db_table = "investment"  # 在資料庫中的表名
 
+#預設投資組合料表
 class DefaultInvestmentPortfolio(models.Model):
     name = models.CharField(max_length=100)  # 投資組合名稱
     investment_threshold = models.DecimalField(max_digits=12, decimal_places=2)  # 投資門檻
@@ -286,6 +287,21 @@ class DefaultInvestmentPortfolio(models.Model):
 
     def __str__(self):
         return self.name
+
+# 預設投資組合中的股票列表
+class DefaultStockList(models.Model):
+    stock_symbol = models.CharField(max_length=10)  # 股票代碼
+    stock_name = models.CharField(max_length=100, null=True, blank=True)  # 股票名稱（可選）
+    quantity = models.IntegerField(default=1)  # 股票數量，預設為 1
+    default_investment_portfolio = models.ForeignKey(DefaultInvestmentPortfolio, on_delete=models.CASCADE, related_name='stocks')  # 關聯到預設投資組合
+
+    class Meta:
+        db_table = "default_stock_list" 
+
+    def __str__(self):
+        return self.stock_symbol
+
+
 
 
 
