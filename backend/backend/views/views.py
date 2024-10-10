@@ -43,8 +43,13 @@ import os
 from django.http import JsonResponse
 
 # 彭軍翔
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
+#     "C:\\Users\\NAOPIgee\\Desktop\\fork\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
+# )
+
+# 歐晉廷
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
-    "C:\\Users\\NAOPIgee\\Desktop\\fork\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
+    "/Users/allenou/stock-decision-support-system/my-project-8423-1685343098922-1fed5b68860e.json"
 )
 
 
