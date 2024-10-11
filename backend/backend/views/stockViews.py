@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+import time
+
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
@@ -579,6 +581,95 @@ def create_portfolio(request):
         "message": serializer.errors
     },
                     status=status.HTTP_400_BAD_REQUEST)
+
+# 輔助函數，用於生成從 2024 年到當前日期每月 1 日的日期列表
+def generate_first_days():
+    today = datetime.today()
+    current = datetime(2024, 1, 1)  # 從 2024 年 1 月 1 日開始
+    dates = []
+    
+    # 迴圈生成每個月的 1 號，直到今天
+    while current <= today:
+        dates.append(current.strftime('%Y-%m-%d'))  # 將日期轉換為字串格式
+        if current.month == 12:
+            current = current.replace(year=current.year + 1, month=1, day=1)
+        else:
+            current = current.replace(month=current.month + 1, day=1)
+    
+    return dates
+
+# 函數來獲取特定股票在某個日期的收盤價，如果沒有資料就往前一天查詢
+def get_closing_price(stock_symbol, date):
+    try:
+        # 每次查詢前休眠 1 秒，防止過快查詢
+        # time.sleep(1)
+        
+        # 執行 API 查詢
+        ticks = api.ticks(
+            contract=api.Contracts.Stocks[stock_symbol], 
+            date=date,
+            query_type=sj.constant.TicksQueryType.LastCount,
+            last_cnt=1  # 只取最後一筆
+        )
+        
+        # 打印 ticks 結構，並檢查 close 值是否存在
+        print(f"Ticks for {stock_symbol} on {date}: {ticks}")
+        
+        if ticks and hasattr(ticks, 'close') and len(ticks.close) > 0:
+            # 如果存在 close 值，則返回最後一個 close 值
+            print(f"Data found for {stock_symbol} on {date}. Close: {ticks.close[-1]}")
+            return ticks.close[-1]  # 返回最後一筆交易的收盤價
+        else:
+            print(f"No data for {stock_symbol} on {date}. Trying previous day.")
+            previous_date = (datetime.strptime(date, '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m-%d')
+            return get_closing_price(stock_symbol, previous_date)
+    
+    except Exception as e:  
+        print(f"Error fetching data for {stock_symbol} on {date}: {str(e)}")
+        return 0
+
+
+
+
+
+# API 端點，用於獲取投資組合的每月總績效
+@api_view(["POST"])
+def portfolio_monthly_performance(request, portfolio_id):
+    try:
+        # 根據投資組合 ID 獲取投資組合的詳細資料
+        portfolio = DefaultInvestmentPortfolio.objects.get(id=portfolio_id)
+        stocks = DefaultStockList.objects.filter(default_investment_portfolio=portfolio)
+
+        # 檢查投資組合中是否有股票
+        if not stocks.exists():
+            return Response({'error': '投資組合中沒有股票'}, status=status.HTTP_404_NOT_FOUND)
+
+        # 生成從 2024 年至今的每個月 1 號的日期
+        months = generate_first_days()
+        
+        # 初始化結果字典，用於存儲每個月的總收盤價
+        result = {month: 0 for month in months}
+        
+        # 遍歷投資組合中的每支股票，並獲取每月的收盤價
+        for stock in stocks:
+            for month in months:
+                # 獲取股票在指定月份的收盤價
+                closing_price = get_closing_price(stock.stock_symbol, month)
+                # 將該股票的收盤價加到該月份的總和中
+                result[month] += closing_price
+
+        # 返回每月績效的結果
+        return JsonResponse({
+            'portfolio_name': portfolio.name,  # 返回投資組合名稱
+            'performance': result  # 返回每月總績效
+        }, status=status.HTTP_200_OK)
+
+    except DefaultInvestmentPortfolio.DoesNotExist:
+        # 如果找不到對應的投資組合，返回 404 錯誤
+        return JsonResponse({'error': '找不到投資組合'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        # 如果出現其他錯誤，返回 500 錯誤並打印詳細信息
+        return JsonResponse({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # 獲取特定投資組合的詳細資料
