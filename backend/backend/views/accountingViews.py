@@ -948,7 +948,7 @@ class FinancialAnalysisView(APIView):
                         },
                         {"role": "user", "content": prompt},
                     ],
-                    max_tokens=150,
+                    max_tokens=600,
                     temperature=0.7,
                 )
                 advice_text = response["choices"][0]["message"]["content"].strip()
