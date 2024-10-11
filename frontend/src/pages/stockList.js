@@ -35,8 +35,7 @@ const StockList = () => {
     return (
         <>
             <div className="d-flex flex-column justify-content-between align-items-center vh-100" >
-                {/* SearchContainer 向下移動 */}
-                <div className="sticky-container d-flex justify-content-between align-items-center" style={{ marginTop: '50px' }}>
+                <div className="sticky-container d-flex justify-content-between align-items-center" style={{ marginTop: '6rem' }}>
                     <Card style={{ flexGrow: 1 }}>
                         <SearchContainer />
                     </Card>

@@ -6,7 +6,6 @@ import { AccountTypeRequest } from '../api/request/accountTypeRequest';
 import { CategoryRequest } from '../api/request/categoryRequest';
 import CategoryDialog from '../components/categoryDialog';
 import AccountDialog from '../components/accountDialog';
-import moment from 'moment';
 
 const { Option } = Select;
 
@@ -14,7 +13,6 @@ const AccountingForm = () => {
   const [form] = Form.useForm(); // 使用 Ant Design 表單
   const [totalAmount, setTotalAmount] = useState(0)
   const [netAmount, setNetAmount] = useState(0)
-  const [tradeHistory, setTradeHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [assetType, setAssetType] = useState('0');
   const [consumeType, setConsumeType] = useState('1');
@@ -25,7 +23,6 @@ const AccountingForm = () => {
   const [isAccountDialogVisible, setIsAccountDialogVisible] = useState(false);
 
   useEffect(() => {
-    fetchTradeHistory();
     fetchTotalAmount();
     fetchConsumeTypes();
     fetchAccountTypes();
@@ -62,27 +59,18 @@ const AccountingForm = () => {
     setLoading(false);
   };
 
-  const fetchTradeHistory = async () => {
-    setLoading(true);
-    AccountingRequest.getAccountingList()
-      .then(response => {
-        const sortedHistory = response.data.sort((a, b) => new Date(b.transactionDate) - new Date(a.transactionDate));
-        setTradeHistory(sortedHistory);
-      })
-      .catch((error) => {
-        message.error(error.message);
-      });
-    setLoading(false);
-  };
-
   const handleSubmit = async (values) => {
     setLoading(true);
-    values["transactionDate"] = moment(values.transactionDate).format("YYYY-MM-DD")
+
+    if (values.transactionDate) {
+      const tDate = new Date(values.transactionDate);
+      values["transactionDate"] = tDate.toISOString().split('T')[0];  // 格式化為 YYYY-MM-DD
+    }
+
     const newData = { ...values, assetType, consumeType, accountType }
     AccountingRequest.addAccountingData(newData)
       .then(response => {
         message.success(response.message);
-        fetchTradeHistory(); // 提交後重新獲取交易歷史
         form.resetFields(); // 重置表單
       })
       .catch((error) => {
@@ -110,94 +98,96 @@ const AccountingForm = () => {
   return (
     <div className="accounting-kv w-100" style={{ height: '80%', display: 'flex' }}>
       <AccountingSidebar totalAmount={totalAmount} netAmount={netAmount} selectedKey={'1'} />
-      <Card style={{ marginLeft: '2rem', width: '80%' }}>
-        <Spin spinning={loading}>
-          <Form form={form} onFinish={handleSubmit}>
-            <Form.Item name="transactionDate" label="交易日期" rules={[{ required: true, message: '請選擇日期' }]}>
-              <DatePicker locale />
-            </Form.Item>
-            <Form.Item name="accountingName" label="消費名稱" rules={[{ required: true, message: '請簡述消費行為' }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="amount" label="金額" rules={[{ required: true, message: '請輸入金額' }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="assetType" label="交易行為">
-              <Radio.Group
-                onChange={(e) => {
-                  setAssetType(e.target.value);
-                }}>
-                <Radio.Button value="0">收入</Radio.Button>
-                <Radio.Button value="1">支出</Radio.Button>
-              </Radio.Group>
-            </Form.Item>
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item name="consumeType" label="消費類型">
-                  <Select
-                    onChange={(value) => setConsumeType(value)}
-                    style={{ width: '100%' }} // 確保 Select 佔滿 Col 寬度
+      <div className="generalreport-container-all" style={{ flex: 1, marginLeft: '1rem' }}>
+        <Card title="記帳" style={{ marginBottom: '1rem', height: '100%', width: '95%' }}>
+          <Spin spinning={loading}>
+            <Form form={form} onFinish={handleSubmit}>
+              <Form.Item name="transactionDate" label="交易日期" rules={[{ required: true, message: '請選擇日期' }]}>
+                <DatePicker onChange={(date) => form.setFieldsValue({ 'transactionDate': date })} locale />
+              </Form.Item>
+              <Form.Item name="accountingName" label="消費名稱" rules={[{ required: true, message: '請簡述消費行為' }]}>
+                <Input />
+              </Form.Item>
+              <Form.Item name="amount" label="金額" rules={[{ required: true, message: '請輸入金額' }]}>
+                <Input />
+              </Form.Item>
+              <Form.Item name="assetType" label="交易行為">
+                <Radio.Group
+                  onChange={(e) => {
+                    setAssetType(e.target.value);
+                  }}>
+                  <Radio.Button value="0">收入</Radio.Button>
+                  <Radio.Button value="1">支出</Radio.Button>
+                </Radio.Group>
+              </Form.Item>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item name="consumeType" label="消費類型">
+                    <Select
+                      onChange={(value) => setConsumeType(value)}
+                      style={{ width: '100%' }} // 確保 Select 佔滿 Col 寬度
+                    >
+                      {consumeTypes.map((type) => (
+                        <Option key={type.id} value={type.id}>
+                          {type.icon} {type.name}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Button
+                    type="default"
+                    className="ms-auto button1"
+                    style={{
+                      marginLeft: '10px',
+                      width: '100%' // 確保按鈕佔滿 Col 寬度
+                    }}
+                    onClick={handleConsumeClick}
                   >
-                    {consumeTypes.map((type) => (
-                      <Option key={type.id} value={type.id}>
-                        {type.icon} {type.name}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Button
-                  type="default"
-                  className="ms-auto button1"
-                  style={{
-                    marginLeft: '10px',
-                    width: '100%' // 確保按鈕佔滿 Col 寬度
-                  }}
-                  onClick={handleConsumeClick}
-                >
-                  新增類別
-                </Button>
-              </Col>
-            </Row>
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item name="accountType" label="消費帳戶">
-                  <Select
-                    onChange={(value) => setAccountType(value)}
-                    style={{ width: '100%' }} // 確保 Select 佔滿 Col 寬度
+                    新增類別
+                  </Button>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item name="accountType" label="消費帳戶">
+                    <Select
+                      onChange={(value) => setAccountType(value)}
+                      style={{ width: '100%' }} // 確保 Select 佔滿 Col 寬度
+                    >
+                      {accountTypes.map((type) => (
+                        <Option key={type.id} value={type.id}>
+                          {type.icon} {type.account_name}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Button
+                    type="default"
+                    className="ms-auto button1"
+                    style={{
+                      marginLeft: '10px',
+                      width: '100%' // 確保按鈕佔滿 Col 寬度
+                    }}
+                    onClick={handleAccountClick}
                   >
-                    {accountTypes.map((type) => (
-                      <Option key={type.id} value={type.id}>
-                        {type.icon} {type.account_name}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Button
-                  type="default"
-                  className="ms-auto button1"
-                  style={{
-                    marginLeft: '10px',
-                    width: '100%' // 確保按鈕佔滿 Col 寬度
-                  }}
-                  onClick={handleAccountClick}
-                >
-                  新增帳戶
-                </Button>
-              </Col>
-            </Row>
-            <Form.Item name="content" label="備註">
-              <Input.TextArea />
-            </Form.Item>
-            <Button type="primary" htmlType="submit">
-              送出
-            </Button>
-          </Form>
-        </Spin>
-      </Card>
+                    新增帳戶
+                  </Button>
+                </Col>
+              </Row>
+              <Form.Item name="content" label="備註">
+                <Input.TextArea />
+              </Form.Item>
+              <Button type="primary" htmlType="submit" className="button2" style={{ width: '100%', display: 'block' }}>
+                送出
+              </Button>
+            </Form>
+          </Spin>
+        </Card>
+      </div>
       {isConsumeDialogVisible && (
         <CategoryDialog
           onClose={handleConsumeClose}

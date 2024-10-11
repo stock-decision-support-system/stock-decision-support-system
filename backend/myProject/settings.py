@@ -12,7 +12,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+
+import pymysql
 import yaml
+from cryptography.fernet import Fernet
 
 # 讀取配置文件
 with open("config.yaml", "r") as file:
@@ -34,6 +37,8 @@ ALLOWED_HOSTS = ['*']
 
 APPEND_SLASH = False
 # Application definition
+
+pymysql.install_as_MySQLdb()
 
 INSTALLED_APPS = [
     'backend',
@@ -192,3 +197,5 @@ EMAIL_HOST_PASSWORD = 'qesr hpzy anid oytr'
 RECAPTCHA_SECRET_KEY = '6LdmwcgpAAAAAFkprWdUSzzAZ8dE-1obmzqLK3Nf'
 
 OPENAI_API_KEY = ''
+
+ENCRYPTION_KEY = Fernet.generate_key().decode('utf-8')

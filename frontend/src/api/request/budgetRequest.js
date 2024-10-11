@@ -12,8 +12,8 @@ export class BudgetRequest {
     static addBudget(data) {
         return FetchUtil.postAPI(`${BASE_URL}`, data);
     }
-    static updateBudget(data) {
-        return FetchUtil.putAPI(`${BASE_URL}`, data);
+    static updateBudget(id, data) {
+        return FetchUtil.putAPI(`${BASE_URL}/${id}`, data);
     }
     static deleteBudget(id) {
         return FetchUtil.deleteAPI(`${BASE_URL}/${id}`);

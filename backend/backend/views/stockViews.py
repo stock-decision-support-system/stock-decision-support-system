@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 import shioaji as sj
@@ -7,7 +9,7 @@ import logging
 
 from rest_framework import status  # 新增這行導入
 from rest_framework.response import Response
-from ..models import InvestmentPortfolio, Investment, DefaultInvestmentPortfolio
+from ..models import InvestmentPortfolio, Investment, DefaultInvestmentPortfolio, APICredentials
 from ..serializers import InvestmentPortfolioSerializer, InvestmentSerializer, DefaultInvestmentPortfolioSerializer
 from backend.models import DefaultStockList, DefaultInvestmentPortfolio
 from rest_framework.permissions import IsAuthenticated
@@ -44,6 +46,45 @@ api.login(
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
+
+# def login_to_shioaji(username):
+#     try:
+#         # 從資料庫獲取對應用戶的 API 憑證
+#         credentials = APICredentials.objects.get(username=username)
+#
+#         # 解密數據
+#         decrypted_data = credentials.get_decrypted_data()
+#
+#         # 登入永豐金 API
+#         api = sj.Shioaji(simulation=True)  # 設置模擬模式為True
+#         accounts = api.login(
+#             api_key=decrypted_data['api_key'],  # 使用解密後的api_key
+#             secret_key=decrypted_data['secret_key']  # 使用解密後的secret_key
+#         )
+#
+#         # 激活CA憑證
+#         api.activate_ca(
+#             ca_path=credentials.ca_path.path,  # CA 憑證的路徑
+#             ca_passwd=decrypted_data['ca_passwd'],  # 使用解密後的ca_passwd
+#             person_id=decrypted_data['person_id']  # 使用解密後的person_id
+#         )
+#
+#         return api, accounts
+#
+#     except ObjectDoesNotExist:
+#         raise Exception(f"No API credentials found for username {username}")
+#     except Exception as e:
+#         raise Exception(f"Error logging into Shioaji API: {str(e)}")
+#
+# def test_login_to_shioaji():
+#     username = "testuser"  # 替換為你的測試用戶名
+#     try:
+#         api, accounts = login_to_shioaji(username)
+#         print(f"Logged in successfully for {username}.")
+#         # 這裡你可以檢查返回的accounts數據是否正確
+#     except Exception as e:
+#         print(f"Failed to login: {str(e)}")
+
 
 
 # 股票資料查詢 (使用訂閱模式)
@@ -85,6 +126,54 @@ def get_stock_detail(request, id):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+# @api_view(["GET"])
+# def get_stock_detail(request, id):
+#     try:
+#         # 獲取當前用戶的 API 憑證
+#         username = request.user.username  # 假設你有基於身份驗證的用戶系統
+#         api, _ = login_to_shioaji(username)  # 調用之前的 login_to_shioaji 函數
+#
+#         # 根據傳入的股票 ID，從 API 獲取對應的股票合約
+#         stock_contract = api.Contracts.Stocks[id]
+#
+#         # 創建一個合約列表 (在這裡僅包含一個合約)
+#         contracts = [stock_contract]
+#
+#         # 使用 API 獲取指定合約的快照數據
+#         snapshots = api.snapshots(contracts)
+#
+#         # 將快照數據轉換為字典格式，便於返回給前端
+#         data = vars(snapshots[0])
+#
+#         # 在返回的數據中附加股票名稱
+#         data["name"] = stock_contract.name
+#
+#         # 返回成功的響應，包含股票詳細資料
+#         return Response(
+#             {
+#                 "status": "success",
+#                 "data": data
+#             },
+#             status=status.HTTP_200_OK,
+#         )
+#
+#     except ObjectDoesNotExist:
+#         return Response(
+#             {
+#                 "status": "error",
+#                 "message": f"No API credentials found for user {username}"
+#             },
+#             status=status.HTTP_400_BAD_REQUEST,
+#         )
+#     except Exception as e:
+#         # 如果出現錯誤，返回錯誤信息
+#         return Response(
+#             {
+#                 "status": "error",
+#                 "message": str(e)  # 返回錯誤的詳細信息
+#             },
+#             status=status.HTTP_400_BAD_REQUEST,
+#         )
 
 # K線圖資料查詢
 # 這個端點根據股票 ID 和時間範圍（傳入類型）獲取股票的 K 線圖資料

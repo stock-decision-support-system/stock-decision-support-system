@@ -5,8 +5,6 @@ import AccountingSidebar from '../components/accountingSidebar.js'; // 引入 Si
 import { Bar } from '@ant-design/plots';
 import { AccountTypeRequest } from '../api/request/accountTypeRequest';
 
-const { Sider, Content } = Layout;
-
 const BalanceReport = () => {
     const [loading, setLoading] = useState(false);
     const [totalAmount, setTotalAmount] = useState(0)
@@ -48,16 +46,16 @@ const BalanceReport = () => {
     }, []);
 
     const fetchTotalAmount = async () => {
-      setLoading(true);
-      AccountingRequest.getFinancialSummary()
-        .then(response => {
-          setTotalAmount(response.data.total_assets);
-          setNetAmount(response.data.net_assets);
-        })
-        .catch((error) => {
-          message.error(error.message);
-        });
-      setLoading(false);
+        setLoading(true);
+        AccountingRequest.getFinancialSummary()
+            .then(response => {
+                setTotalAmount(response.data.total_assets);
+                setNetAmount(response.data.net_assets);
+            })
+            .catch((error) => {
+                message.error(error.message);
+            });
+        setLoading(false);
     };
 
     const fetchAccountChart = async () => {
@@ -75,7 +73,7 @@ const BalanceReport = () => {
         <div className="generalreport-kv w-100" style={{ height: '80%', display: 'flex' }}>
             <AccountingSidebar totalAmount={totalAmount} netAmount={netAmount} selectedKey={'4'} />
             <div className="generalreport-container-all" style={{ flex: 1, marginLeft: '1rem' }}>
-                <Card title="帳戶金額變動" style={{ marginBottom: '1rem', height: '100%' }}>
+                <Card title="帳戶金額變動" style={{ marginBottom: '1rem', height: '100%', width: '95%' }}>
                     <Spin spinning={loading}>
                         {data.length > 0 ? (
                             <Bar {...config} />

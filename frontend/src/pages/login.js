@@ -48,7 +48,7 @@ const Login = () => {
           });
 
           if (response.data.status === 'success') {
-            const { is_active, username, email, token, is_superuser, is_staff, avatar } = response.data;
+            const { is_active, username, email, token, pending_token, is_superuser, is_staff, avatar } = response.data;
 
             if (!is_active) {
               alert('帳號已被停用');
@@ -67,7 +67,7 @@ const Login = () => {
               } else {
                 // 如果是 pending_token，暫存資料並進行二階段驗證
                 localStorage.setItem('pending_username', username);
-                localStorage.setItem('pending_token', token);
+                localStorage.setItem('pending_token', pending_token);
                 localStorage.setItem('is_superuser', is_superuser);
                 localStorage.setItem('is_staff', is_staff);
 

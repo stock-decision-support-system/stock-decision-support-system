@@ -135,7 +135,7 @@ const Navbar = () => {
             <li className="nav-item">
               <a
                 className="nav-link me-5 justify-content-center d-flex align-items-center"
-                onClick={() => handleNavigation('/reports')}
+                onClick={() => handleNavigation('/generalreport')}
                 style={{ height: '37px', cursor: 'pointer' }}
               >
                 報表
@@ -161,7 +161,7 @@ const Navbar = () => {
                         src={`${BASE_URL}${avatar}`}
                         alt="avatar"
                         className="me-3"
-                        style={{ width: 30 }}
+                        style={{ width: 30, borderRadius: '5px' }}
                       />
                     ) : (
                       <img

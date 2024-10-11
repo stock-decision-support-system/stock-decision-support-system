@@ -1,5 +1,6 @@
 from datetime import timezone, date
 
+from cryptography.fernet import Fernet
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from decimal import Decimal
@@ -9,6 +10,7 @@ from django.db.models.functions import TruncMonth, TruncYear
 from django.utils import timezone
 from datetime import timedelta
 
+from myProject import settings
 
 # 自訂用戶管理器
 class CustomUserManager(BaseUserManager):
@@ -197,6 +199,16 @@ class Accounting(models.Model):
     class Meta:
         db_table = "accounting"  # 資料表名稱
 
+# 定義加密解密方法
+def encrypt_data(data):
+    cipher_suite = Fernet(settings.ENCRYPTION_KEY)  # 使用設置中的加密密鑰
+    encrypted_data = cipher_suite.encrypt(data.encode('utf-8'))
+    return encrypted_data.decode('utf-8')
+
+def decrypt_data(data):
+    cipher_suite = Fernet(settings.ENCRYPTION_KEY)
+    decrypted_data = cipher_suite.decrypt(data.encode('utf-8'))
+    return decrypted_data.decode('utf-8')
 
 # 紀錄API憑證的模型
 class APICredentials(models.Model):
@@ -226,6 +238,23 @@ class APICredentials(models.Model):
     class Meta:
         db_table = "api_credentials"  # 在資料庫中的表名
 
+    def save(self, *args, **kwargs):
+        # 保存時始終加密敏感信息
+        self.api_key = encrypt_data(self.api_key)
+        self.secret_key = encrypt_data(self.secret_key)
+        self.ca_passwd = encrypt_data(self.ca_passwd)
+        self.person_id = encrypt_data(self.person_id)
+
+        super(APICredentials, self).save(*args, **kwargs)
+
+    def get_decrypted_data(self):
+        # 返回解密後的數據，用於API登入
+        return {
+            'api_key': decrypt_data(self.api_key),
+            'secret_key': decrypt_data(self.secret_key),
+            'ca_passwd': decrypt_data(self.ca_passwd),
+            'person_id': decrypt_data(self.person_id)
+        }
 
 BUY_TYPE = [
     ('0', 'buy and hold'),

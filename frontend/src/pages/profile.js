@@ -17,7 +17,7 @@ const Profile = () => {
     avatar: null // 用於存儲上傳的圖片
   });
   const [isEditing, setIsEditing] = useState(false);
-  const [avatarImage, setAvatarImage] = useState();
+  const [avatarImage, setAvatarImage] = useState(null);
 
 
   useEffect(() => {
@@ -44,6 +44,10 @@ const Profile = () => {
             password: '', // 密碼初始化為空
             avatar: response.data.avatar // 獲取用戶的圖片資料
           });
+          const avatar = response.data.avatar;
+          if (avatar) {
+            localStorage.setItem('avatar', avatar);
+          }
         } else {
           alert('User not found.');
         }
@@ -71,6 +75,7 @@ const Profile = () => {
       message.error('請上傳圖片文件！');
       return false;
     }
+    setAvatarImage(file);
     setFormData(prevFormData => ({
       ...prevFormData,
       avatar: file
@@ -96,7 +101,6 @@ const Profile = () => {
     axios.post(`${BASE_URL}/edit-profile/`, formDataToSend, {
       headers: {
         'Authorization': `Bearer ${token}`
-        // 移除 Content-Type
       }
     })
       .then(response => {
@@ -104,6 +108,7 @@ const Profile = () => {
           setUser({ ...user, ...formData });
           message.success('更新成功！');
           setIsEditing(false);
+          window.location.reload();
         } else {
           message.error(response.data.message);
         }
@@ -133,7 +138,13 @@ const Profile = () => {
         <Form layout="vertical" onFinish={handleComplete}>
           <Row gutter={16}>
             <Col span={9} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              {formData.avatar ? (
+              {avatarImage ? (
+                <img
+                  src={URL.createObjectURL(avatarImage)}
+                  alt="avatar"
+                  style={{ width: 120, height: 120, borderRadius: 8, marginBottom: 20 }}
+                />
+              ) : formData.avatar ? (
                 <img
                   src={`${BASE_URL}${formData.avatar}`}
                   alt="avatar"
