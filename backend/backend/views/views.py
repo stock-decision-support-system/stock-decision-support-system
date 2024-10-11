@@ -606,6 +606,23 @@ def edit_profile(request):
         password = request.data.get("password")
         avatar = request.FILES.get("avatar")  # 獲取上傳的圖片（如果有）
 
+        # 檢查 avatar 是不是文件，並且避免對其進行解碼
+        if avatar is not None:
+            # 這裡可以檢查文件類型，確保它是一個圖片文件，並保存到正確的字段中
+            if avatar.content_type.startswith('image/'):  # 確保上傳的是圖片文件
+                # 檢查文件大小和 MIME 類型 (可選)
+                if avatar.size > 5 * 1024 * 1024:  # 5MB 大小限制
+                    return Response(
+                        {"status": "error", "message": "圖片文件過大"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                user.avatar_path = avatar
+            else:
+                return Response(
+                    {"status": "error", "message": "請上傳有效的圖片文件"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         # 根據請求數據部分更新用戶對象
         if first_name is not None:
             user.first_name = first_name
@@ -616,7 +633,14 @@ def edit_profile(request):
         if password is not None:
             user.set_password(password)  # 更新密碼，使用 set_password 方法以安全地處理
         if avatar is not None:
-            user.avatar_path = avatar  # 更新圖片欄位
+            # 檢查文件大小和 MIME 類型 (可選)
+            if avatar.size > 5 * 1024 * 1024:  # 5MB 大小限制
+                return Response(
+                    {"status": "error", "message": "圖片文件過大"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            user.avatar_path = avatar
+            
 
         # 保存更新後的用戶信息
         user.save()

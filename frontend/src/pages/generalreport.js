@@ -129,10 +129,10 @@ const GeneralReport = () => {
         ],
         meta: {
             total_assets: {
-                alias: '消費帳戶',
+                alias: '總資產',
             },
             net_assets: {
-                alias: '金額(新台幣)',
+                alias: '淨資產',
             },
         },
     };
