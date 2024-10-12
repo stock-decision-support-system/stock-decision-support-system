@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime, timedelta
 import time
 
@@ -49,45 +50,64 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
-# def login_to_shioaji(username):
-#     try:
-#         # 從資料庫獲取對應用戶的 API 憑證
-#         credentials = APICredentials.objects.get(username=username)
-#
-#         # 解密數據
-#         decrypted_data = credentials.get_decrypted_data()
-#
-#         # 登入永豐金 API
-#         api = sj.Shioaji(simulation=True)  # 設置模擬模式為True
-#         accounts = api.login(
-#             api_key=decrypted_data['api_key'],  # 使用解密後的api_key
-#             secret_key=decrypted_data['secret_key']  # 使用解密後的secret_key
-#         )
-#
-#         # 激活CA憑證
-#         api.activate_ca(
-#             ca_path=credentials.ca_path.path,  # CA 憑證的路徑
-#             ca_passwd=decrypted_data['ca_passwd'],  # 使用解密後的ca_passwd
-#             person_id=decrypted_data['person_id']  # 使用解密後的person_id
-#         )
-#
-#         return api, accounts
-#
-#     except ObjectDoesNotExist:
-#         raise Exception(f"No API credentials found for username {username}")
-#     except Exception as e:
-#         raise Exception(f"Error logging into Shioaji API: {str(e)}")
-#
-# def test_login_to_shioaji():
-#     username = "testuser"  # 替換為你的測試用戶名
-#     try:
-#         api, accounts = login_to_shioaji(username)
-#         print(f"Logged in successfully for {username}.")
-#         # 這裡你可以檢查返回的accounts數據是否正確
-#     except Exception as e:
-#         print(f"Failed to login: {str(e)}")
+def login_to_shioaji(user):
+    try:
+        # 從資料庫獲取對應用戶的 API 憑證
+        credentials = APICredentials.objects.get(username=user)
+
+        # 解密數據
+        decrypted_data = credentials.get_decrypted_data()
+
+        # 登入永豐金 API (非模擬模式)
+        api = sj.Shioaji(simulation=False)  # 將模擬模式設置為False
+        accounts = api.login(
+            api_key=decrypted_data['api_key'],  # 使用解密後的api_key
+            secret_key=decrypted_data['secret_key']  # 使用解密後的secret_key
+        )
+
+        # 激活CA憑證
+        api.activate_ca(
+            ca_path=credentials.ca_path.path,  # CA 憑證的路徑
+            ca_passwd=decrypted_data['ca_passwd'],  # 使用解密後的ca_passwd
+            person_id=decrypted_data['person_id']  # 使用解密後的person_id
+        )
+
+        return api, accounts
+
+    except ObjectDoesNotExist:
+        raise Exception(f"No API credentials found for username {user}")
+    except Exception as e:
+        error_message = f"Error logging into Shioaji API: {str(e)}"
+        error_traceback = traceback.format_exc()  # 獲取詳細的錯誤堆疊信息
+        raise Exception(f"{error_message}\nDetails:\n{error_traceback}")
 
 
+@api_view(['GET'])
+# @permission_classes([IsAuthenticated])  # 確保用戶已登錄
+def login_to_shioaji_view(request):
+    try:
+        # 使用當前登錄的用戶進行操作
+        user = '11046003'
+        # user = request.user
+        api, accounts = login_to_shioaji(user)
+
+        # 調試：先打印 accounts 的類型和屬性，方便調試
+        account_details = []
+        for account in accounts:
+            account_details.append(str(account))  # 將 account 轉換為字串，看看裡面有哪些屬性
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"Logged in successfully for {user}.",
+            # "message": f"Logged in successfully for {user.username}.",
+            "accounts": account_details  # 暫時返回 account 的字串表示
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=400)
 
 # 股票資料查詢 (使用訂閱模式)
 # 這個端點根據股票 ID 獲取股票的詳細資料
@@ -128,54 +148,6 @@ def get_stock_detail(request, id):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-# @api_view(["GET"])
-# def get_stock_detail(request, id):
-#     try:
-#         # 獲取當前用戶的 API 憑證
-#         username = request.user.username  # 假設你有基於身份驗證的用戶系統
-#         api, _ = login_to_shioaji(username)  # 調用之前的 login_to_shioaji 函數
-#
-#         # 根據傳入的股票 ID，從 API 獲取對應的股票合約
-#         stock_contract = api.Contracts.Stocks[id]
-#
-#         # 創建一個合約列表 (在這裡僅包含一個合約)
-#         contracts = [stock_contract]
-#
-#         # 使用 API 獲取指定合約的快照數據
-#         snapshots = api.snapshots(contracts)
-#
-#         # 將快照數據轉換為字典格式，便於返回給前端
-#         data = vars(snapshots[0])
-#
-#         # 在返回的數據中附加股票名稱
-#         data["name"] = stock_contract.name
-#
-#         # 返回成功的響應，包含股票詳細資料
-#         return Response(
-#             {
-#                 "status": "success",
-#                 "data": data
-#             },
-#             status=status.HTTP_200_OK,
-#         )
-#
-#     except ObjectDoesNotExist:
-#         return Response(
-#             {
-#                 "status": "error",
-#                 "message": f"No API credentials found for user {username}"
-#             },
-#             status=status.HTTP_400_BAD_REQUEST,
-#         )
-#     except Exception as e:
-#         # 如果出現錯誤，返回錯誤信息
-#         return Response(
-#             {
-#                 "status": "error",
-#                 "message": str(e)  # 返回錯誤的詳細信息
-#             },
-#             status=status.HTTP_400_BAD_REQUEST,
-#         )
 
 # K線圖資料查詢
 # 這個端點根據股票 ID 和時間範圍（傳入類型）獲取股票的 K 線圖資料
@@ -237,7 +209,55 @@ def get_kbars(request, id):
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
-
+#
+# # 获取台股股票的快照資料
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def get_tw_stocks(request):
+#     try:
+#         # 使用當前登錄的用戶進行操作
+#         user = request.user
+#         api, accounts = login_to_shioaji(user)
+#
+#         # 定義股票合約
+#         contracts = [
+#             api.Contracts.Stocks['1101'],  # 台泥
+#             api.Contracts.Stocks['1216'],  # 統一
+#             api.Contracts.Stocks['1301'],  # 台塑
+#             api.Contracts.Stocks['1303'],  # 南亞
+#             api.Contracts.Stocks['2327'],  # 國巨
+#             api.Contracts.Stocks['2330'],  # 台積電
+#             api.Contracts.Stocks['2454'],  # 聯發科
+#             api.Contracts.Stocks['2881'],  # 富邦金
+#             api.Contracts.Stocks['2882'],  # 國泰金
+#             api.Contracts.Stocks['2317'],  # 鴻海
+#         ]
+#
+#         # 使用 API 獲取股票快照資料
+#         snapshots = api.snapshots(contracts)
+#
+#         # 序列化資料
+#         snapshot_data = []
+#         for i, snapshot in enumerate(snapshots):
+#             snapshot_data.append({
+#                 'name': contracts[i].name,
+#                 'price': snapshot.close,  # 假設你需要close價格
+#                 'volume': snapshot.volume,
+#                 'high': snapshot.high,
+#                 'low': snapshot.low,
+#                 'open': snapshot.open,
+#             })
+#
+#         return JsonResponse({
+#             "status": "success",
+#             "data": snapshot_data
+#         })
+#
+#     except Exception as e:
+#         return JsonResponse({
+#             "status": "error",
+#             "message": str(e)
+#         }, status=400)
 
 # 獲取特定台股股票的快照資料
 # 這個端點返回多支指定台股股票的即時快照資料
