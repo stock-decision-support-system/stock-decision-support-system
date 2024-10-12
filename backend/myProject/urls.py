@@ -98,6 +98,9 @@ urlpatterns = [
     path('investment/stock_price/<str:symbol>/', stockViews.get_stock_price, name='get_stock_price'),
     path('investment/portfolios/<int:portfolio_id>/', stockViews.get_portfolio_detail, name='get_portfolio_detail'),
     path('investment/default-investment-portfolios/', stockViews.default_investment_portfolios, name='default-investment-portfolios'),
+    path('investment/default-investment-portfolios/<int:portfolio_id>/', stockViews.get_portfolio_detaila, name='portfolio-detail'),
+    path('investment/portfolio-performance/<int:portfolio_id>/', stockViews.portfolio_monthly_performance, name='portfolio_monthly_performance'),
+
 
     # 資產負債查詢
     path('users/<username>/financial-summary/', accountingViews.financial_summary, name='financial-summary'),

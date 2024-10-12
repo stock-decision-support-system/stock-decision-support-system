@@ -9,6 +9,7 @@ from .models import (
     Investment,
     Budget,
     DefaultInvestmentPortfolio,
+    DefaultStockList,
 )
 
 
@@ -136,8 +137,17 @@ class BudgetSerializer(serializers.ModelSerializer):
         validated_data["username"] = self.context["request"].user
         return super().create(validated_data)
     
+
+class DefaultStockListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DefaultStockList
+        fields = ['stock_symbol', 'stock_name', 'quantity']
+
 class DefaultInvestmentPortfolioSerializer(serializers.ModelSerializer):
+    stocks = DefaultStockListSerializer(many=True, read_only=True)
+
     class Meta:
         model = DefaultInvestmentPortfolio
-        fields = ['id', 'name', 'investment_threshold']  # 只包括這兩個欄位
+        fields = ['id', 'name', 'investment_threshold', 'stocks']  # 加入 stocks
+
 

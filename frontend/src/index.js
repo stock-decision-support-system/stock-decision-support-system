@@ -28,7 +28,8 @@ import BalanceReport from './pages/balanceReport';
 import ConsumeReport from './pages/consumeReport';
 import StockList from './pages/stockList';
 import TwoFactorAuthPage from './pages/twoFactorAuthPage';
-import DefaultInvestment from './pages/defaultInvestment'
+import DefaultInvestmentDetail from './pages/defaultInvestmentDetail'; // 假設這是你的詳細頁面組件
+import DefaultInvestment from './pages/defaultInvestment';
 import TradeHistory from './pages/tradeHistory';
 
 const root = createRoot(document.getElementById('root'));
@@ -60,6 +61,7 @@ root.render(
             <Route path="/balancereport" element={<BalanceReport />} />
             <Route path="/consumereport" element={<ConsumeReport />} />
             <Route path="/tradeHistory" element={<TradeHistory />} />
+            <Route path="/investment/:portfolioId" element={<DefaultInvestmentDetail />} />
           </Routes>
         </div>
         <GoalProgressBar/>
