@@ -198,4 +198,4 @@ RECAPTCHA_SECRET_KEY = '6LdmwcgpAAAAAFkprWdUSzzAZ8dE-1obmzqLK3Nf'
 
 OPENAI_API_KEY = ''
 
-ENCRYPTION_KEY = Fernet.generate_key().decode('utf-8')
+ENCRYPTION_KEY = 'kXZ5gUwuh9RaSOM3BlJ8CJH8UxiRtKMOvZLno5YZH-k='

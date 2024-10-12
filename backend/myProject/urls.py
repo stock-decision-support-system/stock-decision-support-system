@@ -102,6 +102,9 @@ urlpatterns = [
     # 資產負債查詢
     path('users/<username>/financial-summary/', accountingViews.financial_summary, name='financial-summary'),
     path('asset-change/', accountingViews.assets_change_chart, name='assets_change_chart'),
+
+    # 股票下單
+    path('api/login-to-shioaji/', stockViews.login_to_shioaji_view, name='login_to_shioaji'),
 ]
 
 if settings.DEBUG:

@@ -201,14 +201,15 @@ class Accounting(models.Model):
 
 # 定義加密解密方法
 def encrypt_data(data):
-    cipher_suite = Fernet(settings.ENCRYPTION_KEY)  # 使用設置中的加密密鑰
+    cipher_suite = Fernet(settings.ENCRYPTION_KEY.encode())  # 使用相同的加密密鑰
     encrypted_data = cipher_suite.encrypt(data.encode('utf-8'))
     return encrypted_data.decode('utf-8')
 
 def decrypt_data(data):
-    cipher_suite = Fernet(settings.ENCRYPTION_KEY)
+    cipher_suite = Fernet(settings.ENCRYPTION_KEY.encode())  # 使用相同的加密密鑰
     decrypted_data = cipher_suite.decrypt(data.encode('utf-8'))
     return decrypted_data.decode('utf-8')
+
 
 # 紀錄API憑證的模型
 class APICredentials(models.Model):
