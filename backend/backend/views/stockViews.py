@@ -147,12 +147,12 @@ def get_account_balance(request):
 
 #查詢股票交易狀況
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def get_all_order_status(request):
     try:
         # 使用當前登錄的用戶進行操作
-        user = request.user
-        # user = '11046003'
+        # user = request.username
+        user = '11046003'
         api, accounts = login_to_shioaji(user)
 
         # 更新證券委託狀態
@@ -310,7 +310,7 @@ def get_portfolio_status(request):
         }, status=400)
 
 
-#單獨下單
+#單獨下單零股
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def place_odd_lot_order(request):
@@ -326,6 +326,7 @@ def place_odd_lot_order(request):
         order_price = request.data.get("order_price")  # 下單價格
         action = request.data.get("action", sj.constant.Action.Buy)  # 默認為買單
         price_type = request.data.get("price_type", sj.constant.StockPriceType.LMT)  # 默認為限價單
+        order_type = request.data.get("order_type", sj.constant.OrderType.ROD) # 默認為ROD
 
         # 構建股票合約
         contract = api.Contracts.Stocks.TSE[stock_symbol]
@@ -336,7 +337,7 @@ def place_odd_lot_order(request):
             quantity=order_quantity,
             action=action,  # "Buy" or "Sell"
             price_type=price_type,  # "LMT" for limit, "MKT" for market
-            order_type=sj.constant.OrderType.ROD,  # ROD (當日有效)
+            order_type=order_type,  # ROD (當日有效)
             order_lot=sj.constant.StockOrderLot.IntradayOdd,  # 零股
             account=api.stock_account  # 設定帳戶
         )
@@ -537,7 +538,9 @@ def place_odd_lot_orders(request):
         order_quantities = request.data.get("order_quantities", [])  # 下單股數列表
         order_prices = request.data.get("order_prices", [])  # 下單價格列表
         actions = request.data.get("actions", [sj.constant.Action.Buy] * len(stock_symbols))  # 默認為買單
-        price_types = request.data.get("price_types", [sj.constant.StockPriceType.LMT] * len(stock_symbols))  # 默認為限價單
+        price_types = request.data.get("price_types", [sj.constant.StockPriceType.MKT] * len(stock_symbols))  # 默認為市價單
+        order_types = request.data.get("order_types", [sj.constant.OrderType.ROD] * len(stock_symbols)) # 默認為ROD
+
 
         # 檢查參數是否一致
         if not (len(stock_symbols) == len(order_quantities) == len(order_prices) == len(actions) == len(price_types)):
@@ -555,6 +558,7 @@ def place_odd_lot_orders(request):
             order_price = order_prices[i]
             action = actions[i]
             price_type = price_types[i]
+            order_type = order_types[i]
 
             # 構建股票合約
             contract = api.Contracts.Stocks.TSE[stock_symbol]
@@ -565,7 +569,7 @@ def place_odd_lot_orders(request):
                 quantity=order_quantity,
                 action=action,
                 price_type=price_type,
-                order_type=sj.constant.OrderType.ROD,  # ROD (當日有效)
+                order_type=order_type,  # ROD (當日有效)
                 order_lot=sj.constant.StockOrderLot.IntradayOdd,  # 零股
                 account=api.stock_account
             )
