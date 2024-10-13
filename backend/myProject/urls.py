@@ -110,6 +110,14 @@ urlpatterns = [
 
     # 股票下單
     path('api/login-to-shioaji/', stockViews.login_to_shioaji_view, name='login_to_shioaji'),
+    path('api/place-odd-lot-order/', stockViews.place_odd_lot_order, name='place-odd-lot-order'),
+    path('api/cancel-odd-lot-order/', stockViews.cancel_odd_lot_order, name='cancel-odd-lot-order'),
+    path('api/place-odd-lot-orders/', stockViews.place_odd_lot_orders, name='place_odd_lot_orders'),
+    path('api/cancel-odd-lot-orders/',stockViews.cancel_odd_lot_orders, name='cancel_odd_lot_orders'),
+    path('api/order-status/', stockViews.get_all_order_status, name='get_order_status'),
+    path('api/portfolio-status/', stockViews.get_portfolio_status, name='get_portfolio_status'),
+    path('api/account-balance/', stockViews.get_account_balance, name='get_account_balance'),
+
 ]
 
 if settings.DEBUG:

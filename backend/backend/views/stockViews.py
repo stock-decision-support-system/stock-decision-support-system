@@ -109,6 +109,655 @@ def login_to_shioaji_view(request):
             "message": str(e)
         }, status=400)
 
+#查看銀行餘額
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_account_balance(request):
+    try:
+        # 使用當前登錄的用戶進行操作
+        # user = '11046003'
+        user = request.user  # 根據你的系統設置
+        api, accounts = login_to_shioaji(user)  # 假設已經有 `login_to_shioaji` 函數
+
+        # 調用帳戶餘額
+        balance_data = api.account_balance()
+
+        # 組織回傳資料
+        serialized_balance = {
+            "status": balance_data.status.name,  # 轉換 FetchStatus 為字串
+            "acc_balance": balance_data.acc_balance,
+            "date": balance_data.date,
+            "errmsg": balance_data.errmsg if balance_data.errmsg else ""  # 錯誤訊息，如果有的話
+        }
+
+        return JsonResponse({
+            "status": "success",
+            "data": serialized_balance
+        }, status=200)
+
+    except Exception as e:
+        error_message = str(e)
+        error_traceback = traceback.format_exc()
+
+        return JsonResponse({
+            "status": "error",
+            "message": error_message,
+            "details": error_traceback
+        }, status=400)
+
+#查詢股票交易狀況
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_all_order_status(request):
+    try:
+        # 使用當前登錄的用戶進行操作
+        user = request.user
+        # user = '11046003'
+        api, accounts = login_to_shioaji(user)
+
+        # 更新證券委託狀態
+        api.update_status(api.stock_account)
+
+        # 獲取所有交易（下單）狀態
+        trades = api.list_trades()  # 列出當前所有交易（下單）狀態
+
+        # 將交易狀態轉換為 JSON 格式
+        serialized_trades = []
+        for trade in trades:
+            trade_data = {
+                "contract": {
+                    "exchange": trade.contract.exchange.value,
+                    "code": trade.contract.code,
+                    "symbol": trade.contract.symbol,
+                    "name": trade.contract.name,
+                    "category": trade.contract.category,
+                    "unit": trade.contract.unit,
+                    "limit_up": trade.contract.limit_up,
+                    "limit_down": trade.contract.limit_down,
+                    "reference": trade.contract.reference,
+                    "update_date": trade.contract.update_date,
+                    "day_trade": trade.contract.day_trade.value,
+                },
+                "order": {
+                    "action": trade.order.action.value,
+                    "price": trade.order.price,
+                    "quantity": trade.order.quantity,
+                    "id": trade.order.id,
+                    "seqno": trade.order.seqno,
+                    "ordno": trade.order.ordno,
+                    "account": {
+                        "account_type": trade.order.account.account_type.value,
+                        "person_id": trade.order.account.person_id,
+                        "broker_id": trade.order.account.broker_id,
+                        "account_id": trade.order.account.account_id,
+                    },
+                    "custom_field": trade.order.custom_field,
+                    "price_type": trade.order.price_type.value,
+                    "order_type": trade.order.order_type.value,
+                    "daytrade_short": trade.order.daytrade_short,
+                },
+                "status": {
+                    "id": trade.status.id,
+                    "status": trade.status.status.value,
+                    "status_code": trade.status.status_code,
+                    "order_datetime": trade.status.order_datetime.isoformat(),
+                    "order_quantity": trade.status.order_quantity,
+                    "deals": [
+                        {
+                            "seq": deal.seq,
+                            "price": deal.price,
+                            "quantity": deal.quantity,
+                            "ts": deal.ts
+                        } for deal in trade.status.deals
+                    ]
+                }
+            }
+            serialized_trades.append(trade_data)
+
+        # 返回 JSON 格式的訂單狀態和交易資料
+        return JsonResponse({
+            "status": "success",
+            "data": serialized_trades
+        }, status=200)
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=400)
+
+
+#查詢損益與持有股票
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_portfolio_status(request):
+    try:
+        # 使用當前登錄的用戶進行操作
+        user = request.user
+        # user = '11046003'
+        api, accounts = login_to_shioaji(user)
+
+        # 從請求中獲取日期範圍參數
+        start_date = request.query_params.get("start_date", "2024-05-05")  # 默認開始日期
+        end_date = request.query_params.get("end_date", "2024-10-13")  # 默認結束日期
+
+        # 獲取持有的股票資料
+        positions = api.list_positions(api.stock_account)  # 未實現損益
+        profit_loss = api.list_profit_loss(api.stock_account, start_date, end_date)  # 已實現損益
+        settlements = api.settlements(api.stock_account)  # 結算資訊
+
+        # 將持有股票資訊轉換為 JSON 格式
+        serialized_positions = [
+            {
+                "id": position.id,
+                "code": position.code,
+                "direction": position.direction.name,  # Buy or Sell
+                "quantity": position.quantity,
+                "price": position.price,
+                "last_price": position.last_price,
+                "pnl": position.pnl,
+                "yd_quantity": position.yd_quantity,
+                "margin_purchase_amount": position.margin_purchase_amount,
+                "collateral": position.collateral,
+                "short_sale_margin": position.short_sale_margin,
+                "interest": position.interest,
+            }
+            for position in positions
+        ]
+
+        # 將損益資料轉換為 JSON 格式，遍歷 profit_loss 列表
+        serialized_profit_loss = [
+            {
+                "id": pl.id,
+                "code": pl.code,
+                "seqno": pl.seqno,
+                "dseq": pl.dseq,
+                "quantity": pl.quantity,
+                "price": pl.price,
+                "pnl": pl.pnl,
+                "pr_ratio": pl.pr_ratio,
+                "cond": pl.cond,
+                "date": pl.date
+            }
+            for pl in profit_loss
+        ]
+
+        # 將結算資訊轉換為 JSON 格式
+        serialized_settlements = [
+            {
+                "settle_date": settlement.date.isoformat(),
+                "amount": settlement.amount,
+                "T": settlement.T
+            }
+            for settlement in settlements
+        ]
+
+        return JsonResponse({
+            "status": "success",
+            "positions": serialized_positions,
+            "profit_loss": serialized_profit_loss,
+            "settlements": serialized_settlements
+        }, status=200)
+
+    except Exception as e:
+        error_message = str(e)
+        error_traceback = traceback.format_exc()  # 捕捉詳細的錯誤信息
+
+        return JsonResponse({
+            "status": "error",
+            "message": error_message,
+            "details": error_traceback
+        }, status=400)
+
+
+#單獨下單
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def place_odd_lot_order(request):
+    try:
+        # 使用當前登錄的用戶進行操作
+        user = request.user  # 根據你系統的需求設置當前使用者
+        # user = '11046003'
+        api, accounts = login_to_shioaji(user)
+
+        # 從請求中獲取下單相關參數
+        stock_symbol = request.data.get("stock_symbol")  # 股票代號
+        order_quantity = request.data.get("order_quantity")  # 下單股數
+        order_price = request.data.get("order_price")  # 下單價格
+        action = request.data.get("action", sj.constant.Action.Buy)  # 默認為買單
+        price_type = request.data.get("price_type", sj.constant.StockPriceType.LMT)  # 默認為限價單
+
+        # 構建股票合約
+        contract = api.Contracts.Stocks.TSE[stock_symbol]
+
+        # 構建零股下單委託
+        order = api.Order(
+            price=order_price,
+            quantity=order_quantity,
+            action=action,  # "Buy" or "Sell"
+            price_type=price_type,  # "LMT" for limit, "MKT" for market
+            order_type=sj.constant.OrderType.ROD,  # ROD (當日有效)
+            order_lot=sj.constant.StockOrderLot.IntradayOdd,  # 零股
+            account=api.stock_account  # 設定帳戶
+        )
+
+        # 發送下單請求
+        trade = api.place_order(contract, order)
+
+        # 手動序列化 Trade 結構，將 contract, order, 和 status 資料轉為 JSON
+        serialized_trade = {
+            "contract": {
+                "exchange": trade.contract.exchange.value,
+                "code": trade.contract.code,
+                "symbol": trade.contract.symbol,
+                "name": trade.contract.name,
+                "category": trade.contract.category,
+                "limit_up": trade.contract.limit_up,
+                "limit_down": trade.contract.limit_down,
+                "reference": trade.contract.reference,
+                "update_date": trade.contract.update_date,
+                "margin_trading_balance": trade.contract.margin_trading_balance,
+                "short_selling_balance": trade.contract.short_selling_balance,
+                "day_trade": trade.contract.day_trade.name,
+            },
+            "order": {
+                "action": trade.order.action.name,
+                "price": trade.order.price,
+                "quantity": trade.order.quantity,
+                "id": trade.order.id,
+                "seqno": trade.order.seqno,
+                "ordno": trade.order.ordno,
+                "account": {
+                    "account_type": trade.order.account.account_type.name,
+                    "person_id": trade.order.account.person_id,
+                    "broker_id": trade.order.account.broker_id,
+                    "account_id": trade.order.account.account_id,
+                    "signed": trade.order.account.signed,
+                },
+                "price_type": trade.order.price_type.name,
+                "order_type": trade.order.order_type.name,
+                "order_lot": trade.order.order_lot.name,
+            },
+            "status": {
+                "id": trade.status.id,
+                "status": trade.status.status.name,
+                "status_code": trade.status.status_code,
+                "order_datetime": trade.status.order_datetime.isoformat(),
+                "deals": [
+                    {
+                        "seq": deal.seq,
+                        "price": deal.price,
+                        "quantity": deal.quantity,
+                        "timestamp": deal.ts
+                    }
+                    for deal in trade.status.deals
+                ]
+            }
+        }
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"Odd-lot order placed for {stock_symbol}.",
+            "trade": serialized_trade
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=400)
+
+
+import traceback
+
+#單獨刪單
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def cancel_odd_lot_order(request):
+    try:
+        # 使用當前登錄的用戶進行操作
+        user = request.user
+        # user = '11046003'
+        api, accounts = login_to_shioaji(user)
+
+        # 從請求中獲取取消訂單的相關參數
+        order_id = request.data.get("order_id")  # 下單時返回的訂單ID
+
+        if not order_id:
+            return JsonResponse({
+                "status": "error",
+                "message": "order_id is required"
+            }, status=400)
+
+        # 獲取當前所有交易訂單
+        trades = api.list_trades()
+
+        # 嘗試找到對應的訂單，添加默認值以避免 StopIteration
+        order = next((order for order in trades if order.order.id == order_id), None)
+
+        if order is None:
+            return JsonResponse({
+                "status": "error",
+                "message": f"Order with ID {order_id} not found."
+            }, status=404)
+
+        # 發送取消訂單請求
+        api.cancel_order(order.contract, order.order)
+
+        # 更新訂單狀態
+        updated_status = api.update_status(api.stock_account)
+
+        # 找到該訂單最新的狀態
+        updated_order = next(
+            order for order in updated_status if order.order.id == order_id
+        )
+
+        # 序列化 Trade 結構
+        serialized_trade = {
+            "contract": {
+                "exchange": updated_order.contract.exchange.name,
+                "code": updated_order.contract.code,
+                "symbol": updated_order.contract.symbol,
+                "name": updated_order.contract.name,
+                "category": updated_order.contract.category,
+                "limit_up": updated_order.contract.limit_up,
+                "limit_down": updated_order.contract.limit_down,
+                "reference": updated_order.contract.reference,
+                "update_date": updated_order.contract.update_date,
+                "margin_trading_balance": updated_order.contract.margin_trading_balance,
+                "short_selling_balance": updated_order.contract.short_selling_balance,
+                "day_trade": updated_order.contract.day_trade.name,
+            },
+            "order": {
+                "action": updated_order.order.action.name,
+                "price": updated_order.order.price,
+                "quantity": updated_order.order.quantity,
+                "id": updated_order.order.id,
+                "seqno": updated_order.order.seqno,
+                "ordno": updated_order.order.ordno,
+                "account": {
+                    "account_type": updated_order.order.account.account_type.name,
+                    "person_id": updated_order.order.account.person_id,
+                    "broker_id": updated_order.order.account.broker_id,
+                    "account_id": updated_order.order.account.account_id,
+                    "signed": updated_order.order.account.signed,
+                },
+                "price_type": updated_order.order.price_type.name,
+                "order_type": updated_order.order.order_type.name,
+                "order_lot": updated_order.order.order_lot.name,
+            },
+            "status": {
+                "id": updated_order.status.id,
+                "status": updated_order.status.status.name,
+                "status_code": updated_order.status.status_code,
+                "order_datetime": updated_order.status.order_datetime.isoformat(),
+                "cancel_quantity": updated_order.status.cancel_quantity,
+                "deals": [
+                    {
+                        "seq": deal.seq,
+                        "price": deal.price,
+                        "quantity": deal.quantity,
+                        "timestamp": deal.ts
+                    }
+                    for deal in updated_order.status.deals
+                ]
+            }
+        }
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"Odd-lot order with order ID {order_id} canceled successfully.",
+            "trade": serialized_trade
+        })
+
+    except Exception as e:
+        error_message = str(e)
+        error_traceback = traceback.format_exc()  # 獲取完整的錯誤堆疊信息
+
+        return JsonResponse({
+            "status": "error",
+            "message": error_message,
+            "details": error_traceback
+        }, status=400)
+
+
+
+#批次下單零股
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def place_odd_lot_orders(request):
+    try:
+        # 使用當前登錄的用戶進行操作
+        user = request.user
+        # user = '11046003'
+        api, accounts = login_to_shioaji(user)
+
+        # 從請求中獲取多筆下單參數
+        stock_symbols = request.data.get("stock_symbols", [])  # 股票代號列表
+        order_quantities = request.data.get("order_quantities", [])  # 下單股數列表
+        order_prices = request.data.get("order_prices", [])  # 下單價格列表
+        actions = request.data.get("actions", [sj.constant.Action.Buy] * len(stock_symbols))  # 默認為買單
+        price_types = request.data.get("price_types", [sj.constant.StockPriceType.LMT] * len(stock_symbols))  # 默認為限價單
+
+        # 檢查參數是否一致
+        if not (len(stock_symbols) == len(order_quantities) == len(order_prices) == len(actions) == len(price_types)):
+            return JsonResponse({
+                "status": "error",
+                "message": "The number of stock symbols, quantities, prices, actions, and price types must match."
+            }, status=400)
+
+        trades = []  # 儲存所有交易結果
+
+        # 依次處理每一筆訂單
+        for i in range(len(stock_symbols)):
+            stock_symbol = stock_symbols[i]
+            order_quantity = order_quantities[i]
+            order_price = order_prices[i]
+            action = actions[i]
+            price_type = price_types[i]
+
+            # 構建股票合約
+            contract = api.Contracts.Stocks.TSE[stock_symbol]
+
+            # 構建零股下單委託
+            order = api.Order(
+                price=order_price,
+                quantity=order_quantity,
+                action=action,
+                price_type=price_type,
+                order_type=sj.constant.OrderType.ROD,  # ROD (當日有效)
+                order_lot=sj.constant.StockOrderLot.IntradayOdd,  # 零股
+                account=api.stock_account
+            )
+
+            # 發送下單請求
+            trade = api.place_order(contract, order)
+
+            # 手動序列化 Trade 結構
+            serialized_trade = {
+                "contract": {
+                    "exchange": trade.contract.exchange.value,
+                    "code": trade.contract.code,
+                    "symbol": trade.contract.symbol,
+                    "name": trade.contract.name,
+                    "category": trade.contract.category,
+                    "limit_up": trade.contract.limit_up,
+                    "limit_down": trade.contract.limit_down,
+                    "reference": trade.contract.reference,
+                    "update_date": trade.contract.update_date,
+                    "margin_trading_balance": trade.contract.margin_trading_balance,
+                    "short_selling_balance": trade.contract.short_selling_balance,
+                    "day_trade": trade.contract.day_trade.name,
+                },
+                "order": {
+                    "action": trade.order.action.name,
+                    "price": trade.order.price,
+                    "quantity": trade.order.quantity,
+                    "id": trade.order.id,
+                    "seqno": trade.order.seqno,
+                    "ordno": trade.order.ordno,
+                    "account": {
+                        "account_type": trade.order.account.account_type.name,
+                        "person_id": trade.order.account.person_id,
+                        "broker_id": trade.order.account.broker_id,
+                        "account_id": trade.order.account.account_id,
+                        "signed": trade.order.account.signed,
+                    },
+                    "price_type": trade.order.price_type.name,
+                    "order_type": trade.order.order_type.name,
+                    "order_lot": trade.order.order_lot.name,
+                },
+                "status": {
+                    "id": trade.status.id,
+                    "status": trade.status.status.name,
+                    "status_code": trade.status.status_code,
+                    "order_datetime": trade.status.order_datetime.isoformat(),
+                    "deals": [
+                        {
+                            "seq": deal.seq,
+                            "price": deal.price,
+                            "quantity": deal.quantity,
+                            "timestamp": deal.ts
+                        }
+                        for deal in trade.status.deals
+                    ]
+                }
+            }
+
+            # 將序列化的交易加入結果列表
+            trades.append(serialized_trade)
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Multiple odd-lot orders placed successfully.",
+            "trades": trades
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=400)
+
+#批次刪單零股
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def cancel_odd_lot_orders(request):
+    try:
+        # 使用當前登錄的用戶進行操作
+        user = request.user
+        # user = '11046003'
+        api, accounts = login_to_shioaji(user)
+
+        # 從請求中獲取多筆訂單ID
+        order_ids = request.data.get("order_ids", [])
+
+        if not order_ids:
+            return JsonResponse({
+                "status": "error",
+                "message": "order_ids are required."
+            }, status=400)
+
+        cancelled_orders = []  # 儲存所有取消的訂單結果
+
+        # 獲取當前所有交易訂單
+        trades = api.list_trades()
+
+        # 依次處理每一筆取消訂單請求
+        for order_id in order_ids:
+            # 嘗試找到對應的訂單，避免 StopIteration
+            order = next((order for order in trades if order.order.id == order_id), None)
+
+            if order is None:
+                cancelled_orders.append({
+                    "order_id": order_id,
+                    "status": "Order not found"
+                })
+                continue
+
+            # 發送取消訂單請求
+            api.cancel_order(order.contract, order.order)
+
+            # 更新訂單狀態
+            updated_status = api.update_status(api.stock_account)
+
+            # 找到該訂單最新的狀態
+            updated_order = next(
+                order for order in updated_status if order.order.id == order_id
+            )
+
+            # 序列化取消後的訂單狀態
+            serialized_trade = {
+                "contract": {
+                    "exchange": updated_order.contract.exchange.name,
+                    "code": updated_order.contract.code,
+                    "symbol": updated_order.contract.symbol,
+                    "name": updated_order.contract.name,
+                    "category": updated_order.contract.category,
+                    "limit_up": updated_order.contract.limit_up,
+                    "limit_down": updated_order.contract.limit_down,
+                    "reference": updated_order.contract.reference,
+                    "update_date": updated_order.contract.update_date,
+                    "margin_trading_balance": updated_order.contract.margin_trading_balance,
+                    "short_selling_balance": updated_order.contract.short_selling_balance,
+                    "day_trade": updated_order.contract.day_trade.name,
+                },
+                "order": {
+                    "action": updated_order.order.action.name,
+                    "price": updated_order.order.price,
+                    "quantity": updated_order.order.quantity,
+                    "id": updated_order.order.id,
+                    "seqno": updated_order.order.seqno,
+                    "ordno": updated_order.order.ordno,
+                    "account": {
+                        "account_type": updated_order.order.account.account_type.name,
+                        "person_id": updated_order.order.account.person_id,
+                        "broker_id": updated_order.order.account.broker_id,
+                        "account_id": updated_order.order.account.account_id,
+                        "signed": updated_order.order.account.signed,
+                    },
+                    "price_type": updated_order.order.price_type.name,
+                    "order_type": updated_order.order.order_type.name,
+                    "order_lot": updated_order.order.order_lot.name,
+                },
+                "status": {
+                    "id": updated_order.status.id,
+                    "status": updated_order.status.status.name,
+                    "status_code": updated_order.status.status_code,
+                    "order_datetime": updated_order.status.order_datetime.isoformat(),
+                    "cancel_quantity": updated_order.status.cancel_quantity,
+                    "deals": [
+                        {
+                            "seq": deal.seq,
+                            "price": deal.price,
+                            "quantity": deal.quantity,
+                            "timestamp": deal.ts
+                        }
+                        for deal in updated_order.status.deals
+                    ]
+                }
+            }
+
+            # 添加取消訂單結果到列表
+            cancelled_orders.append({
+                "order_id": order_id,
+                "trade": serialized_trade,
+                "status": "cancelled"
+            })
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Multiple odd-lot orders cancelled successfully.",
+            "cancelled_orders": cancelled_orders
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=400)
+
+
 # 股票資料查詢 (使用訂閱模式)
 # 這個端點根據股票 ID 獲取股票的詳細資料
 @api_view(["GET"])
@@ -147,7 +796,6 @@ def get_stock_detail(request, id):
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
-
 
 # K線圖資料查詢
 # 這個端點根據股票 ID 和時間範圍（傳入類型）獲取股票的 K 線圖資料
