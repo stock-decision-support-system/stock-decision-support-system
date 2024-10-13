@@ -100,6 +100,8 @@ urlpatterns = [
     path('investment/default-investment-portfolios/', stockViews.default_investment_portfolios, name='default-investment-portfolios'),
     path('investment/default-investment-portfolios/<int:portfolio_id>/', stockViews.get_portfolio_detaila, name='portfolio-detail'),
     path('investment/portfolio-performance/<int:portfolio_id>/', stockViews.portfolio_monthly_performance, name='portfolio_monthly_performance'),
+    path('investment/calculate-threshold/<int:portfolio_id>/', stockViews.calculate_threshold, name='calculate_threshold'),
+
 
 
     # 資產負債查詢
