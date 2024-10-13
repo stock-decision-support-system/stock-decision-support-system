@@ -342,7 +342,8 @@ def get_tw_stocks(request):
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
-    
+
+#抓預設投資組合資料
 @api_view(['GET', 'POST'])
 def default_investment_portfolios(request):
     if request.method == 'GET':
@@ -409,8 +410,47 @@ def get_portfolio_detaila(request, portfolio_id):
         logger.error("Portfolio not found")
         return Response({'error': 'Portfolio not found'}, status=status.HTTP_404_NOT_FOUND)
 
+#計算投資門檻
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def calculate_threshold(request, portfolio_id):
+    print(f"Calculating threshold for portfolio: {portfolio_id}")  # 用來檢查函數是否執行
+    
+    try:
+        portfolio = DefaultInvestmentPortfolio.objects.get(id=portfolio_id)
+        stocks = portfolio.stocks.all()
+        # 當調用每隻股票的價格計算時打印出來
+        for stock in stocks:
+            print(f"Calculating for stock: {stock.stock_symbol}")  # 打印每隻股票代號
+            price = get_current_stock_price(stock.stock_symbol)
+            print(f"Price for {stock.stock_symbol}: {price}")  # 打印股票價格
+        # 其餘代碼...
 
+        # 計算每個股票的總價，將所有股票的價格加起來
+        total_investment_threshold = 0
+        for stock in stocks:
+            # 調用獲取股票價格的函數
+            price = get_current_stock_price(stock.stock_symbol)
+            total_investment_threshold += price * stock.quantity
+        
+        # 更新該投資組合的投資門檻
+        portfolio.investment_threshold = total_investment_threshold
+        portfolio.save()  # 保存變更到資料庫
+        
+        # 返回更新的門檻
+        return Response({"threshold": total_investment_threshold}, status=status.HTTP_200_OK)
+    
+    except DefaultInvestmentPortfolio.DoesNotExist:
+        return Response({'error': '投資組合不存在'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+def get_current_stock_price(stock_symbol):
+    try:
+        return get_closing_price(stock_symbol)  # 現在只傳遞股票代碼
+    except Exception as e:
+        print(f"Error fetching stock price for {stock_symbol}: {str(e)}")
+        return 0
 
 
 # 獲取所有股票合約
@@ -602,6 +642,8 @@ def create_portfolio(request):
     },
                     status=status.HTTP_400_BAD_REQUEST)
 
+
+
 # 輔助函數，用於生成從 2024 年到當前日期每月 1 日的日期列表
 def generate_first_days():
     today = datetime.today()
@@ -618,78 +660,96 @@ def generate_first_days():
     
     return dates
 
-# 函數來獲取特定股票在某個日期的收盤價，如果沒有資料就往前一天查詢
-def get_closing_price(stock_symbol, date):
+from datetime import datetime, timedelta
+
+def get_closing_price(stock_symbol, date=None, max_retries=5):
     try:
-        # 每次查詢前休眠 1 秒，防止過快查詢
-        # time.sleep(1)
-        
-        # 執行 API 查詢
-        ticks = api.ticks(
-            contract=api.Contracts.Stocks[stock_symbol], 
-            date=date,
-            query_type=sj.constant.TicksQueryType.LastCount,
-            last_cnt=1  # 只取最後一筆
-        )
-        
-        # 打印 ticks 結構，並檢查 close 值是否存在
-        print(f"Ticks for {stock_symbol} on {date}: {ticks}")
-        
-        if ticks and hasattr(ticks, 'close') and len(ticks.close) > 0:
-            # 如果存在 close 值，則返回最後一個 close 值
-            print(f"Data found for {stock_symbol} on {date}. Close: {ticks.close[-1]}")
-            return ticks.close[-1]  # 返回最後一筆交易的收盤價
+        # 查詢股票合約
+        contract = api.Contracts.Stocks[stock_symbol]
+
+        if date:
+            retries = 0
+            while retries < max_retries:
+                # 嘗試查詢特定日期的歷史收盤價
+                ticks = api.ticks(
+                    contract=contract,
+                    date=date,
+                    query_type=sj.constant.TicksQueryType.LastCount,
+                    last_cnt=1  # 只取最後一筆
+                )
+
+                if ticks and hasattr(ticks, 'close') and len(ticks.close) > 0:
+                    print(f"Data found for {stock_symbol} on {date}. Close: {ticks.close[-1]}")
+                    return ticks.close[-1]
+                else:
+                    print(f"No data for {stock_symbol} on {date}. Retrying for the previous day.")
+                    # 日期回溯一天
+                    date = (datetime.strptime(date, '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m-%d')
+                    retries += 1
+
+            print(f"No valid data for {stock_symbol} after {max_retries} retries. Returning 0.")
+            return 0
+
         else:
-            print(f"No data for {stock_symbol} on {date}. Trying previous day.")
-            previous_date = (datetime.strptime(date, '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m-%d')
-            return get_closing_price(stock_symbol, previous_date)
-    
-    except Exception as e:  
-        print(f"Error fetching data for {stock_symbol} on {date}: {str(e)}")
+            # 沒有提供日期，則查詢當前即時行情快照
+            snapshot = api.snapshots([contract])
+
+            if snapshot and hasattr(snapshot[0], 'close'):
+                print(f"Data found for {stock_symbol}. Close: {snapshot[0].close}")
+                return snapshot[0].close
+            else:
+                print(f"No data for {stock_symbol}. Returning 0.")
+                return 0
+
+    except Exception as e:
+        print(f"Error fetching data for {stock_symbol}: {str(e)}")
         return 0
 
 
-
-
-
-# API 端點，用於獲取投資組合的每月總績效
+#投資績效
 @api_view(["POST"])
 def portfolio_monthly_performance(request, portfolio_id):
     try:
-        # 根據投資組合 ID 獲取投資組合的詳細資料
         portfolio = DefaultInvestmentPortfolio.objects.get(id=portfolio_id)
         stocks = DefaultStockList.objects.filter(default_investment_portfolio=portfolio)
 
-        # 檢查投資組合中是否有股票
         if not stocks.exists():
             return Response({'error': '投資組合中沒有股票'}, status=status.HTTP_404_NOT_FOUND)
 
-        # 生成從 2024 年至今的每個月 1 號的日期
-        months = generate_first_days()
-        
-        # 初始化結果字典，用於存儲每個月的總收盤價
+        months = generate_first_days()  # 生成每個月的1日日期
         result = {month: 0 for month in months}
-        
-        # 遍歷投資組合中的每支股票，並獲取每月的收盤價
-        for stock in stocks:
-            for month in months:
-                # 獲取股票在指定月份的收盤價
-                closing_price = get_closing_price(stock.stock_symbol, month)
-                # 將該股票的收盤價加到該月份的總和中
-                result[month] += closing_price
+        total_investment_cost = 0
+        current_portfolio_value = 0
 
-        # 返回每月績效的結果
+        for stock in stocks:
+            # 對於每支股票，找到該月份第一筆有效收盤價作為成本
+            initial_price = get_closing_price(stock.stock_symbol, months[0])  # 查詢1月份第一筆有效價格
+            stock_cost = stock.quantity * initial_price
+            total_investment_cost += stock_cost
+
+            for month in months:
+                closing_price = get_closing_price(stock.stock_symbol, month)
+                stock_value = stock.quantity * closing_price
+                result[month] += stock_value
+
+                if month == months[-1]:  # 只計算最新月份的市值
+                    current_portfolio_value += stock_value
+
+        pnl = current_portfolio_value - total_investment_cost  # 損益計算
+        roi = (pnl / total_investment_cost) * 100 if total_investment_cost != 0 else 0  # 投報率計算
+
         return JsonResponse({
-            'portfolio_name': portfolio.name,  # 返回投資組合名稱
-            'performance': result  # 返回每月總績效
+            'portfolio_name': portfolio.name,
+            'performance': result,
+            'pnl': pnl,
+            'roi': roi
         }, status=status.HTTP_200_OK)
 
     except DefaultInvestmentPortfolio.DoesNotExist:
-        # 如果找不到對應的投資組合，返回 404 錯誤
         return JsonResponse({'error': '找不到投資組合'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        # 如果出現其他錯誤，返回 500 錯誤並打印詳細信息
         return JsonResponse({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 # 獲取特定投資組合的詳細資料

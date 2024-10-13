@@ -1,24 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Select, Input } from 'antd';
-import axios from 'axios'; // 使用 axios 來發送 API 請求
-import { InvestmentRequest } from '../api/request/investmentRequest.js'; // 假設有這個 API
-import { useNavigate } from 'react-router-dom';  // 新增這行
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const { Option } = Select;
 
 const DefaultInvestment = () => {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [investmentData, setInvestmentData] = useState([]);  // 用來存儲投資組合
-  const [stockOptions, setStockOptions] = useState([]);  // 用於儲存股票選項
-  const [selectedStocks, setSelectedStocks] = useState([]);  // 用於儲存選擇的股票
-  const [stockQuantities, setStockQuantities] = useState({});  // 儲存每個股票的股數
-  const [stockPrices, setStockPrices] = useState({});  // 儲存股票的價格
-  const [isModalOpen, setIsModalOpen] = useState(false);  // 使用新的 `open` 屬性
+  const [investmentData, setInvestmentData] = useState([]); 
+  const [stockOptions, setStockOptions] = useState([]);  
+  const [selectedStocks, setSelectedStocks] = useState([]);  
+  const [stockQuantities, setStockQuantities] = useState({}); 
+  const [stockPrices, setStockPrices] = useState({}); 
+  const [isModalOpen, setIsModalOpen] = useState(false); 
   const [form] = Form.useForm();
-  const navigate = useNavigate();  // 使用 navigate 來進行路由導航
+  const navigate = useNavigate(); 
 
-
-  // 檢查是否是管理員
+  // 檢查使用者是否為管理員
   useEffect(() => {
     const isStaff = localStorage.getItem('is_staff') === 'true';
     const isSuperuser = localStorage.getItem('is_superuser') === 'true';
@@ -27,50 +25,76 @@ const DefaultInvestment = () => {
     }
   }, []);
 
-  // 每次頁面加載時從後端抓取投資組合資料
+  // 取得所有投資組合資料
   useEffect(() => {
     axios.get('http://localhost:8000/investment/default-investment-portfolios/')
       .then(response => {
-        setInvestmentData(response.data);  // 成功後將資料設置到狀態中
+        const portfolios = response.data;
+        setInvestmentData(portfolios);
+
+        // 在抓取完投資組合後，逐一計算每個投資組合的投資門檻
+        portfolios.forEach(portfolio => calculateThreshold(portfolio.id));
       })
       .catch(error => {
         console.error('無法獲取投資組合資料:', error);
       });
-  }, []);  // 空依賴陣列，確保只在頁面初次加載時執行
+  }, []);
 
-  // 獲取股票選項
+  // 取得股票選項資料
   useEffect(() => {
-    InvestmentRequest.getAllStocks()
+    axios.get('http://localhost:8000/investment/stocks/')  // 假設這裡是 API 的股票資料端點
       .then(response => {
-        setStockOptions(response.data);  // 成功後設置股票選項
+        setStockOptions(response.data);
       })
       .catch(error => {
         console.error('無法獲取股票列表:', error);
       });
   }, []);
 
-  const handleAddPortfolio = () => {
-    setIsModalOpen(true);
+  // 計算投資組合的投資門檻
+  const calculateThreshold = (portfolioId) => {
+    console.log(`計算門檻: 投資組合 ID = ${portfolioId}`);
+    
+    axios.get(`http://localhost:8000/investment/calculate-threshold/${portfolioId}/`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    .then(response => {
+      const updatedThreshold = response.data.threshold;
+      console.log(`更新的門檻: ${updatedThreshold}`);
+
+      // 更新前端顯示的投資組合門檻資料
+      setInvestmentData(prevData =>
+        prevData.map(portfolio =>
+          portfolio.id === portfolioId ? { ...portfolio, investment_threshold: updatedThreshold } : portfolio
+        )
+      );
+    })
+    .catch(error => {
+      console.error('門檻計算失敗:', error.response?.data || error.message);
+    });
   };
 
+  // 新增投資組合
   const handleOk = () => {
     form.validateFields()
       .then(values => {
         const newPortfolio = {
-          name: values.portfolioName,  // 投資組合名稱
+          name: values.portfolioName, 
           stocks: selectedStocks.map(stockSymbol => ({
             stock_symbol: stockSymbol,
             stock_name: stockOptions.find(stock => stock.symbol === stockSymbol)?.name || '',
-            quantity: stockQuantities[stockSymbol] || 1,  // 使用者設定的股數，若無則預設為 1
+            quantity: stockQuantities[stockSymbol] || 1,  
           })),
-          investment_threshold: calculateInvestmentThreshold(), // 計算投資門檻
+          investment_threshold: calculateInvestmentThreshold(),
         };
 
         console.log('即將發送至後端的數據:', newPortfolio);
 
         axios.post('http://localhost:8000/investment/default-investment-portfolios/', newPortfolio)
           .then(response => {
-            setInvestmentData([...investmentData, response.data]);  // 新增成功後將資料添加到表格
+            setInvestmentData([...investmentData, response.data]);
             setIsModalOpen(false);
             form.resetFields();
             setSelectedStocks([]);
@@ -86,25 +110,24 @@ const DefaultInvestment = () => {
       });
   };
 
-  const handleCancel = () => {
-    setIsModalOpen(false);
-    form.resetFields();
-    setSelectedStocks([]);
-    setStockQuantities({});
-    setStockPrices({});
+  const handleAddPortfolio = () => {
+    setIsModalOpen(true);  // 將對話框設為打開狀態
   };
+  
 
+  // 處理股票選擇變化
   const handleStocksChange = (value) => {
     setSelectedStocks(value);
 
-    // 查詢所選股票的即時價格或收盤價
     value.forEach(stockSymbol => {
-      if (!stockPrices[stockSymbol]) {  // 如果價格還未查詢過，才發送請求
-        InvestmentRequest.getStockPrice(stockSymbol)
+      if (!stockPrices[stockSymbol]) {
+        axios.get(`http://localhost:8000/investment/stocks/${stockSymbol}/price/`)  // 假設這是股票價格的 API
           .then(response => {
+            const price = response.data.price || 0;
+            console.log(`Fetched price for ${stockSymbol}: ${price}`);
             setStockPrices(prevPrices => ({
               ...prevPrices,
-              [stockSymbol]: response.data.price || 0,
+              [stockSymbol]: price,
             }));
           })
           .catch(error => {
@@ -114,6 +137,7 @@ const DefaultInvestment = () => {
     });
   };
 
+  // 處理股票數量變化
   const handleQuantityChange = (stockSymbol, quantity) => {
     setStockQuantities(prevQuantities => ({
       ...prevQuantities,
@@ -121,23 +145,13 @@ const DefaultInvestment = () => {
     }));
   };
 
-  // 計算投資門檻
+  // 計算總投資門檻
   const calculateInvestmentThreshold = () => {
     return selectedStocks.reduce((total, stockSymbol) => {
       const price = stockPrices[stockSymbol] || 0;
       const quantity = stockQuantities[stockSymbol] || 1;
       return total + (price * quantity);
     }, 0);
-  };
-
-  const handleSetSavingsGoal = (portfolio) => {
-    // 設置儲蓄目標的操作邏輯
-    console.log(`設置儲蓄目標: ${portfolio.name}，門檻: ${portfolio.investment_threshold}`);
-    // 這裡可以加入額外邏輯來處理儲蓄目標
-  };
-
-  const handleNavigateToDetail = (portfolioId) => {
-    navigate(`/investment/${portfolioId}`);  // 根據 portfolioId 進行導航
   };
 
   const columns = [
@@ -152,10 +166,10 @@ const DefaultInvestment = () => {
       render: (text, record) => `NT$ ${record.investment_threshold.toLocaleString()}`,
     },
     {
-      title: '儲蓄目標',
+      title: '動作',
       key: 'action',
       render: (text, record) => (
-        <Button onClick={() => handleNavigateToDetail(record.id)}>
+        <Button onClick={() => navigate(`/investment/${record.id}`)}>
           查看詳細
         </Button>
       ),
@@ -178,7 +192,7 @@ const DefaultInvestment = () => {
         title="新增投資組合"
         open={isModalOpen}
         onOk={handleOk}
-        onCancel={handleCancel}
+        onCancel={() => setIsModalOpen(false)}
         okText="確認"
         cancelText="取消"
       >
@@ -195,21 +209,20 @@ const DefaultInvestment = () => {
             label="選擇股票"
             rules={[{ required: true, message: '請選擇至少一支股票' }]}
           >
-            <Select
-              mode="multiple"
-              placeholder="選擇股票"
-              onChange={handleStocksChange}
-              style={{ width: '100%' }}
-            >
-              {stockOptions.map(stock => (
-                <Option key={stock.symbol} value={stock.symbol}>
-                  {stock.name} ({stock.symbol})
-                </Option>
-              ))}
-            </Select>
+          <Select
+            mode="multiple"
+            placeholder="選擇股票"
+            onChange={handleStocksChange}
+            style={{ width: '100%' }}
+          >
+            {(Array.isArray(stockOptions) ? stockOptions : []).map(stock => (
+              <Option key={stock.symbol} value={stock.symbol}>
+                {stock.name} ({stock.symbol})
+              </Option>
+            ))}
+          </Select>
           </Form.Item>
 
-          {/* 根據選擇的股票顯示股數輸入框 */}
           {selectedStocks.map(stockSymbol => (
             <Form.Item
               key={stockSymbol}
