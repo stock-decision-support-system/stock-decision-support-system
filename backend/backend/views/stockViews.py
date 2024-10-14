@@ -83,12 +83,12 @@ def login_to_shioaji(user):
 
 
 @api_view(['GET'])
-# @permission_classes([IsAuthenticated])  # 確保用戶已登錄
+@permission_classes([IsAuthenticated])  # 確保用戶已登錄
 def login_to_shioaji_view(request):
     try:
         # 使用當前登錄的用戶進行操作
-        user = '11046003'
-        # user = request.user
+        # user = '11046003'
+        user = request.user
         api, accounts = login_to_shioaji(user)
 
         # 調試：先打印 accounts 的類型和屬性，方便調試
@@ -147,12 +147,12 @@ def get_account_balance(request):
 
 #查詢股票交易狀況
 @api_view(["GET"])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def get_all_order_status(request):
     try:
         # 使用當前登錄的用戶進行操作
-        # user = request.username
-        user = '11046003'
+        user = request.username
+        # user = '11046003'
         api, accounts = login_to_shioaji(user)
 
         # 更新證券委託狀態
@@ -166,20 +166,20 @@ def get_all_order_status(request):
         for trade in trades:
             trade_data = {
                 "contract": {
-                    "exchange": trade.contract.exchange.value,
-                    "code": trade.contract.code,
-                    "symbol": trade.contract.symbol,
-                    "name": trade.contract.name,
-                    "category": trade.contract.category,
-                    "unit": trade.contract.unit,
-                    "limit_up": trade.contract.limit_up,
-                    "limit_down": trade.contract.limit_down,
-                    "reference": trade.contract.reference,
-                    "update_date": trade.contract.update_date,
-                    "day_trade": trade.contract.day_trade.value,
+                    "exchange": trade.contract.exchange.value if trade.contract.exchange else "Unknown",
+                    "code": trade.contract.code if trade.contract.code else "Unknown",
+                    "symbol": trade.contract.symbol if trade.contract.symbol else "Unknown",
+                    "name": trade.contract.name if trade.contract.name else "Unknown",
+                    "category": trade.contract.category if trade.contract.category else "Unknown",
+                    "unit": trade.contract.unit if trade.contract.unit else 0,
+                    "limit_up": trade.contract.limit_up if trade.contract.limit_up else 0.0,
+                    "limit_down": trade.contract.limit_down if trade.contract.limit_down else 0.0,
+                    "reference": trade.contract.reference if trade.contract.reference else 0.0,
+                    "update_date": trade.contract.update_date if trade.contract.update_date else "",
+                    "day_trade": trade.contract.day_trade.value if trade.contract.day_trade else "No",
                 },
                 "order": {
-                    "action": trade.order.action.value,
+                    "action": trade.order.action.value if trade.order.action else "Unknown",
                     "price": trade.order.price,
                     "quantity": trade.order.quantity,
                     "id": trade.order.id,
@@ -191,16 +191,16 @@ def get_all_order_status(request):
                         "broker_id": trade.order.account.broker_id,
                         "account_id": trade.order.account.account_id,
                     },
-                    "custom_field": trade.order.custom_field,
-                    "price_type": trade.order.price_type.value,
-                    "order_type": trade.order.order_type.value,
+                    "custom_field": trade.order.custom_field if trade.order.custom_field else "",
+                    "price_type": trade.order.price_type.value if trade.order.price_type else "Unknown",
+                    "order_type": trade.order.order_type.value if trade.order.order_type else "Unknown",
                     "daytrade_short": trade.order.daytrade_short,
                 },
                 "status": {
                     "id": trade.status.id,
-                    "status": trade.status.status.value,
+                    "status": trade.status.status.value if trade.status.status else "Unknown",
                     "status_code": trade.status.status_code,
-                    "order_datetime": trade.status.order_datetime.isoformat(),
+                    "order_datetime": trade.status.order_datetime.isoformat() if trade.status.order_datetime else "",
                     "order_quantity": trade.status.order_quantity,
                     "deals": [
                         {
@@ -209,7 +209,7 @@ def get_all_order_status(request):
                             "quantity": deal.quantity,
                             "ts": deal.ts
                         } for deal in trade.status.deals
-                    ]
+                    ] if trade.status.deals else []
                 }
             }
             serialized_trades.append(trade_data)
@@ -417,8 +417,8 @@ import traceback
 def cancel_odd_lot_order(request):
     try:
         # 使用當前登錄的用戶進行操作
-        user = request.user
         # user = '11046003'
+        user = request.user
         api, accounts = login_to_shioaji(user)
 
         # 從請求中獲取取消訂單的相關參數
@@ -430,85 +430,48 @@ def cancel_odd_lot_order(request):
                 "message": "order_id is required"
             }, status=400)
 
-        # 獲取當前所有交易訂單
-        trades = api.list_trades()
+        # 打印用於調試的日誌
+        print(f"Stock account: {api.stock_account}")
 
-        # 嘗試找到對應的訂單，添加默認值以避免 StopIteration
-        order = next((order for order in trades if order.order.id == order_id), None)
+        # 使用 update_status 來獲取所有訂單狀態
+        updated_status = api.update_status(api.stock_account)
 
-        if order is None:
+        # 調試：檢查是否成功獲取到訂單狀態數據
+        if updated_status is None:
+            print("Failed to retrieve order status data. Trying list_trades.")
+            trades = api.list_trades()  # 嘗試使用 list_trades()
+
+            if not trades:
+                return JsonResponse({
+                    "status": "error",
+                    "message": "No trades found, unable to cancel order."
+                }, status=500)
+
+            # 調試：輸出交易列表
+            print(f"Trades: {trades}")
+
+            # 嘗試查找訂單
+            trade = next((trade for trade in trades if trade.order.id == order_id), None)
+        else:
+            # 查找對應的訂單
+            trade = next((trade for trade in updated_status if trade.order.id == order_id), None)
+
+        if trade is None:
             return JsonResponse({
                 "status": "error",
                 "message": f"Order with ID {order_id} not found."
             }, status=404)
 
         # 發送取消訂單請求
-        api.cancel_order(order.contract, order.order)
+        api.cancel_order(trade)
 
         # 更新訂單狀態
-        updated_status = api.update_status(api.stock_account)
+        api.update_status(api.stock_account)
 
-        # 找到該訂單最新的狀態
-        updated_order = next(
-            order for order in updated_status if order.order.id == order_id
-        )
-
-        # 序列化 Trade 結構
-        serialized_trade = {
-            "contract": {
-                "exchange": updated_order.contract.exchange.name,
-                "code": updated_order.contract.code,
-                "symbol": updated_order.contract.symbol,
-                "name": updated_order.contract.name,
-                "category": updated_order.contract.category,
-                "limit_up": updated_order.contract.limit_up,
-                "limit_down": updated_order.contract.limit_down,
-                "reference": updated_order.contract.reference,
-                "update_date": updated_order.contract.update_date,
-                "margin_trading_balance": updated_order.contract.margin_trading_balance,
-                "short_selling_balance": updated_order.contract.short_selling_balance,
-                "day_trade": updated_order.contract.day_trade.name,
-            },
-            "order": {
-                "action": updated_order.order.action.name,
-                "price": updated_order.order.price,
-                "quantity": updated_order.order.quantity,
-                "id": updated_order.order.id,
-                "seqno": updated_order.order.seqno,
-                "ordno": updated_order.order.ordno,
-                "account": {
-                    "account_type": updated_order.order.account.account_type.name,
-                    "person_id": updated_order.order.account.person_id,
-                    "broker_id": updated_order.order.account.broker_id,
-                    "account_id": updated_order.order.account.account_id,
-                    "signed": updated_order.order.account.signed,
-                },
-                "price_type": updated_order.order.price_type.name,
-                "order_type": updated_order.order.order_type.name,
-                "order_lot": updated_order.order.order_lot.name,
-            },
-            "status": {
-                "id": updated_order.status.id,
-                "status": updated_order.status.status.name,
-                "status_code": updated_order.status.status_code,
-                "order_datetime": updated_order.status.order_datetime.isoformat(),
-                "cancel_quantity": updated_order.status.cancel_quantity,
-                "deals": [
-                    {
-                        "seq": deal.seq,
-                        "price": deal.price,
-                        "quantity": deal.quantity,
-                        "timestamp": deal.ts
-                    }
-                    for deal in updated_order.status.deals
-                ]
-            }
-        }
-
+        # 返回已取消的交易資料
         return JsonResponse({
             "status": "success",
-            "message": f"Odd-lot order with order ID {order_id} canceled successfully.",
-            "trade": serialized_trade
+            "message": f"Order with ID {order_id} canceled successfully."
         })
 
     except Exception as e:
@@ -520,7 +483,6 @@ def cancel_odd_lot_order(request):
             "message": error_message,
             "details": error_traceback
         }, status=400)
-
 
 
 #批次下單零股
@@ -649,8 +611,8 @@ def place_odd_lot_orders(request):
 def cancel_odd_lot_orders(request):
     try:
         # 使用當前登錄的用戶進行操作
-        user = request.user
         # user = '11046003'
+        user = request.user
         api, accounts = login_to_shioaji(user)
 
         # 從請求中獲取多筆訂單ID
@@ -664,91 +626,64 @@ def cancel_odd_lot_orders(request):
 
         cancelled_orders = []  # 儲存所有取消的訂單結果
 
-        # 獲取當前所有交易訂單
-        trades = api.list_trades()
+        # 使用 update_status 來獲取所有訂單狀態
+        updated_status = api.update_status(api.stock_account)
 
-        # 依次處理每一筆取消訂單請求
-        for order_id in order_ids:
-            # 嘗試找到對應的訂單，避免 StopIteration
-            order = next((order for order in trades if order.order.id == order_id), None)
+        # 調試：檢查是否成功獲取到訂單狀態數據
+        if updated_status is None:
+            print("Failed to retrieve order status data. Trying list_trades.")
+            trades = api.list_trades()  # 嘗試使用 list_trades()
 
-            if order is None:
+            if not trades:
+                return JsonResponse({
+                    "status": "error",
+                    "message": "No trades found."
+                }, status=500)
+
+            # 遍歷 order_ids 並取消每個訂單
+            for order_id in order_ids:
+                trade = next((trade for trade in trades if trade.order.id == order_id), None)
+
+                if trade is None:
+                    cancelled_orders.append({
+                        "order_id": order_id,
+                        "status": "Order not found"
+                    })
+                    continue
+
+                # 發送取消訂單請求
+                api.cancel_order(trade)
+
+                # 將取消成功的訂單加入結果
                 cancelled_orders.append({
                     "order_id": order_id,
-                    "status": "Order not found"
+                    "status": "cancelled"
                 })
-                continue
+        else:
+            # 使用 updated_status 遍歷 order_ids 並取消每個訂單
+            for order_id in order_ids:
+                trade = next((trade for trade in updated_status if trade.order.id == order_id), None)
 
-            # 發送取消訂單請求
-            api.cancel_order(order.contract, order.order)
+                if trade is None:
+                    cancelled_orders.append({
+                        "order_id": order_id,
+                        "status": "Order not found"
+                    })
+                    continue
 
-            # 更新訂單狀態
-            updated_status = api.update_status(api.stock_account)
+                # 發送取消訂單請求
+                api.cancel_order(trade)
 
-            # 找到該訂單最新的狀態
-            updated_order = next(
-                order for order in updated_status if order.order.id == order_id
-            )
+                # 將取消成功的訂單加入結果
+                cancelled_orders.append({
+                    "order_id": order_id,
+                    "status": "cancelled"
+                })
 
-            # 序列化取消後的訂單狀態
-            serialized_trade = {
-                "contract": {
-                    "exchange": updated_order.contract.exchange.name,
-                    "code": updated_order.contract.code,
-                    "symbol": updated_order.contract.symbol,
-                    "name": updated_order.contract.name,
-                    "category": updated_order.contract.category,
-                    "limit_up": updated_order.contract.limit_up,
-                    "limit_down": updated_order.contract.limit_down,
-                    "reference": updated_order.contract.reference,
-                    "update_date": updated_order.contract.update_date,
-                    "margin_trading_balance": updated_order.contract.margin_trading_balance,
-                    "short_selling_balance": updated_order.contract.short_selling_balance,
-                    "day_trade": updated_order.contract.day_trade.name,
-                },
-                "order": {
-                    "action": updated_order.order.action.name,
-                    "price": updated_order.order.price,
-                    "quantity": updated_order.order.quantity,
-                    "id": updated_order.order.id,
-                    "seqno": updated_order.order.seqno,
-                    "ordno": updated_order.order.ordno,
-                    "account": {
-                        "account_type": updated_order.order.account.account_type.name,
-                        "person_id": updated_order.order.account.person_id,
-                        "broker_id": updated_order.order.account.broker_id,
-                        "account_id": updated_order.order.account.account_id,
-                        "signed": updated_order.order.account.signed,
-                    },
-                    "price_type": updated_order.order.price_type.name,
-                    "order_type": updated_order.order.order_type.name,
-                    "order_lot": updated_order.order.order_lot.name,
-                },
-                "status": {
-                    "id": updated_order.status.id,
-                    "status": updated_order.status.status.name,
-                    "status_code": updated_order.status.status_code,
-                    "order_datetime": updated_order.status.order_datetime.isoformat(),
-                    "cancel_quantity": updated_order.status.cancel_quantity,
-                    "deals": [
-                        {
-                            "seq": deal.seq,
-                            "price": deal.price,
-                            "quantity": deal.quantity,
-                            "timestamp": deal.ts
-                        }
-                        for deal in updated_order.status.deals
-                    ]
-                }
-            }
+        # 更新訂單狀態
+        api.update_status(api.stock_account)
 
-            # 添加取消訂單結果到列表
-            cancelled_orders.append({
-                "order_id": order_id,
-                "trade": serialized_trade,
-                "status": "cancelled"
-            })
-
+        # 返回已取消的交易資料
         return JsonResponse({
             "status": "success",
             "message": "Multiple odd-lot orders cancelled successfully.",
@@ -756,9 +691,13 @@ def cancel_odd_lot_orders(request):
         })
 
     except Exception as e:
+        error_message = str(e)
+        error_traceback = traceback.format_exc()  # 獲取完整的錯誤堆疊信息
+
         return JsonResponse({
             "status": "error",
-            "message": str(e)
+            "message": error_message,
+            "details": error_traceback
         }, status=400)
 
 
