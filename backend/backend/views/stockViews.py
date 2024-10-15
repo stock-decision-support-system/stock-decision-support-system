@@ -151,8 +151,8 @@ def get_account_balance(request):
 def get_all_order_status(request):
     try:
         # 使用當前登錄的用戶進行操作
-        user = request.username
-        # user = '11046003'
+        user = request.user.username
+        # user = '11046013'
         api, accounts = login_to_shioaji(user)
 
         # 更新證券委託狀態
@@ -160,6 +160,14 @@ def get_all_order_status(request):
 
         # 獲取所有交易（下單）狀態
         trades = api.list_trades()  # 列出當前所有交易（下單）狀態
+
+         # 如果沒有交易，返回空數據
+        if not trades:
+            return JsonResponse({
+                "status": "success",
+                "data": [],
+                "message": "No active trades found."
+            }, status=200)
 
         # 將交易狀態轉換為 JSON 格式
         serialized_trades = []
@@ -232,26 +240,28 @@ def get_all_order_status(request):
 @permission_classes([IsAuthenticated])
 def get_portfolio_status(request):
     try:
-        # 使用當前登錄的用戶進行操作
         user = request.user
-        # user = '11046003'
         api, accounts = login_to_shioaji(user)
 
-        # 從請求中獲取日期範圍參數
-        start_date = request.query_params.get("start_date", "2024-05-05")  # 默認開始日期
-        end_date = request.query_params.get("end_date", "2024-10-13")  # 默認結束日期
+        start_date = request.query_params.get("start_date", "2024-05-05")
+        end_date = request.query_params.get("end_date", "2024-10-13")
 
-        # 獲取持有的股票資料
-        positions = api.list_positions(api.stock_account)  # 未實現損益
-        profit_loss = api.list_profit_loss(api.stock_account, start_date, end_date)  # 已實現損益
-        settlements = api.settlements(api.stock_account)  # 結算資訊
+        positions = api.list_positions(api.stock_account,unit=sj.constant.Unit.Share)
+        profit_loss = api.list_profit_loss(api.stock_account, start_date, end_date)
+        settlements = api.settlements(api.stock_account)
 
-        # 將持有股票資訊轉換為 JSON 格式
-        serialized_positions = [
-            {
+        serialized_positions = []
+        
+        for position in positions:
+            stock_id = position.code  # 使用股票代號
+            # 調用你的 get_stock_detail 方法來獲取股票名稱
+            stock_name = get_stock_name_by_id(stock_id)
+            
+            serialized_positions.append({
                 "id": position.id,
                 "code": position.code,
-                "direction": position.direction.name,  # Buy or Sell
+                "name": stock_name,  # 將股票名稱加入
+                "direction": position.direction.name,
                 "quantity": position.quantity,
                 "price": position.price,
                 "last_price": position.last_price,
@@ -261,11 +271,8 @@ def get_portfolio_status(request):
                 "collateral": position.collateral,
                 "short_sale_margin": position.short_sale_margin,
                 "interest": position.interest,
-            }
-            for position in positions
-        ]
+            })
 
-        # 將損益資料轉換為 JSON 格式，遍歷 profit_loss 列表
         serialized_profit_loss = [
             {
                 "id": pl.id,
@@ -282,7 +289,6 @@ def get_portfolio_status(request):
             for pl in profit_loss
         ]
 
-        # 將結算資訊轉換為 JSON 格式
         serialized_settlements = [
             {
                 "settle_date": settlement.date.isoformat(),
@@ -298,6 +304,30 @@ def get_portfolio_status(request):
             "profit_loss": serialized_profit_loss,
             "settlements": serialized_settlements
         }, status=200)
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": str(e),
+            "details": traceback.format_exc()
+        }, status=400)
+
+
+def get_stock_name_by_id(stock_id):
+    try:
+        # 根據傳入的股票代號，獲取對應的股票合約
+        stock_contract = api.Contracts.Stocks[stock_id]
+
+        # 使用 API 獲取該合約的快照數據
+        snapshots = api.snapshots([stock_contract])
+
+        # 返回股票名稱
+        return stock_contract.name
+    except Exception as e:
+        # 出現問題時返回 None 或處理錯誤
+        print(f"Error fetching stock name for {stock_id}: {str(e)}")
+        return None
+
 
     except Exception as e:
         error_message = str(e)

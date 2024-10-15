@@ -31,6 +31,10 @@ import TwoFactorAuthPage from './pages/twoFactorAuthPage';
 import DefaultInvestmentDetail from './pages/defaultInvestmentDetail'; // 假設這是你的詳細頁面組件
 import DefaultInvestment from './pages/defaultInvestment';
 import TradeHistory from './pages/tradeHistory';
+import MyStocks from './pages/myStock';
+import PlaceOrder from './pages/placeOrder'
+import OrderManagement from './pages/orderManagement';
+
 
 const root = createRoot(document.getElementById('root'));
 
@@ -62,6 +66,9 @@ root.render(
             <Route path="/consumereport" element={<ConsumeReport />} />
             <Route path="/tradeHistory" element={<TradeHistory />} />
             <Route path="/investment/:portfolioId" element={<DefaultInvestmentDetail />} />
+            <Route path="/myStocks/" element={<MyStocks />} />
+            <Route path="/placeOrder/" element={<PlaceOrder />} />
+            <Route path="/orderManagement/" element={<OrderManagement />} />
           </Routes>
         </div>
         <GoalProgressBar/>

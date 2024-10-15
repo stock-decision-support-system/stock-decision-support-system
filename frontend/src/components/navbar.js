@@ -79,6 +79,21 @@ const Navbar = () => {
     </Menu>
   );
 
+  // 我的股票下拉菜單
+  const myStockMenu = (
+    <Menu>
+      <Menu.Item key="myStock" onClick={() => navigate('/myStocks')}>
+        我的股票
+      </Menu.Item>
+      <Menu.Item key="placeOrder" onClick={() => navigate('/placeOrder')}>
+        下單頁面
+      </Menu.Item>
+      <Menu.Item key="orderManagement" onClick={() => navigate('/orderManagement')}>
+        訂單管理
+      </Menu.Item>
+    </Menu>
+  );
+
   const handleNavigation = (path) => {
     if (!username) {
       alert('請先登入以繼續訪問該頁面。');
@@ -140,6 +155,16 @@ const Navbar = () => {
               >
                 報表
               </a>
+            </li>
+            <li className="nav-item">
+              <Dropdown overlay={myStockMenu} placement="bottom">
+                <a
+                  className="nav-link justify-content-center d-flex align-items-center"
+                  style={{ height: '37px', marginRight: '25px', cursor: 'pointer' }}
+                >
+                  我的股票
+                </a>
+              </Dropdown>
             </li>
             <li className="nav-item">
               <Dropdown overlay={investmentMenu} placement="bottom">
