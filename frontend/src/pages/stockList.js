@@ -44,9 +44,7 @@ const StockList = () => {
                     </Button>
                 </div>
 
-
-                {/* 表格部分，縮小寬度，並居中顯示 */}
-                <div className="mt-2" style={{ flexGrow: 1, width: '90%' }}>
+                <div className="mt-2" style={{ flexGrow: 1, width: '100%' }}>
                     <Flex gap="middle" vertical>
                         <Spin spinning={isLoading} indicator={<LoadingOutlined spin />} size="large">
                             <StockTable data={stockList} onCheckboxChange={handleCheckboxChange} selectedCodes={selectedStocks} />

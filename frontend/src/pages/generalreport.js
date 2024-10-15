@@ -21,6 +21,11 @@ const GeneralReport = () => {
     const [totalLength, setTotalLength] = useState(null);
     const [chartData, setChartData] = useState([]);
     const [selectedDates, setSelectedDates] = useState([null, null]); // 儲存選擇的日期範圍
+    const [isVisible, setIsVisible] = useState(false);  // 初始狀態為不顯示
+
+    const toggleVisibility = () => {
+        setIsVisible(!isVisible);  // 切換顯示狀態
+    };
 
     useEffect(() => {
         fetchTotalAmount();
@@ -140,7 +145,7 @@ const GeneralReport = () => {
 
     return (
         <div className="w-100" style={{ height: '80%', display: 'flex' }}>
-            <AccountingSidebar totalAmount={totalAmount} netAmount={netAmount} selectedKey={'3'} />
+            <AccountingSidebar totalAmount={totalAmount} netAmount={netAmount} selectedKey={'3'} isVisible={isVisible} toggle={toggleVisibility} />
             <div className="generalreport-container-all" style={{ flex: 1, marginLeft: '1rem' }}>
                 <Card title="報告圖表" style={{ marginBottom: '1rem', height: '100%', width: '95%' }}>
                     <div className="generalreport-account-form">

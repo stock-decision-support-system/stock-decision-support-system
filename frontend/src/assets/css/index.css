@@ -23,18 +23,12 @@ body {
   box-shadow: 3px 5px 5px #E8B4BC;
 }
 
-.text-content, .image-content {
+.text-content {
   flex: 1; /* Ensure text and image sections take equal space in the container */
 }
 
 .text-content {
   padding-top: 7%;
-}
-
-.image-content {
-  display: flex;
-  justify-content: center; /* Center the image */
-  align-items: center; /* Vertically center */
 }
 
 .text-content h1{

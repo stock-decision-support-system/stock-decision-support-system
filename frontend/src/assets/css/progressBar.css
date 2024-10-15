@@ -5,7 +5,3 @@
 .ant-card-body {
     transition: transform 0.2s; /* 添加平滑過渡效果 */
 }
-
-.ant-card:hover .ant-card-body {
-    transform: scale(1.02); /* 懸停時放大 */
-}

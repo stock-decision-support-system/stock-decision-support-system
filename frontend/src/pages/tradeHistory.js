@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { message, Spin, Card, Radio, List, Typography, Row, Col, Pagination } from 'antd';
+import { message, Spin, Card, Typography } from 'antd';
 import AccountingSidebar from '../components/accountingSidebar';
 import AccountingList from '../components/accountingList';
 import { AccountingRequest } from '../api/request/accountingRequest';
 import { CategoryRequest } from '../api/request/categoryRequest';
 import { Pie } from '@ant-design/plots';
+import '../assets/css/tradeHistory.css';
 
 const TradeHistory = () => {
     const [loading, setLoading] = useState(false);
@@ -13,6 +14,11 @@ const TradeHistory = () => {
     const [incomeData, setIncomeData] = useState([])
     const [expenseData, setExpenseData] = useState([])
     const [totalPages, setTotalPages] = useState(null);
+    const [isVisible, setIsVisible] = useState(false);  // 初始狀態為不顯示
+
+    const toggleVisibility = () => {
+        setIsVisible(!isVisible);  // 切換顯示狀態
+    };
 
     const incomeConfig = {
         appendPadding: 10,
@@ -95,16 +101,22 @@ const TradeHistory = () => {
     };
 
     return (
-        <div className="accounting-kv w-100" style={{ height: '80%', display: 'flex' }}>
-            <AccountingSidebar totalAmount={totalAmount} netAmount={netAmount} selectedKey={'2'} />
-            <AccountingList totalPages={totalPages * 8} /> {/*8是size */}
-            <Card style={{ marginLeft: '2rem', width: '28%' }}>
+        <div className="accounting-kv w-100">
+            <AccountingSidebar
+                totalAmount={totalAmount}
+                netAmount={netAmount}
+                selectedKey={'2'}
+                isVisible={isVisible}
+                toggle={toggleVisibility}
+            />
+            <AccountingList totalPages={totalPages * 8} isVisible={isVisible} /> {/* 8 是 size */}
+            <Card className="chart-card">
                 <Spin spinning={loading}>
-                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                    <div className="chart-container">
                         {incomeData.length > 0 ? (
                             <>
-                                <Typography.Title level={3} style={{ textAlign: 'center' }}>收入圖表</Typography.Title>
-                                <div style={{ height: '200px', width: '100%', marginBottom: '10rem' }}>  {/* 設置圓餅圖的容器高度和底部間距 */}
+                                <Typography.Title level={3} className="chart-title">收入圖表</Typography.Title>
+                                <div className="chart-pie-container">
                                     <Pie {...incomeConfig} />
                                 </div>
                             </>
@@ -113,8 +125,8 @@ const TradeHistory = () => {
                         )}
                         {expenseData.length > 0 ? (
                             <>
-                                <Typography.Title level={3} style={{ textAlign: 'center' }}>支出圖表</Typography.Title>
-                                <div style={{ height: '200px', width: '100%' }}>  {/* 設置圓餅圖的容器高度 */}
+                                <Typography.Title level={3} className="chart-title">支出圖表</Typography.Title>
+                                <div className="chart-pie-container">
                                     <Pie {...expenseConfig} />
                                 </div>
                             </>

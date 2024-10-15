@@ -128,6 +128,7 @@ const GoalProgressBar = () => {
                                         }}
                                         trailColor="#f0f0f0"
                                         style={{ marginTop: '10px' }}
+                                        format={(percent) => `${percent.toFixed(2)}%`}  // 顯示小數點後兩位
                                     />
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
                                         <Text>
@@ -141,44 +142,7 @@ const GoalProgressBar = () => {
                             </div>
                         </div>
                     ) : (
-                        <div
-                            style={{
-                                position: 'fixed',
-                                top: '10%',
-                                right: '0',
-                                zIndex: 1000,
-                                transition: 'transform 0.3s ease',
-                                transform: isHovered ? 'translateX(0%)' : 'translateX(90%)',
-                            }}
-                            onMouseEnter={() => setIsHovered(true)}
-                            onMouseLeave={() => setIsHovered(false)}
-                        >
-                            <div style={{
-                                position: 'relative',
-                                width: '450px',
-                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                                backgroundColor: '#fff',
-                                borderRadius: '8px',
-                                padding: '20px',
-                                display: 'flex',
-                                alignItems: 'center',
-                            }}>
-                                <div style={{ marginRight: '10px' }}>
-                                    <LeftCircleOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
-                                </div>
-                                <div
-                                    style={{
-                                        flex: 1,
-                                        backgroundColor: 'transparent',
-                                        border: 'none', alignItems: 'center'
-                                    }}
-                                    hoverable
-                                    bodyStyle={{ padding: '0' }}
-                                >
-                                    <Title level={3} style={{ textAlign: 'center' }}>尚未新增儲蓄目標</Title>
-                                </div>
-                            </div>
-                        </div>
+                        <></>
                     )}
                 </>
             )}

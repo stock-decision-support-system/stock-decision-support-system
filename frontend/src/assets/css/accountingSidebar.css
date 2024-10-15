@@ -1,0 +1,64 @@
+.sidebar {
+    width: 256px;
+    margin-left: 16px;
+    border-radius: 8px;
+    opacity: 1;
+    transition: width 0.3s ease, opacity 0.3s ease;
+}
+
+.sidebar.hidden {
+    width: 0;
+    opacity: 0;
+    overflow: hidden;
+    /* 隱藏內部的內容 */
+}
+
+.sidebar.visible {
+    width: 256px;
+    opacity: 1;
+}
+
+.menuButton.hidden {
+    margin-left: '1rem';
+    height: '50px';
+    width: '50px';
+}
+
+.menuButton.visible {
+    height: '50px';
+    width: '50px';
+}
+
+
+/* 手機響應式處理 */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 360px;
+        margin-left: 16px;
+        border-radius: 8px;
+        opacity: 1;
+        transition: width 0.3s ease, opacity 0.3s ease;
+    }
+
+    .sidebar.hidden {
+        width: 0;
+        opacity: 0;
+        overflow: hidden;
+        /* 隱藏內部的內容 */
+    }
+
+    .sidebar.visible {
+        width: 360px;
+        opacity: 1;
+    }
+
+    .menuButton.hidden {
+        height: '50px';
+        width: '50px';
+    }
+    
+    .menuButton.visible {
+        height: '50px';
+        width: '50px';
+    }
+}

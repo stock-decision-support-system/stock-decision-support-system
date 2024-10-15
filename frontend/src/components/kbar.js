@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Stock } from '@ant-design/plots';
-import { Radio, Spin, Flex } from 'antd';  // 引入 Spin 組件
+import { Spin, Flex, Segmented } from 'antd';  // 引入 Spin 組件
 import { LoadingOutlined } from '@ant-design/icons';
 import { config } from "../config";
 import axios from 'axios';
@@ -12,9 +12,9 @@ const KBar = ({ id }) => {
     const [type, setType] = useState('2');
     const [isLoading, setIsLoading] = useState(false);  // 新增加載狀態
 
-    const typeChange = (e) => {
-        setType(e.target.value);
-        fetchStockData(e.target.value);
+    const typeChange = (value) => {
+        setType(value);
+        fetchStockData(value);
     };
 
     const formatKBarData = (rawData) => {
@@ -92,11 +92,15 @@ const KBar = ({ id }) => {
         <>
             <div className="clearfix">
                 <div className="float-end mb-2">
-                    <Radio.Group value={type} onChange={typeChange}>
-                        <Radio.Button value="0">月</Radio.Button>
-                        <Radio.Button value="1">週</Radio.Button>
-                        <Radio.Button value="2">日</Radio.Button>
-                    </Radio.Group>
+                    <Segmented
+                        value={type}
+                        options={[
+                            { label: '月', value: '0' },
+                            { label: '周', value: '1' },
+                            { label: '日', value: '2' },
+                        ]}
+                        onChange={(value) => typeChange(value)}
+                    />
                 </div>
             </div>
             <Flex gap="middle" vertical>

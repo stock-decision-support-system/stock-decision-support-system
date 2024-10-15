@@ -1,21 +1,94 @@
 .accounting-kv {
-  display: flex; /* 使用 Flexbox 進行佈局 */
+  height: 80%;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  margin-top: 4rem;
 }
 
-.accounting-container-right {
-  flex-grow: 1; /* 使右側內容佔據剩餘空間 */
-  padding: 16px; /* 內邊距 */
-  transition: margin-left 0.3s; /* 加入過渡效果以改善側邊欄的展開與收合 */
+.generalreport-container-all {
+  flex: 1;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  display: flex;
+  flex-direction: column;
 }
 
-.accounting-container-right.collapsed {
-  margin-left: 256px; /* 側邊欄展開時的左邊距 */
+.accounting-card {
+  flex: 1;
+  margin-bottom: 1rem;
+  width: 100%;
 }
 
-.accounting-container-right:not(.collapsed) {
-  margin-left: 0; /* 側邊欄收合時的左邊距 */
+.accouting-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
-.card {
-  margin-top: 16px; /* 卡片與上方內容的距離 */
+.full-width-button {
+  margin-left: 10px;
+  width: 100%;
+}
+
+.full-width-submit-button {
+  width: 100%;
+  display: block;
+}
+
+.fs-0 {
+  flex-shrink:0;
+}
+
+/* 手機響應式處理 */
+@media (max-width: 768px) {
+  .accounting-kv {
+    height: 80%;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    margin-top: 4rem;
+  }
+
+  .generalreport-container-all {
+    flex: 1;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .accounting-card.visible {
+    flex: 1;
+    margin-bottom: 1rem;
+    width: 100%;
+  }
+
+  .accounting-card.hidden {
+    flex: 1;
+    margin-bottom: 1rem;
+    width: 0;
+    opacity: 0;
+    overflow: hidden;
+  }
+
+  .accouting-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .full-width-button {
+    margin-left: 10px;
+    width: 100%;
+  }
+
+  .full-width-submit-button {
+    width: 100%;
+    display: block;
+  }
+
+  .fs-0 {
+    flex-shrink:0;
+  }
 }

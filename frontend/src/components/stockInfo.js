@@ -45,8 +45,8 @@ const StockInfo = ({ id }) => {
         .catch((error) => {
           alert(error.message);
         });
-        setIsLoading(false);
-      };
+      setIsLoading(false);
+    };
 
     fetchStockData();
   }, []);
@@ -93,125 +93,123 @@ const StockInfo = ({ id }) => {
   };
 
   return (
-    <div className='h-100'>
-      <Card className='h-100'>
-        <Flex gap="middle" vertical>
-          <Spin spinning={isLoading} indicator={<LoadingOutlined spin />} size="large" >
-            {formData.name != null ? (
-              <>
-                <p>最後更新時間 {formattedDate}</p>
-                <h2 style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
+    <Card className='h-100'>
+      <Flex gap="middle" vertical>
+        <Spin spinning={isLoading} indicator={<LoadingOutlined spin />} size="large" >
+          {formData.name != null ? (
+            <>
+              <p>最後更新時間 {formattedDate}</p>
+              <h2 style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                {formData.name} {id}
+                <Button
+                  type="primary"
+                  onClick={showModal}
+                  className="ms-auto button2"
+                  style={{
+                    marginLeft: '10px'
+                  }}
+                >
+                  新增至投資組合
+                </Button>
+              </h2>
+              <Row gutter={16}>
+                <Col span={6}>
+                  <Statistic
+                    title="價格"
+                    value={formData.close}
+                    precision={2}
+                    valueStyle={{ color: priceColor }} />
+                </Col>
+                <Col span={6}>
+                  <Statistic
+                    title="漲跌幅"
+                    value={formData.change_rate}
+                    precision={2}
+                    valueStyle={{ color: priceColor }}
+                    prefix={changeIcon}
+                    suffix="%" />
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={6}>
+                  <Statistic title="開盤價" value={formData.open} precision={2} />
+                </Col>
+                <Col span={6}>
+                  <Statistic title="收盤價" value={formData.close} precision={2} />
+                </Col>
+                <Col span={6}>
+                  <Statistic title="最高價" value={formData.high} precision={2} />
+                </Col>
+                <Col span={6}>
+                  <Statistic title="最低價" value={formData.low} precision={2} />
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={6}>
+                  <Statistic title="單量" value={formData.volume} precision={2} />
+                </Col>
+                <Col span={6}>
+                  <Statistic title="成交量" value={formData.total_volume} />
+                </Col>
+              </Row>
+              <div className="stock-chart">
+                <KBar id={id}></KBar>
+              </div>
+              <Modal title={<h3>{formData.name} {id}</h3>} open={isModalVisible} onOk={handleOk} onCancel={handleCancel} okText="送出"
+                okButtonProps={{
+                  className: "ms-auto button2"
                 }}>
-                  {formData.name} {id}
-                  <Button
-                    type="primary"
-                    onClick={showModal}
-                    className="ms-auto button2"
-                    style={{
-                      marginLeft: '10px'
-                    }}
-                  >
-                    新增至投資組合
-                  </Button>
-                </h2>
-                <Row gutter={16}>
-                  <Col span={6}>
-                    <Statistic
-                      title="價格"
-                      value={formData.close}
-                      precision={2}
-                      valueStyle={{ color: priceColor }} />
-                  </Col>
-                  <Col span={6}>
-                    <Statistic
-                      title="漲跌幅"
-                      value={formData.change_rate}
-                      precision={2}
-                      valueStyle={{ color: priceColor }}
-                      prefix={changeIcon}
-                      suffix="%" />
-                  </Col>
-                </Row>
-                <Row gutter={16}>
-                  <Col span={6}>
-                    <Statistic title="開盤價" value={formData.open} precision={2} />
-                  </Col>
-                  <Col span={6}>
-                    <Statistic title="收盤價" value={formData.close} precision={2} />
-                  </Col>
-                  <Col span={6}>
-                    <Statistic title="最高價" value={formData.high} precision={2} />
-                  </Col>
-                  <Col span={6}>
-                    <Statistic title="最低價" value={formData.low} precision={2} />
-                  </Col>
-                </Row>
-                <Row gutter={16}>
-                  <Col span={6}>
-                    <Statistic title="單量" value={formData.volume} precision={2} />
-                  </Col>
-                  <Col span={6}>
-                    <Statistic title="成交量" value={formData.total_volume} />
-                  </Col>
-                </Row>
-                <div className="stock-chart">
-                  <KBar id={id}></KBar>
-                </div>
-                <Modal title={<h3>{formData.name} {id}</h3>} open={isModalVisible} onOk={handleOk} onCancel={handleCancel} okText="送出"
-                  okButtonProps={{
-                    className: "ms-auto button2"
-                  }}>
+                <div>
                   <div>
-                    <div>
-                      <Radio.Group onChange={handleOptionChange} value={selectedOption}>
-                        <Radio value="buyAndHold">Buy and Hold</Radio>
-                        <Radio value="naive" style={{ marginLeft: '10px' }}>Naive</Radio>
-                        <Radio value="custom" style={{ marginLeft: '10px' }}>自訂</Radio>
-                      </Radio.Group>
-                      <div style={{ marginTop: '10px' }}>
-                        <Input
-                          type="number"
-                          value={selectedOption === 'custom' ? customAmount : (selectedOption === 'buyAndHold' ? buyAndHoldAmount : naiveAmount)}
-                          onChange={handleCustomAmountChange}
-                          placeholder="輸入股數"
-                          style={{ width: '150px', marginRight: '10px' }} />
-                        <span>現時股價：{formData.close.toFixed(2)} 總花費: {(selectedOption === 'custom' || selectedOption === 'buyAndHold' || selectedOption === 'naive') && totalPrice.toFixed(2)} 元</span>
-                      </div>
-                    </div>
-                    <div style={{ marginTop: '20px' }}>
-                      <Select placeholder="選擇投資組合" style={{ width: '200px', marginRight: '10px' }}>
-                        <Option value="portfolio1">投資組合 1</Option>
-                        <Option value="portfolio2">投資組合 2</Option>
-                        <Option value="portfolio3">投資組合 3</Option>
-                      </Select>
-                      <Button type="primary" className="ms-auto button2" onClick={handleAddPortfolioClick}>新增投資組合</Button>
+                    <Radio.Group onChange={handleOptionChange} value={selectedOption}>
+                      <Radio value="buyAndHold">Buy and Hold</Radio>
+                      <Radio value="naive" style={{ marginLeft: '10px' }}>Naive</Radio>
+                      <Radio value="custom" style={{ marginLeft: '10px' }}>自訂</Radio>
+                    </Radio.Group>
+                    <div style={{ marginTop: '10px' }}>
+                      <Input
+                        type="number"
+                        value={selectedOption === 'custom' ? customAmount : (selectedOption === 'buyAndHold' ? buyAndHoldAmount : naiveAmount)}
+                        onChange={handleCustomAmountChange}
+                        placeholder="輸入股數"
+                        style={{ width: '150px', marginRight: '10px' }} />
+                      <span>現時股價：{formData.close.toFixed(2)} 總花費: {(selectedOption === 'custom' || selectedOption === 'buyAndHold' || selectedOption === 'naive') && totalPrice.toFixed(2)} 元</span>
                     </div>
                   </div>
-                </Modal>
-                <Modal
-                  title="新增投資組合"
-                  open={isAddPortfolioModalVisible}
-                  onOk={handleAddPortfolioOk}
-                  onCancel={handleAddPortfolioCancel}
-                >
-                  <Input
-                    value={portfolioName}
-                    onChange={e => setPortfolioName(e.target.value)}
-                    placeholder="輸入投資組合名稱" />
-                </Modal>
-              </>
-            ) : (
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <p>無法獲取股票信息</p>
-              </div>
-            )}
-          </Spin >
-        </Flex>
-      </Card>
-    </div>
+                  <div style={{ marginTop: '20px' }}>
+                    <Select placeholder="選擇投資組合" style={{ width: '200px', marginRight: '10px' }}>
+                      <Option value="portfolio1">投資組合 1</Option>
+                      <Option value="portfolio2">投資組合 2</Option>
+                      <Option value="portfolio3">投資組合 3</Option>
+                    </Select>
+                    <Button type="primary" className="ms-auto button2" onClick={handleAddPortfolioClick}>新增投資組合</Button>
+                  </div>
+                </div>
+              </Modal>
+              <Modal
+                title="新增投資組合"
+                open={isAddPortfolioModalVisible}
+                onOk={handleAddPortfolioOk}
+                onCancel={handleAddPortfolioCancel}
+              >
+                <Input
+                  value={portfolioName}
+                  onChange={e => setPortfolioName(e.target.value)}
+                  placeholder="輸入投資組合名稱" />
+              </Modal>
+            </>
+          ) : (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+              <p>無法獲取股票信息</p>
+            </div>
+          )}
+        </Spin >
+      </Flex>
+    </Card>
   );
 };
 

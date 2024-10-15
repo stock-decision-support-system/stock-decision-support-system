@@ -1,0 +1,188 @@
+.accounting-card {
+    margin-left: 2rem;
+    width: 50%;
+    overflow: hidden;
+    /* 防止內容溢出 */
+    word-wrap: break-word;
+    /* 自動換行 */
+}
+
+.accounting-list-item {
+    padding: 10px 0;
+}
+
+.accounting-row {
+    width: 100%;
+    align-items: center;
+}
+
+.transaction-date {
+    font-size: 16px;
+}
+
+.accounting-info {
+    display: flex;
+    flex-direction: column;
+    padding-left: 16px;
+    overflow: hidden;
+    /* 防止溢出 */
+    text-overflow: ellipsis;
+    /* 超出部分以省略號顯示 */
+}
+
+.accounting-title {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.consume-type-icon {
+    font-size: 20px;
+}
+
+.accounting-name {
+    margin-left: 8px;
+    font-size: 16px;
+    overflow: hidden;
+    /* 防止名稱溢出 */
+    text-overflow: ellipsis;
+    /* 超出部分以省略號顯示 */
+    white-space: nowrap;
+    /* 不允許換行 */
+}
+
+.content-display {
+    color: gray;
+    font-size: 14px;
+    overflow: hidden;
+    /* 防止內容溢出 */
+    text-overflow: ellipsis;
+    /* 超出部分以省略號顯示 */
+    white-space: nowrap;
+    /* 不允許換行 */
+}
+
+.accounting-amount {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.account-type-icon {
+    font-size: 20px;
+}
+
+.amount-blue {
+    color: blue;
+    font-size: 16px;
+}
+
+.amount-red {
+    color: red;
+    font-size: 16px;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+}
+
+/* 手機響應式處理 */
+@media (max-width: 768px) {
+    .accounting-card.visible {
+        margin-left: 1rem;
+        margin-right: 1rem;
+        width: 100%;
+        /* 將卡片寬度設為100% */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .accounting-card.hidden {
+        margin-left: 1rem;
+        margin-right: 1rem;
+        width: 0;
+        opacity: 0;
+        overflow: hidden;
+    }
+
+    .accounting-list-item {
+        padding: 10px 0;
+        flex: 1;
+    }
+
+    .accounting-row {
+        width: 100%;
+        align-items: center;
+    }
+
+    .transaction-date {
+        font-size: 14px;
+        /* 調整字體大小 */
+    }
+
+    .accounting-info {
+        display: flex;
+        flex-direction: column;
+        padding-left: 8px;
+        /* 調整內部間距 */
+    }
+
+    .accounting-title {
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        /* 調整字體大小 */
+        margin-bottom: 4px;
+        /* 調整間距 */
+    }
+
+    .consume-type-icon {
+        font-size: 16px;
+        /* 調整圖標大小 */
+    }
+
+    .accounting-name {
+        margin-left: 8px;
+        font-size: 14px;
+    }
+
+    .content-display {
+        color: gray;
+        font-size: 12px;
+        /* 調整內容字體大小 */
+    }
+
+    .accounting-amount {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        font-size: 14px;
+        /* 調整金額顯示字體大小 */
+    }
+
+    .account-type-icon {
+        font-size: 16px;
+        /* 調整圖標大小 */
+    }
+
+    .amount-blue {
+        color: blue;
+        font-size: 14px;
+        /* 調整金額字體大小 */
+    }
+
+    .amount-red {
+        color: red;
+        font-size: 14px;
+        /* 調整金額字體大小 */
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 1rem;
+        /* 調整分頁按鈕的間距 */
+    }
+}

@@ -13,6 +13,11 @@ const ConsumeReport = () => {
     const [netAmount, setNetAmount] = useState(0);
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);  // 初始狀態為不顯示
+
+    const toggleVisibility = () => {
+        setIsVisible(!isVisible);  // 切換顯示狀態
+    };
 
     useEffect(() => {
         setLoading(true);
@@ -52,8 +57,8 @@ const ConsumeReport = () => {
     };
 
     // 過濾顯示的數據
-    const filteredData = consumeTypes.length > 0 
-        ? data.filter(item => consumeTypes.includes(item.id)) 
+    const filteredData = consumeTypes.length > 0
+        ? data.filter(item => consumeTypes.includes(item.id))
         : data;
 
     const config = {
@@ -68,7 +73,7 @@ const ConsumeReport = () => {
 
     return (
         <div className="generalreport-kv w-100" style={{ height: '80%', display: 'flex' }}>
-            <AccountingSidebar totalAmount={totalAmount} netAmount={netAmount} selectedKey={'5'} />
+            <AccountingSidebar totalAmount={totalAmount} netAmount={netAmount} selectedKey={'5'} isVisible={isVisible} toggle={toggleVisibility} />
             <div className="generalreport-container-all" style={{ flex: 1, marginLeft: '1rem' }}>
                 <Card title="消費習慣分析" style={{ marginBottom: '1rem', height: '100%', width: '95%' }}>
                     <div className="generalreport-account-form">

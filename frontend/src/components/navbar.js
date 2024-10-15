@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dropdown, Menu } from 'antd'; // 引入 Ant Design 的 Menu 和 Dropdown 組件
+import { Dropdown, Menu } from 'antd'; 
 import iconImage from '../assets/images/logo.png';
 import '../assets/css/navbar.css';
 import headIcon from '../assets/images/account.png';
 import axios from 'axios';
-import { useUser } from '../userContext'; // 確保正確導入 useUser
+import { useUser } from '../userContext';
 import { config } from "../config";
 
 const BASE_URL = config.API_URL;
@@ -53,10 +53,10 @@ const Navbar = () => {
 
   const investmentMenu = (
     <Menu>
-      <Menu.Item key="customInvestment" onClick={() => navigate('/investmentList')}>
+      <Menu.Item key="customInvestment" onClick={() => handleNavigation('/investmentList')}>
         自訂投資組合
       </Menu.Item>
-      <Menu.Item key="defaultInvestment" onClick={() => navigate('/defaultInvestment')}>
+      <Menu.Item key="defaultInvestment" onClick={() => handleNavigation('/defaultInvestment')}>
         預設投資組合
       </Menu.Item>
     </Menu>
@@ -79,6 +79,13 @@ const Navbar = () => {
     </Menu>
   );
 
+  // 手動收起 navbar
+  const closeNavbar = () => {
+    const navbar = document.getElementById('navbarNavDropdown');
+    if (navbar && navbar.classList.contains('show')) {
+      navbar.classList.remove('show');
+    }
+  };
   // 我的股票下拉菜單
   const myStockMenu = (
     <Menu>
@@ -104,6 +111,7 @@ const Navbar = () => {
     } else {
       navigate(path);
     }
+    closeNavbar(); // 導覽後關閉 navbar
   };
 
   return (

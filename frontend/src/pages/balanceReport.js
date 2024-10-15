@@ -10,6 +10,11 @@ const BalanceReport = () => {
     const [totalAmount, setTotalAmount] = useState(0)
     const [netAmount, setNetAmount] = useState(0)
     const [data, setData] = useState([])
+    const [isVisible, setIsVisible] = useState(false);  // 初始狀態為不顯示
+
+    const toggleVisibility = () => {
+        setIsVisible(!isVisible);  // 切換顯示狀態
+    };
 
     const config = {
         data,
@@ -71,7 +76,7 @@ const BalanceReport = () => {
 
     return (
         <div className="generalreport-kv w-100" style={{ height: '80%', display: 'flex' }}>
-            <AccountingSidebar totalAmount={totalAmount} netAmount={netAmount} selectedKey={'4'} />
+            <AccountingSidebar totalAmount={totalAmount} netAmount={netAmount} selectedKey={'4'} isVisible={isVisible} toggle={toggleVisibility} />
             <div className="generalreport-container-all" style={{ flex: 1, marginLeft: '1rem' }}>
                 <Card title="帳戶金額變動" style={{ marginBottom: '1rem', height: '100%', width: '95%' }}>
                     <Spin spinning={loading}>

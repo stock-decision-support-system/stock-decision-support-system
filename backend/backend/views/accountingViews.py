@@ -52,19 +52,17 @@ def get_accounting_total_pages(request):
     page_size = 8  # 每頁顯示 8 條記錄
 
     # 獲取過濾參數
-    account_type_filter = request.query_params.get(
-        "accountType", None
-    )  # 從查詢參數獲取 accountType
-    asset_type_filter = request.query_params.get(
-        "assetType", None
-    )  # 從查詢參數獲取 assetType
+    account_type_filter = request.query_params.get("accountType",
+                                                   None)  # 從查詢參數獲取 accountType
+    asset_type_filter = request.query_params.get("assetType",
+                                                 None)  # 從查詢參數獲取 assetType
 
     # 構建查詢集，先過濾出可用的記帳紀錄
     accountings = Accounting.objects.filter(
-        createdId=user, available=True  # 使用 User 物件而不是 username
-    ).select_related(
-        "consumeType", "accountType"
-    )  # 預加載相關的 consumeType, accountType
+        createdId=user,
+        available=True  # 使用 User 物件而不是 username
+    ).select_related("consumeType",
+                     "accountType")  # 預加載相關的 consumeType, accountType
 
     # 根據 account 過濾，如果 account_filter 有值
     if account_type_filter:
@@ -79,7 +77,12 @@ def get_accounting_total_pages(request):
     total_pages = paginator.num_pages  # 獲取總頁數
 
     return Response(
-        {"status": "success", "data": {"totalPages": total_pages}},
+        {
+            "status": "success",
+            "data": {
+                "totalPages": total_pages
+            }
+        },
         status=status.HTTP_200_OK,
     )
 
@@ -95,30 +98,27 @@ def accounting_list_for_user(request):
         page_size = 8  # 每頁顯示 8 條記錄
         # 獲取過濾參數
         account_type_filter = request.query_params.get(
-            "accountType", None
-        )  # 從查詢參數獲取 accountType
-        asset_type_filter = request.query_params.get(
-            "assetType", None
-        )  # 從查詢參數獲取 assetType
+            "accountType", None)  # 從查詢參數獲取 accountType
+        asset_type_filter = request.query_params.get("assetType",
+                                                     None)  # 從查詢參數獲取 assetType
 
         # 構建查詢集，先過濾出可用的記帳紀錄
         accountings = Accounting.objects.filter(
-            createdId=user, available=True  # 使用 User 物件而不是 username
-        ).select_related(
-            "consumeType", "accountType"
-        )  # 預加載相關的 consumeType, accountType
+            createdId=user,
+            available=True  # 使用 User 物件而不是 username
+        ).select_related("consumeType", "accountType")
 
-        # 根據 account 過濾，如果 account_filter 有值
+        # 根據 accountType 過濾
         if account_type_filter:
-            accountings = accountings.filter(
-                accountType=account_type_filter
-            )  # 假設 Accounting 模型有 accountType 欄位
+            accountings = accountings.filter(accountType=account_type_filter)
 
-        # 根據 assetType 過濾，如果 asset_type_filter 有值
+        # 根據 assetType 過濾
         if asset_type_filter:
-            accountings = accountings.filter(
-                assetType=asset_type_filter
-            )  # 假設 consumeType_id 代表 assetType
+            accountings = accountings.filter(assetType=asset_type_filter)
+
+        # 按交易日遞減排序
+        accountings = accountings.order_by(
+            '-transactionDate')  # 假設 transactionDate 是日期欄位
 
         # 分頁
         paginator = Paginator(accountings, page_size)
@@ -137,79 +137,149 @@ def accounting_list_for_user(request):
         serializer = AccountingSerializer(accountings_page, many=True)
         data = serializer.data
 
+        # 增加類型名稱和圖標
         for i, accounting in enumerate(data):
             data[i] = {
                 **accounting,
-                "accountTypeName": str(accountings[i].accountType.account_name),
-                "accountTypeIcon": str(accountings[i].accountType.icon),
-                "consumeTypeName": str(accountings[i].consumeType.name),
-                "consumeTypeIcon": str(accountings[i].consumeType.icon),
+                "accountTypeName":
+                str(accountings[i].accountType.account_name),
+                "accountTypeIcon":
+                str(accountings[i].accountType.icon),
+                "consumeTypeName":
+                str(accountings[i].consumeType.name),
+                "consumeTypeIcon":
+                str(accountings[i].consumeType.icon),
             }
 
-        return Response({"status": "success", "data": data}, status=status.HTTP_200_OK)
-
+        return Response({
+            "status": "success",
+            "data": data
+        },
+                        status=status.HTTP_200_OK)
+        
     elif request.method == "POST":
         # 創建新的記帳紀錄
-        serializer = AccountingSerializer(
-            data=request.data, context={"request": request}
-        )  # 使用請求數據進行序列化
+        serializer = AccountingSerializer(data=request.data,
+                                          context={"request":
+                                                   request})  # 使用請求數據進行序列化
         if serializer.is_valid():  # 驗證數據
-            accounting_record = serializer.save(
-                createDate=timezone.now(), createdId=user
-            )  # 保存並設置創建者
+            accounting_record = serializer.save(createDate=timezone.now(),
+                                                createdId=user)  # 保存並設置創建者
             try:
                 accounting_record.accountType.calculate_balance()
             except AccountType.DoesNotExist:
                 return Response(
-                    {"status": "error", "message": "紀錄不存在"},
+                    {
+                        "status": "error",
+                        "message": "紀錄不存在"
+                    },
                     status=status.HTTP_404_NOT_FOUND,
                 )
-            user.calculate_net_and_total_assets()  # 更新用戶資產狀態
+
+            # 更新對應的 Budget 金額
+            try:
+                budget = Budget.objects.get(username=user, available=True)
+                if accounting_record.transactionDate >= budget.start_date:  #判斷accounting_record.transactionDate是否在budget.start_date後
+                    if accounting_record.assetType == '0':
+                        budget.current += accounting_record.amount  # 更新金額
+                    else:
+                        budget.current -= accounting_record.amount  # 更新金額
+                    budget.save()
+            except Budget.DoesNotExist:  # 如果找不到儲蓄目標，這是正常情況，所以什麼也不做，繼續執行其他代碼
+                pass
+
+            # 更新用戶資產狀態
+            user.calculate_net_and_total_assets()
 
             return Response(
-                {"status": "success", "message": "新增成功"},
+                {
+                    "status": "success",
+                    "message": "新增成功"
+                },
                 status=status.HTTP_201_CREATED,
             )
         else:
             return Response(
-                {"status": "error", "message": serializer.errors},  # 返回驗證錯誤
+                {
+                    "status": "error",
+                    "message": serializer.errors
+                },  # 返回驗證錯誤
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
     elif request.method == "PUT":
         # 更新現有的記帳紀錄
-        accounting = get_object_or_404(Accounting, pk=request.data.get("accountingId"))
-        serializer = AccountingSerializer(
-            accounting, data=request.data, partial=True
-        )  # 使用部分更新
+        accounting = get_object_or_404(Accounting,
+                                       pk=request.data.get("accountingId"))
+        serializer = AccountingSerializer(accounting,
+                                          data=request.data,
+                                          partial=True)  # 使用部分更新
         if serializer.is_valid():  # 驗證數據
+            previous_amount = accounting.amount  # 保存更新前的金額
+            previous_assetType = accounting.accountType  # 保存更新前的消費行為
             accounting_record = serializer.save()  # 保存更新
             try:
                 accounting_record.accountType.calculate_balance()
             except AccountType.DoesNotExist:
                 return Response(
-                    {"status": "error", "message": "紀錄不存在"},
+                    {
+                        "status": "error",
+                        "message": "紀錄不存在"
+                    },
                     status=status.HTTP_404_NOT_FOUND,
                 )
-            user.calculate_net_and_total_assets()  # 更新用戶資產狀態
-            return Response(
-                {"status": "success", "message": "更新成功"}, status=status.HTTP_200_OK
-            )
+
+            # 更新對應的 Budget 金額
+            try:
+                budget = Budget.objects.get(username=user, available=True)
+                if accounting_record.transactionDate >= budget.start_date:  #判斷accounting_record.transactionDate是否在budget.start_date後
+                    if previous_assetType == '0':
+                        budget.current -= previous_amount  # 更新金額
+                    else:
+                        budget.current += previous_amount  # 更新金額
+                    if accounting_record.assetType == '0':
+                        budget.current += accounting_record.amount  # 更新金額
+                    else:
+                        budget.current -= accounting_record.amount  # 更新金額
+                    budget.save()
+            except Budget.DoesNotExist:
+                return Response(
+                    {
+                        "status": "error",
+                        "message": "找不到儲蓄目標"
+                    },
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            # 更新用戶資產狀態
+            user.calculate_net_and_total_assets()
+
+            return Response({
+                "status": "success",
+                "message": "更新成功"
+            },
+                            status=status.HTTP_200_OK)
         else:
             return Response(
-                {"status": "error", "message": serializer.errors},  # 返回驗證錯誤
+                {
+                    "status": "error",
+                    "message": serializer.errors
+                },  # 返回驗證錯誤
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
     elif request.method == "DELETE":
         # 刪除記帳紀錄（將其標記為不可用）
-        accounting = get_object_or_404(Accounting, pk=request.data.get("accountingId"))
+        accounting = get_object_or_404(Accounting,
+                                       pk=request.data.get("accountingId"))
         accounting.available = False  # 標記為不可用
         accounting.save()  # 保存更改
         user.calculate_net_and_total_assets()  # 更新用戶資產狀態
-        return Response(
-            {"status": "success", "message": "紀錄已被刪除"}, status=status.HTTP_200_OK
-        )
+        return Response({
+            "status": "success",
+            "message": "紀錄已被刪除"
+        },
+                        status=status.HTTP_200_OK)
 
 
 # 管理員記帳紀錄列表 API
@@ -221,9 +291,8 @@ def accounting_list_for_admin(request):
         # 根據查詢參數獲取記帳紀錄
         create_id = request.query_params.get("createId")  # 獲取創建者 ID
         available = request.query_params.get("available")  # 獲取可用性標記
-        sort_order = request.query_params.get(
-            "sort", "createDate"
-        )  # 默認按創建日期排序
+        sort_order = request.query_params.get("sort",
+                                              "createDate")  # 默認按創建日期排序
 
         # 構建查詢
         query = Accounting.objects.all()  # 獲取所有記帳紀錄
@@ -235,40 +304,53 @@ def accounting_list_for_admin(request):
         # 執行查詢
         if not query.exists():  # 若查詢結果為空，返回錯誤
             return Response(
-                {"status": "error", "message": "紀錄不存在"},
+                {
+                    "status": "error",
+                    "message": "紀錄不存在"
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         # 序列化查詢結果
         serializer = AccountingSerializer(query, many=True)
-        return Response(
-            {"status": "success", "data": serializer.data}, status=status.HTTP_200_OK
-        )
+        return Response({
+            "status": "success",
+            "data": serializer.data
+        },
+                        status=status.HTTP_200_OK)
     elif request.method == "PUT":
         # 更新現有的記帳紀錄
         pk = request.GET.get("accountingId")  # 獲取記帳紀錄 ID
         accounting = Accounting.objects.get(accountingId=pk)
-        serializer = AccountingSerializer(
-            accounting, data=request.data, partial=True
-        )  # 使用部分更新
+        serializer = AccountingSerializer(accounting,
+                                          data=request.data,
+                                          partial=True)  # 使用部分更新
         if serializer.is_valid():  # 驗證數據
             serializer.save()  # 保存更新
             user.calculate_net_and_total_assets()  # 更新用戶資產狀態
-            return Response(
-                {"status": "success", "message": "更新成功"}, status=status.HTTP_200_OK
-            )
+            return Response({
+                "status": "success",
+                "message": "更新成功"
+            },
+                            status=status.HTTP_200_OK)
         return Response(
-            {"status": "error", "message": serializer.errors},  # 返回驗證錯誤
+            {
+                "status": "error",
+                "message": serializer.errors
+            },  # 返回驗證錯誤
             status=status.HTTP_400_BAD_REQUEST,
         )
     elif request.method == "DELETE":
         # 刪除記帳紀錄（將其標記為不可用）
-        accounting = get_object_or_404(Accounting, pk=request.data.get("accountingId"))
+        accounting = get_object_or_404(Accounting,
+                                       pk=request.data.get("accountingId"))
         accounting.available = False  # 標記為不可用
         accounting.save()  # 保存更改
         user.calculate_net_and_total_assets()  # 更新用戶資產狀態
-        return Response(
-            {"status": "success", "message": "紀錄已被刪除"}, status=status.HTTP_200_OK
-        )
+        return Response({
+            "status": "success",
+            "message": "紀錄已被刪除"
+        },
+                        status=status.HTTP_200_OK)
 
 
 # 消費類型操作 API
@@ -285,35 +367,45 @@ def consume_type_operations(request, id=None):
                 serializer = ConsumeTypeSerializer(consume_type)  # 序列化單個消費類型
             except ConsumeType.DoesNotExist:
                 return Response(
-                    {"status": "error", "message": "紀錄不存在"},
+                    {
+                        "status": "error",
+                        "message": "紀錄不存在"
+                    },
                     status=status.HTTP_404_NOT_FOUND,
                 )
         else:
             # 獲取當前登入者或管理員的所有消費類型
             consume_types = ConsumeType.objects.filter(
-                createdId__in=[user, "admin"], available=True
-            )  # 根據主鍵查找並篩選 available 為 true
-            serializer = ConsumeTypeSerializer(
-                consume_types, many=True
-            )  # 序列化多個消費類型
-        return Response(
-            {"status": "success", "data": serializer.data}, status=status.HTTP_200_OK
-        )
+                createdId__in=[user, "admin"],
+                available=True)  # 根據主鍵查找並篩選 available 為 true
+            serializer = ConsumeTypeSerializer(consume_types,
+                                               many=True)  # 序列化多個消費類型
+        return Response({
+            "status": "success",
+            "data": serializer.data
+        },
+                        status=status.HTTP_200_OK)
 
     elif request.method == "POST":
         # 創建新的消費類型
-        serializer = ConsumeTypeSerializer(
-            data=request.data, context={"request": request}
-        )  # 使用傳入數據初始化序列化器
+        serializer = ConsumeTypeSerializer(data=request.data,
+                                           context={"request":
+                                                    request})  # 使用傳入數據初始化序列化器
         if serializer.is_valid():  # 驗證數據
             serializer.save(createDate=timezone.now())  # 保存並設置創建者和創建日期
             return Response(
-                {"status": "success", "message": "新增成功"},  # 返回成功信息
+                {
+                    "status": "success",
+                    "message": "新增成功"
+                },  # 返回成功信息
                 status=status.HTTP_201_CREATED,
             )
         else:
             return Response(
-                {"status": "error", "message": serializer.errors},  # 返回驗證錯誤
+                {
+                    "status": "error",
+                    "message": serializer.errors
+                },  # 返回驗證錯誤
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -323,17 +415,25 @@ def consume_type_operations(request, id=None):
         try:
             consume_type = ConsumeType.objects.get(id=id)  # 根據消費類型 ID 查找
             serializer = ConsumeTypeSerializer(
-                consume_type, data=request.data, partial=True  # 使用部分更新
+                consume_type,
+                data=request.data,
+                partial=True  # 使用部分更新
             )
             if serializer.is_valid():  # 驗證數據
                 serializer.save()  # 保存更新
                 return Response(
-                    {"status": "success", "message": "更新成功"},  # 返回成功信息
+                    {
+                        "status": "success",
+                        "message": "更新成功"
+                    },  # 返回成功信息
                     status=status.HTTP_200_OK,
                 )
         except ConsumeType.DoesNotExist:
             return Response(
-                {"status": "error", "message": "紀錄不存在"},  # 如果找不到，返回404
+                {
+                    "status": "error",
+                    "message": "紀錄不存在"
+                },  # 如果找不到，返回404
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -344,7 +444,10 @@ def consume_type_operations(request, id=None):
         # 檢查 id 是否在不允許的範圍內
         if id in map(str, range(1, 13)):  # id 為 1 到 12
             return Response(
-                {"status": "error", "message": "紀錄不可刪除"},  # 返回錯誤信息
+                {
+                    "status": "error",
+                    "message": "紀錄不可刪除"
+                },  # 返回錯誤信息
                 status=status.HTTP_403_FORBIDDEN,
             )
         try:
@@ -352,18 +455,27 @@ def consume_type_operations(request, id=None):
             updated = ConsumeType.objects.filter(id=id).update(available=False)
             if updated:  # 如果更新成功
                 return Response(
-                    {"status": "success", "message": "紀錄已被刪除"},  # 返回成功信息
+                    {
+                        "status": "success",
+                        "message": "紀錄已被刪除"
+                    },  # 返回成功信息
                     status=status.HTTP_200_OK,
                 )
             else:
                 # 如果沒有任何更新，則說明消費類型不存在
                 return Response(
-                    {"status": "error", "message": "紀錄不存在"},  # 返回404
+                    {
+                        "status": "error",
+                        "message": "紀錄不存在"
+                    },  # 返回404
                     status=status.HTTP_404_NOT_FOUND,
                 )
         except ConsumeType.DoesNotExist:
             return Response(
-                {"status": "error", "message": "紀錄不存在"},  # 如果找不到，返回404
+                {
+                    "status": "error",
+                    "message": "紀錄不存在"
+                },  # 如果找不到，返回404
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -382,35 +494,44 @@ def account_type_operations(request, id=None):
                 serializer = AccountTypeSerializer(account_type)  # 序列化單個消費帳戶
             except AccountType.DoesNotExist:
                 return Response(
-                    {"status": "error", "message": "紀錄不存在"},
+                    {
+                        "status": "error",
+                        "message": "紀錄不存在"
+                    },
                     status=status.HTTP_404_NOT_FOUND,
                 )
         else:
             # 獲取當前登入者的所有消費帳戶
             account_type = AccountType.objects.filter(
-                username=user, available=True
-            )  # 根據主鍵查找並篩選 available 為 true
-            serializer = AccountTypeSerializer(
-                account_type, many=True
-            )  # 序列化多個消費帳戶
-        return Response(
-            {"status": "success", "data": serializer.data}, status=status.HTTP_200_OK
-        )
+                username=user, available=True)  # 根據主鍵查找並篩選 available 為 true
+            serializer = AccountTypeSerializer(account_type,
+                                               many=True)  # 序列化多個消費帳戶
+        return Response({
+            "status": "success",
+            "data": serializer.data
+        },
+                        status=status.HTTP_200_OK)
 
     elif request.method == "POST":
         # 創建新的消費帳戶
-        serializer = AccountTypeSerializer(
-            data=request.data, context={"request": request}
-        )  # 使用傳入數據初始化序列化器
+        serializer = AccountTypeSerializer(data=request.data,
+                                           context={"request":
+                                                    request})  # 使用傳入數據初始化序列化器
         if serializer.is_valid():  # 驗證數據
             serializer.save(createDate=timezone.now())  # 保存並設置創建者和創建日期
             return Response(
-                {"status": "success", "message": "新增成功"},  # 返回成功信息
+                {
+                    "status": "success",
+                    "message": "新增成功"
+                },  # 返回成功信息
                 status=status.HTTP_201_CREATED,
             )
         else:
             return Response(
-                {"status": "error", "message": serializer.errors},  # 返回驗證錯誤
+                {
+                    "status": "error",
+                    "message": serializer.errors
+                },  # 返回驗證錯誤
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -420,17 +541,25 @@ def account_type_operations(request, id=None):
         try:
             account_type = AccountType.objects.get(id=id)  # 根據消費帳戶 ID 查找
             serializer = AccountTypeSerializer(
-                account_type, data=request.data, partial=True  # 使用部分更新
+                account_type,
+                data=request.data,
+                partial=True  # 使用部分更新
             )
             if serializer.is_valid():  # 驗證數據
                 serializer.save()  # 保存更新
                 return Response(
-                    {"status": "success", "message": "更新成功"},  # 返回成功信息
+                    {
+                        "status": "success",
+                        "message": "更新成功"
+                    },  # 返回成功信息
                     status=status.HTTP_200_OK,
                 )
         except AccountType.DoesNotExist:
             return Response(
-                {"status": "error", "message": "紀錄不存在"},  # 如果找不到，返回404
+                {
+                    "status": "error",
+                    "message": "紀錄不存在"
+                },  # 如果找不到，返回404
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -442,18 +571,27 @@ def account_type_operations(request, id=None):
             updated = AccountType.objects.filter(id=id).update(available=False)
             if updated:  # 如果更新成功
                 return Response(
-                    {"status": "success", "message": "紀錄已被刪除"},  # 返回成功信息
+                    {
+                        "status": "success",
+                        "message": "紀錄已被刪除"
+                    },  # 返回成功信息
                     status=status.HTTP_200_OK,
                 )
             else:
                 # 如果沒有任何更新，則說明消費帳戶不存在
                 return Response(
-                    {"status": "error", "message": "紀錄不存在"},  # 返回404
+                    {
+                        "status": "error",
+                        "message": "紀錄不存在"
+                    },  # 返回404
                     status=status.HTTP_404_NOT_FOUND,
                 )
         except AccountType.DoesNotExist:
             return Response(
-                {"status": "error", "message": "紀錄不存在"},  # 如果找不到，返回404
+                {
+                    "status": "error",
+                    "message": "紀錄不存在"
+                },  # 如果找不到，返回404
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -482,9 +620,9 @@ def financial_summary(request, username):
 def account_charts_user(request):
     user = request.user  # 獲取當前請求的用戶# 獲取過濾參數
     # 獲取當前登入者的所有消費帳戶
-    account_type = AccountType.objects.filter(username=user, available=True).order_by(
-        "-balance"
-    )  # 根據主鍵查找並篩選 available 為 true
+    account_type = AccountType.objects.filter(
+        username=user,
+        available=True).order_by("-balance")  # 根據主鍵查找並篩選 available 為 true
     serializer = AccountTypeSerializer(account_type, many=True)  # 序列化多個消費帳戶
     # 处理序列化后的数据，添加额外字段
     data = []
@@ -494,7 +632,11 @@ def account_charts_user(request):
             "value": type_data.balance,
         }
         data.append(accounting_data)
-    return Response({"status": "success", "data": data}, status=status.HTTP_200_OK)
+    return Response({
+        "status": "success",
+        "data": data
+    },
+                    status=status.HTTP_200_OK)
 
 
 # 用戶消費類別圓餅圖 API
@@ -506,21 +648,17 @@ def consume_charts_user_All(request):
     # 獲取當前登入者的所有消費帳戶
     accounting_datas = (
         Accounting.objects.filter(
-            createdId=user, available=True  # 使用 User 物件而不是 username
-        )
-        .select_related("consumeType")  # 預加載相關的 consumeType
-        .values(
-            "consumeType__icon", "consumeType__name"
-        )  # 獲取 consumeType 的 icon 和 name
-        .annotate(
-            total_amount=Sum(
-                Case(
-                    When(assetType=0, then=F("amount")),  # 收入
-                    When(assetType=1, then=-F("amount")),  # 支出
-                    output_field=models.DecimalField(),  # 指定返回類型為 DecimalField
-                )
-            )
-        )  # 計算每組的金額總和，根據 assetType 判斷正負
+            createdId=user,
+            available=True  # 使用 User 物件而不是 username
+        ).select_related("consumeType")  # 預加載相關的 consumeType
+        .values("consumeType__icon",
+                "consumeType__name")  # 獲取 consumeType 的 icon 和 name
+        .annotate(total_amount=Sum(
+            Case(
+                When(assetType=0, then=F("amount")),  # 收入
+                When(assetType=1, then=-F("amount")),  # 支出
+                output_field=models.DecimalField(),  # 指定返回類型為 DecimalField
+            )))  # 計算每組的金額總和，根據 assetType 判斷正負
         .order_by("consumeType")  # 按 consumeType 排序
     )
 
@@ -528,13 +666,16 @@ def consume_charts_user_All(request):
     datas = []
     for data in accounting_datas:
         accounting_data = {
-            "name": data["consumeType__icon"]
-            + " "
-            + data["consumeType__name"],  # 獲取 icon name
+            "name": data["consumeType__icon"] + " " +
+            data["consumeType__name"],  # 獲取 icon name
             "value": data["total_amount"],  # 獲取總金額
         }
         datas.append(accounting_data)
-    return Response({"status": "success", "data": datas}, status=status.HTTP_200_OK)
+    return Response({
+        "status": "success",
+        "data": datas
+    },
+                    status=status.HTTP_200_OK)
 
 
 # 用戶消費類別收入/支出圓餅圖 API
@@ -546,27 +687,24 @@ def consume_charts_user(request):
     # 獲取當前登入者的所有消費帳戶
     accounting_datas = (
         Accounting.objects.filter(
-            createdId=user, available=True  # 使用 User 物件而不是 username
-        )
-        .select_related("consumeType")  # 預加載相關的 consumeType
-        .values(
-            "consumeType__id", "consumeType__icon", "consumeType__name"
-        )  # 獲取 consumeType 的 icon 和 name
+            createdId=user,
+            available=True  # 使用 User 物件而不是 username
+        ).select_related("consumeType")  # 預加載相關的 consumeType
+        .values("consumeType__id", "consumeType__icon",
+                "consumeType__name")  # 獲取 consumeType 的 icon 和 name
         .annotate(
             income=Sum(
                 Case(
                     When(assetType=0, then=F("amount")),  # 收入
                     default=0,
                     output_field=models.DecimalField(),  # 指定返回類型為 DecimalField
-                )
-            ),
+                )),
             expense=Sum(
                 Case(
                     When(assetType=1, then=F("amount")),  # 支出
                     default=0,
                     output_field=models.DecimalField(),  # 指定返回類型為 DecimalField
-                )
-            ),
+                )),
         )  # 分別計算收入和支出的總金額
         .order_by("consumeType")  # 按 consumeType 排序
     )
@@ -578,16 +716,14 @@ def consume_charts_user(request):
     for data in accounting_datas:
         income_data = {
             "id": data["consumeType__id"],
-            "name": data["consumeType__icon"]
-            + " "
-            + data["consumeType__name"],  # 獲取 icon name
+            "name": data["consumeType__icon"] + " " +
+            data["consumeType__name"],  # 獲取 icon name
             "value": data["income"],  # 獲取收入總金額
         }
         expense_data = {
             "id": data["consumeType__id"],
-            "name": data["consumeType__icon"]
-            + " "
-            + data["consumeType__name"],  # 獲取 icon name
+            "name": data["consumeType__icon"] + " " +
+            data["consumeType__name"],  # 獲取 icon name
             "value": data["expense"],  # 獲取支出總金額
         }
         if data["income"] > 0:  # 只添加有收入的資料
@@ -598,7 +734,10 @@ def consume_charts_user(request):
     return Response(
         {
             "status": "success",
-            "data": {"income": income_datas, "expense": expense_datas},
+            "data": {
+                "income": income_datas,
+                "expense": expense_datas
+            },
         },
         status=status.HTTP_200_OK,
     )
@@ -611,39 +750,32 @@ def budget_operations(request, id=None):
     user = request.user  # 獲取當前登入者
     if request.method == "GET":
         # 獲取儲蓄目標
-        if id is not None:
-            # 根據主鍵獲取特定儲蓄目標
-            try:
-                budget = Budget.objects.get(id=id)  # 根據主鍵查找
-                serializer = BudgetSerializer(budget)  # 序列化單個儲蓄目標
+        # 獲取當前登入者的所有儲蓄目標
+        budget = Budget.objects.get(
+            username=user, available=True)  # 根據主鍵查找並篩選 available 為 true
 
-                return Response(
-                    {"status": "success", "data": serializer.data},
-                    status=status.HTTP_200_OK,
-                )
-            except Budget.DoesNotExist:
-                return Response(
-                    {"status": "error", "message": "紀錄不存在"},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-        else:
-            # 獲取當前登入者的所有儲蓄目標
-            budget = Budget.objects.get(
-                username=user, available=True
-            )  # 根據主鍵查找並篩選 available 為 true
-            # 將 budget 的屬性轉換為字典
-            data = {
-                "id": budget.id,
-                "name": budget.name,
-                "target": budget.target,
-                "current": budget.current,
-                "start_date": budget.start_date,
-                "end_date": budget.end_date,
-            }
+        # 如果 is_successful 為 True，將 available 改為 False
+        if budget.is_successful:
+            budget.available = False
+            budget.save()  # 保存更新
 
-            return Response(
-                {"status": "success", "data": data}, status=status.HTTP_200_OK
-            )
+        # 將 budget 的屬性轉換為字典
+        data = {
+            "id": budget.id,
+            "name": budget.name,
+            "target": budget.target,
+            "current": budget.current,
+            "start_date": budget.start_date,
+            "end_date": budget.end_date,
+            "is_successful": budget.is_successful,
+            "available": budget.available,
+        }
+
+        return Response({
+            "status": "success",
+            "data": data
+        },
+                        status=status.HTTP_200_OK)
 
     elif request.method == "POST":
         data = request.data.copy()  # 複製請求數據，以便進行修改
@@ -652,7 +784,10 @@ def budget_operations(request, id=None):
         # 檢查是否存在未達成的目標
         if Budget.objects.filter(username=user, available=True).exists():
             return Response(
-                {"status": "error", "message": "你有尚未達成的目標"},  # 返回錯誤信息
+                {
+                    "status": "error",
+                    "message": "你有尚未達成的目標"
+                },  # 返回錯誤信息
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -661,18 +796,24 @@ def budget_operations(request, id=None):
             # 設置 end_date 為今天 + 30 天
             data["end_date"] = timezone.now() + timedelta(days=30)
         # 創建新的儲蓄目標
-        serializer = BudgetSerializer(
-            data=data, context={"request": request}
-        )  # 使用傳入數據初始化序列化器
+        serializer = BudgetSerializer(data=data,
+                                      context={"request":
+                                               request})  # 使用傳入數據初始化序列化器
         if serializer.is_valid():  # 驗證數據
             serializer.save()  # 保存並設置創建者和創建日期
             return Response(
-                {"status": "success", "message": "新增成功"},  # 返回成功信息
+                {
+                    "status": "success",
+                    "message": "新增成功"
+                },  # 返回成功信息
                 status=status.HTTP_201_CREATED,
             )
         else:
             return Response(
-                {"status": "error", "message": serializer.errors},  # 返回驗證錯誤
+                {
+                    "status": "error",
+                    "message": serializer.errors
+                },  # 返回驗證錯誤
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -681,17 +822,25 @@ def budget_operations(request, id=None):
         try:
             budget = Budget.objects.get(id=id)  # 根據儲蓄目標 ID 查找
             serializer = BudgetSerializer(
-                budget, data=request.data, partial=True  # 使用部分更新
+                budget,
+                data=request.data,
+                partial=True  # 使用部分更新
             )
             if serializer.is_valid():  # 驗證數據
                 serializer.save()  # 保存更新
                 return Response(
-                    {"status": "success", "message": "更新成功"},  # 返回成功信息
+                    {
+                        "status": "success",
+                        "message": "更新成功"
+                    },  # 返回成功信息
                     status=status.HTTP_200_OK,
                 )
         except Budget.DoesNotExist:
             return Response(
-                {"status": "error", "message": "紀錄不存在"},  # 如果找不到，返回404
+                {
+                    "status": "error",
+                    "message": "紀錄不存在"
+                },  # 如果找不到，返回404
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -699,7 +848,10 @@ def budget_operations(request, id=None):
         # 刪除儲蓄目標（將其標記為不可用）
         if not id:
             return Response(
-                {"status": "error", "message": "缺少ID參數"},
+                {
+                    "status": "error",
+                    "message": "缺少ID參數"
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -712,13 +864,19 @@ def budget_operations(request, id=None):
             budget.save()
 
             return Response(
-                {"status": "success", "message": "紀錄已被刪除"},
+                {
+                    "status": "success",
+                    "message": "紀錄已被刪除"
+                },
                 status=status.HTTP_200_OK,
             )
 
         except Budget.DoesNotExist:
             return Response(
-                {"status": "error", "message": "紀錄不存在"},
+                {
+                    "status": "error",
+                    "message": "紀錄不存在"
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -746,14 +904,20 @@ def assets_change_chart(request):
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
         except ValueError:
             return Response(
-                {"status": "error", "message": "Invalid date format."},
+                {
+                    "status": "error",
+                    "message": "Invalid date format."
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
     # 確保 end_date 是在 start_date 之後
     if end_date < start_date:
         return Response(
-            {"status": "error", "message": "End date must be after start date."},
+            {
+                "status": "error",
+                "message": "End date must be after start date."
+            },
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -794,21 +958,22 @@ def assets_change_chart(request):
                 daily_records[date_key]["total_expense"] += record.amount
 
         labels = list(daily_records.keys())
-        data = [
-            {
-                "date": label,
-                "total_assets": daily_records[label]["total_income"],
-                "net_assets": daily_records[label]["total_income"]
-                - daily_records[label]["total_expense"],
-            }
-            for label in labels
-        ]
+        data = [{
+            "date":
+            label,
+            "total_assets":
+            daily_records[label]["total_income"],
+            "net_assets":
+            daily_records[label]["total_income"] -
+            daily_records[label]["total_expense"],
+        } for label in labels]
 
     elif date_difference <= 30 * 23:  # 30天 * 23 = 690天
         # 按月分組
-        monthly_records = defaultdict(
-            lambda: {"total_income": Decimal(0), "total_expense": Decimal(0)}
-        )
+        monthly_records = defaultdict(lambda: {
+            "total_income": Decimal(0),
+            "total_expense": Decimal(0)
+        })
 
         records = Accounting.objects.filter(
             createdId=user,
@@ -825,21 +990,22 @@ def assets_change_chart(request):
                 monthly_records[month_key]["total_expense"] += record.amount
 
         labels = list(monthly_records.keys())
-        data = [
-            {
-                "date": label,
-                "total_assets": monthly_records[label]["total_income"],
-                "net_assets": monthly_records[label]["total_income"]
-                - monthly_records[label]["total_expense"],
-            }
-            for label in labels
-        ]
+        data = [{
+            "date":
+            label,
+            "total_assets":
+            monthly_records[label]["total_income"],
+            "net_assets":
+            monthly_records[label]["total_income"] -
+            monthly_records[label]["total_expense"],
+        } for label in labels]
 
     else:
         # 按年分組
-        yearly_records = defaultdict(
-            lambda: {"total_income": Decimal(0), "total_expense": Decimal(0)}
-        )
+        yearly_records = defaultdict(lambda: {
+            "total_income": Decimal(0),
+            "total_expense": Decimal(0)
+        })
 
         records = Accounting.objects.filter(
             createdId=user,
@@ -856,15 +1022,15 @@ def assets_change_chart(request):
                 yearly_records[year_key]["total_expense"] += record.amount
 
         labels = list(yearly_records.keys())
-        data = [
-            {
-                "date": label,
-                "total_assets": yearly_records[label]["total_income"],
-                "net_assets": yearly_records[label]["total_income"]
-                - yearly_records[label]["total_expense"],
-            }
-            for label in labels
-        ]
+        data = [{
+            "date":
+            label,
+            "total_assets":
+            yearly_records[label]["total_income"],
+            "net_assets":
+            yearly_records[label]["total_income"] -
+            yearly_records[label]["total_expense"],
+        } for label in labels]
 
     return Response(
         {
@@ -886,11 +1052,9 @@ class FinancialAnalysisView(APIView):
         asset_type_filter = request.query_params.get("assetType")
 
         # 構建查詢集，按月分組
-        accountings = (
-            Accounting.objects.filter(createdId=user, available=True)
-            .annotate(month=TruncMonth("transactionDate"))
-            .order_by("month")
-        )
+        accountings = (Accounting.objects.filter(
+            createdId=user, available=True).annotate(
+                month=TruncMonth("transactionDate")).order_by("month"))
 
         if account_type_filter:
             accountings = accountings.filter(accountType=account_type_filter)
@@ -912,14 +1076,17 @@ class FinancialAnalysisView(APIView):
         for month_data in summary:
             month_str = month_data["month"].strftime("%Y-%m")  # 格式化月份字符串
             month_advice = next(
-                (adv["advice"] for adv in advice if adv["month"] == month_str), None
-            )  # 尋找對應的建議
+                (adv["advice"] for adv in advice if adv["month"] == month_str),
+                None)  # 尋找對應的建議
 
             # 合併資料
             merged_entry = {
-                "date": month_data["month"],
-                "total_assets": month_data["total_income"],
-                "net_assets": month_data["total_income"] - month_data["total_expense"],
+                "date":
+                month_data["month"],
+                "total_assets":
+                month_data["total_income"],
+                "net_assets":
+                month_data["total_income"] - month_data["total_expense"],
             }
             if month_advice:  # 如果有建議，將其添加到合併的資料中
                 merged_entry["advice"] = month_advice
@@ -946,16 +1113,18 @@ class FinancialAnalysisView(APIView):
                             "role": "system",
                             "content": "你是一個精通財務管理的專家，能夠給出適用於學生的理財及儲蓄建議。",
                         },
-                        {"role": "user", "content": prompt},
+                        {
+                            "role": "user",
+                            "content": prompt
+                        },
                     ],
                     max_tokens=600,
                     temperature=0.7,
                 )
-                advice_text = response["choices"][0]["message"]["content"].strip()
-                advice.append(
-                    {
-                        "month": month_data["month"].strftime("%Y-%m"),
-                        "advice": advice_text,
-                    }
-                )
+                advice_text = response["choices"][0]["message"][
+                    "content"].strip()
+                advice.append({
+                    "month": month_data["month"].strftime("%Y-%m"),
+                    "advice": advice_text,
+                })
         return advice
