@@ -81,7 +81,7 @@ def login_to_shioaji(user):
         error_traceback = traceback.format_exc()  # 獲取詳細的錯誤堆疊信息
         raise Exception(f"{error_message}\nDetails:\n{error_traceback}")
 
-
+#證券登入測試
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])  # 確保用戶已登錄
 def login_to_shioaji_view(request):
