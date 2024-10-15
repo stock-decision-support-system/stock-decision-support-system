@@ -86,7 +86,10 @@ const Navbar = () => {
         我的股票
       </Menu.Item>
       <Menu.Item key="placeOrder" onClick={() => navigate('/placeOrder')}>
-        下單頁面
+        單股下單頁面
+      </Menu.Item>
+      <Menu.Item key="batchOrderPage" onClick={() => navigate('/batchOrderPage')}>
+        投資組合下單頁面
       </Menu.Item>
       <Menu.Item key="orderManagement" onClick={() => navigate('/orderManagement')}>
         訂單管理

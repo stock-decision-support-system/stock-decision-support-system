@@ -530,7 +530,7 @@ def place_odd_lot_orders(request):
         order_quantities = request.data.get("order_quantities", [])  # 下單股數列表
         order_prices = request.data.get("order_prices", [])  # 下單價格列表
         actions = request.data.get("actions", [sj.constant.Action.Buy] * len(stock_symbols))  # 默認為買單
-        price_types = request.data.get("price_types", [sj.constant.StockPriceType.MKT] * len(stock_symbols))  # 默認為市價單
+        price_types = request.data.get("price_types", [sj.constant.StockPriceType.LMT] * len(stock_symbols))  # 默認為限價單
         order_types = request.data.get("order_types", [sj.constant.OrderType.ROD] * len(stock_symbols)) # 默認為ROD
 
 

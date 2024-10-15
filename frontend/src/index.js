@@ -34,6 +34,7 @@ import TradeHistory from './pages/tradeHistory';
 import MyStocks from './pages/myStock';
 import PlaceOrder from './pages/placeOrder'
 import OrderManagement from './pages/orderManagement';
+import BatchOrderPage from './pages/batchOrderPage';
 
 
 const root = createRoot(document.getElementById('root'));
@@ -69,6 +70,7 @@ root.render(
             <Route path="/myStocks/" element={<MyStocks />} />
             <Route path="/placeOrder/" element={<PlaceOrder />} />
             <Route path="/orderManagement/" element={<OrderManagement />} />
+            <Route path="/batchOrderPage/" element={<BatchOrderPage />} />
           </Routes>
         </div>
         <GoalProgressBar/>
