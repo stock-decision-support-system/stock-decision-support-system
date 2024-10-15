@@ -1107,18 +1107,21 @@ class FinancialAnalysisView(APIView):
 
             if prompt:  # 如果有生成提示問題
                 response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",  # 使用 chat 模型
+                    model="gpt-4o",  # 使用 chat 模型
+
                     messages=[
                         {
                             "role": "system",
-                            "content": "你是一個精通財務管理的專家，能夠給出適用於學生的理財及儲蓄建議。",
+                            "content": "你是一個精通財務管理的專家，能夠給出適用於學生的理財及儲蓄建議，如果支出超過收入請教我怎麼儲蓄，"
+                                       "如果收入超過支出請給我投資建議並且要適合投資新手像是學生的低風險投資策略，"
+                                       "低風險投資策略也請給我台股方面的，可以的話給我股票代號和標的名稱。",
                         },
                         {
                             "role": "user",
                             "content": prompt
                         },
                     ],
-                    max_tokens=600,
+                    max_tokens=1000,
                     temperature=0.7,
                 )
                 advice_text = response["choices"][0]["message"][
