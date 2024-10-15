@@ -61,7 +61,7 @@ const AccountingList = ({ totalPages, isVisible }) => {
     };
 
     return (
-        <Card  className={`accounting-card ${!isVisible ? 'visible' : 'hidden'}`}>
+        <Card  className={`history-card ${!isVisible ? 'visible' : 'hidden'}`}>
             <Spin spinning={loading}>
                 <List
                     itemLayout="horizontal"

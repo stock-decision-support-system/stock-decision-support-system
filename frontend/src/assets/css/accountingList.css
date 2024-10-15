@@ -1,6 +1,6 @@
-.accounting-card {
+.history-card {
     margin-left: 2rem;
-    width: 50%;
+    width: 60%;
     overflow: hidden;
     /* 防止內容溢出 */
     word-wrap: break-word;
@@ -90,7 +90,7 @@
 
 /* 手機響應式處理 */
 @media (max-width: 768px) {
-    .accounting-card.visible {
+    .history-card.visible {
         margin-left: 1rem;
         margin-right: 1rem;
         width: 100%;
@@ -99,7 +99,7 @@
         flex-direction: column;
     }
 
-    .accounting-card.hidden {
+    .history-card.hidden {
         margin-left: 1rem;
         margin-right: 1rem;
         width: 0;
