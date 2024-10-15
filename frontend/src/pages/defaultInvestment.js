@@ -41,15 +41,17 @@ const DefaultInvestment = () => {
   }, []);
 
   // 取得股票選項資料
-  useEffect(() => {
-    axios.get('http://localhost:8000/investment/stocks/')  // 假設這裡是 API 的股票資料端點
-      .then(response => {
-        setStockOptions(response.data);
-      })
-      .catch(error => {
-        console.error('無法獲取股票列表:', error);
-      });
-  }, []);
+// 取得股票選項資料
+useEffect(() => {
+  axios.get('http://localhost:8000/investment/stocks/')
+    .then(response => {
+      // console.log('取得的股票選項:', response.data);  // 確認股票選項資料
+      setStockOptions(response.data.data);  // 確保提取的是 data 裡的內容
+    })
+    .catch(error => {
+      console.error('無法獲取股票列表:', error);
+    });
+}, []);
 
   // 計算投資組合的投資門檻
   const calculateThreshold = (portfolioId) => {

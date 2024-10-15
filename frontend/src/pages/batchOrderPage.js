@@ -28,73 +28,75 @@ const BatchOrderPage = () => {
   const handlePortfolioChange = (portfolioId) => {
     axios.get(`http://localhost:8000/investment/default-investment-portfolios/${portfolioId}/`)
       .then(response => {
-        // 使用 console.log 顯示回傳的資料
         console.log('後端返回的資料:', response.data);
   
-        const portfolio = response.data; // 拿到完整投資組合資料
-        const stocks = portfolio.stocks || []; // 從投資組合資料中取出 stocks 陣列
-  
+        const portfolio = response.data; 
+        const stocks = portfolio.stocks || []; 
+
         if (stocks.length === 0) {
           console.warn('投資組合中沒有股票');
         }
-  
+
         // 顯示解析後的股票代號
         stocks.forEach(stock => {
           console.log(`股票代號: ${stock.stock_symbol}, 股票名稱: ${stock.stock_name}`);
         });
-  
-        setSelectedPortfolio(portfolio); // 設定已選擇的投資組合
-        setStocks(stocks); // 設定從投資組合中獲取的股票列表
+
+        setSelectedPortfolio(portfolio);
+        setStocks(stocks);
         setStockOrders(stocks.map(stock => ({
-          symbol: stock.stock_symbol,   // 股票代號
-          quantity: stock.quantity,     // 從後端獲取默認的下單數量
-          price: 0                      // 默認價格，讓使用者手動輸入
-        })));
+          symbol: stock.stock_symbol,
+          quantity: stock.quantity || 1,  // 初始化 quantity
+          price: stock.price || 0,        // 初始化 price
+          action: 'Buy',
+        })));        
       })
       .catch(error => {
         console.error('無法獲取投資組合股票資料:', error);
         message.error('無法獲取投資組合股票資料');
       });
   };
-  
-  
 
-  // 批次下單
   const handlePlaceOrders = () => {
-    setLoading(true);
-    const token = localStorage.getItem('token');
-    
-    const stock_symbols = stockOrders.map(order => order.symbol);
-    const order_quantities = stockOrders.map(order => order.quantity);
-    const order_prices = stockOrders.map(order => order.price);
-    
+    console.log("即將發送的下單資料:", stockOrders);  
+    const token = localStorage.getItem('token'); // 從 localStorage 中獲取 token
+    if (!token) {
+      message.error('尚未登入或缺少驗證 token');
+      return;
+    }
+  
     axios.post('http://localhost:8000/api/place-odd-lot-orders/', {
-      stock_symbols,
-      order_quantities,
-      order_prices,
-    }, {
+      stock_symbols: stockOrders.map(order => order.symbol),
+      order_quantities: stockOrders.map(order => order.quantity),
+      order_prices: stockOrders.map(order => order.price),
+      actions: stockOrders.map(order => order.action),  // 默認為 'Buy' 或 'Sell'
+      price_types: stockOrders.map(() => 'LMT'), // 默認為限價單
+      order_types: stockOrders.map(() => 'ROD'), // 默認為ROD
+    },  {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${token}` // 將 token 加入到 Authorization headers 中
       }
-    }).then(response => {
-      message.success('批次下單成功');
-    }).catch(error => {
-      console.error('批次下單失敗:', error);
-      message.error('批次下單失敗，請檢查網路連線');
-    }).finally(() => {
-      setLoading(false);
+    })
+    .then(response => {
+      console.log("批次下單成功:", response.data);
+    })
+    .catch(error => {
+      console.error("批次下單失敗:", error.response?.data || error.message);
+      message.error('批次下單失敗');
     });
   };
+  
 
-  // 更新股票的下單數量和價格
+  // 更新股票的下單數量、價格和操作(買/賣)
   const handleOrderChange = (symbol, field, value) => {
     setStockOrders(stockOrders.map(order => {
       if (order.symbol === symbol) {
-        return { ...order, [field]: value };
+        return { ...order, [field]: value };  // 動態更新 `price` 或 `quantity`
       }
       return order;
     }));
   };
+  
 
   const columns = [
     {
@@ -127,9 +129,23 @@ const BatchOrderPage = () => {
         <InputNumber
           min={0}
           step={0.01}
-          defaultValue={0}
-          onChange={(value) => handleOrderChange(record.symbol, 'price', value)}
+          value={stockOrders.find(order => order.symbol === record.stock_symbol)?.price || 0}  // 從 `stockOrders` 中獲取當前 symbol 的 price 值
+          onChange={(value) => handleOrderChange(record.stock_symbol, 'price', value)}  // 當用戶輸入新值時，觸發狀態更新
         />
+      ),
+    },
+    {
+      title: '操作',
+      dataIndex: 'action',
+      key: 'action',
+      render: (text, record) => (
+        <Select
+          defaultValue="Buy"  // 默認為買單
+          onChange={(value) => handleOrderChange(record.symbol, 'action', value)}
+        >
+          <Option value="Buy">買</Option>
+          <Option value="Sell">賣</Option>
+        </Select>
       ),
     }
   ];
