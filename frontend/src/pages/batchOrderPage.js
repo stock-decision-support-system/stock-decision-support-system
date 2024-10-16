@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Select, Button, Table, InputNumber, message, Form } from 'antd';
+import { useNavigate } from 'react-router-dom'; // 使用 useNavigate 來進行跳轉
+import { Select, Button, Table, InputNumber, message } from 'antd';
+import { config } from '../config';
 
+const BASE_URL = config.API_URL;
 const { Option } = Select;
 
 const BatchOrderPage = () => {
@@ -9,16 +12,18 @@ const BatchOrderPage = () => {
   const [selectedPortfolio, setSelectedPortfolio] = useState(null);
   const [stocks, setStocks] = useState([]);
   const [stockOrders, setStockOrders] = useState([]);
-
   const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate(); // 使用 useNavigate 來跳轉頁面
 
   // 獲取預設投資組合
   useEffect(() => {
-    axios.get('http://localhost:8000/investment/default-investment-portfolios/')
-      .then(response => {
+    axios
+      .get(`${BASE_URL}/investment/default-investment-portfolios/`)
+      .then((response) => {
         setPortfolios(response.data);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error('無法獲取投資組合資料:', error);
         message.error('無法獲取投資組合資料');
       });
@@ -26,77 +31,79 @@ const BatchOrderPage = () => {
 
   // 當選取的投資組合改變時，獲取投資組合的股票資料
   const handlePortfolioChange = (portfolioId) => {
-    axios.get(`http://localhost:8000/investment/default-investment-portfolios/${portfolioId}/`)
-      .then(response => {
-        console.log('後端返回的資料:', response.data);
-  
-        const portfolio = response.data; 
-        const stocks = portfolio.stocks || []; 
-
-        if (stocks.length === 0) {
-          console.warn('投資組合中沒有股票');
-        }
-
-        // 顯示解析後的股票代號
-        stocks.forEach(stock => {
-          console.log(`股票代號: ${stock.stock_symbol}, 股票名稱: ${stock.stock_name}`);
-        });
+    axios
+      .get(`${BASE_URL}/investment/default-investment-portfolios/${portfolioId}/`)
+      .then((response) => {
+        const portfolio = response.data;
+        const stocks = portfolio.stocks || [];
 
         setSelectedPortfolio(portfolio);
         setStocks(stocks);
-        setStockOrders(stocks.map(stock => ({
-          symbol: stock.stock_symbol,
-          quantity: stock.quantity || 1,  // 初始化 quantity
-          price: stock.price || 0,        // 初始化 price
-          action: 'Buy',
-        })));        
+        setStockOrders(
+          stocks.map((stock) => ({
+            symbol: stock.stock_symbol,
+            quantity: stock.quantity || 1,
+            price: stock.price || 0,
+            action: 'Buy',
+          }))
+        );
       })
-      .catch(error => {
+      .catch((error) => {
         console.error('無法獲取投資組合股票資料:', error);
         message.error('無法獲取投資組合股票資料');
       });
   };
 
   const handlePlaceOrders = () => {
-    console.log("即將發送的下單資料:", stockOrders);  
-    const token = localStorage.getItem('token'); // 從 localStorage 中獲取 token
+    const token = localStorage.getItem('token');
     if (!token) {
       message.error('尚未登入或缺少驗證 token');
       return;
     }
-  
-    axios.post('http://localhost:8000/api/place-odd-lot-orders/', {
-      stock_symbols: stockOrders.map(order => order.symbol),
-      order_quantities: stockOrders.map(order => order.quantity),
-      order_prices: stockOrders.map(order => order.price),
-      actions: stockOrders.map(order => order.action),  // 默認為 'Buy' 或 'Sell'
-      price_types: stockOrders.map(() => 'LMT'), // 默認為限價單
-      order_types: stockOrders.map(() => 'ROD'), // 默認為ROD
-    },  {
-      headers: {
-        Authorization: `Bearer ${token}` // 將 token 加入到 Authorization headers 中
-      }
-    })
-    .then(response => {
-      console.log("批次下單成功:", response.data);
-    })
-    .catch(error => {
-      console.error("批次下單失敗:", error.response?.data || error.message);
-      message.error('批次下單失敗');
-    });
+
+    setLoading(true); // 開始加載狀態
+
+    axios
+      .post(
+        `${BASE_URL}/api/place-odd-lot-orders/`,
+        {
+          stock_symbols: stockOrders.map((order) => order.symbol),
+          order_quantities: stockOrders.map((order) => order.quantity),
+          order_prices: stockOrders.map((order) => order.price),
+          actions: stockOrders.map((order) => order.action),
+          price_types: stockOrders.map(() => 'LMT'),
+          order_types: stockOrders.map(() => 'ROD'),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+      .then((response) => {
+        message.success('批次下單成功!');
+        navigate('/orderManagement/'); // 跳轉到 /orderManagement/
+      })
+      .catch((error) => {
+        console.error('批次下單失敗:', error.response?.data || error.message);
+        message.error('批次下單失敗');
+      })
+      .finally(() => {
+        setLoading(false); // 結束加載狀態
+      });
   };
-  
 
   // 更新股票的下單數量、價格和操作(買/賣)
   const handleOrderChange = (symbol, field, value) => {
-    setStockOrders(stockOrders.map(order => {
-      if (order.symbol === symbol) {
-        return { ...order, [field]: value };  // 動態更新 `price` 或 `quantity`
-      }
-      return order;
-    }));
+    setStockOrders(
+      stockOrders.map((order) => {
+        if (order.symbol === symbol) {
+          return { ...order, [field]: value };
+        }
+        return order;
+      })
+    );
   };
-  
 
   const columns = [
     {
@@ -129,8 +136,8 @@ const BatchOrderPage = () => {
         <InputNumber
           min={0}
           step={0.01}
-          value={stockOrders.find(order => order.symbol === record.stock_symbol)?.price || 0}  // 從 `stockOrders` 中獲取當前 symbol 的 price 值
-          onChange={(value) => handleOrderChange(record.stock_symbol, 'price', value)}  // 當用戶輸入新值時，觸發狀態更新
+          value={stockOrders.find((order) => order.symbol === record.stock_symbol)?.price || 0}
+          onChange={(value) => handleOrderChange(record.stock_symbol, 'price', value)}
         />
       ),
     },
@@ -140,49 +147,59 @@ const BatchOrderPage = () => {
       key: 'action',
       render: (text, record) => (
         <Select
-          defaultValue="Buy"  // 默認為買單
+          defaultValue="Buy"
           onChange={(value) => handleOrderChange(record.symbol, 'action', value)}
         >
           <Option value="Buy">買</Option>
           <Option value="Sell">賣</Option>
         </Select>
       ),
-    }
+    },
   ];
 
   return (
-    <div>
-      <h2>批次下單零股</h2>
-      <Select
-        placeholder="選擇投資組合"
-        onChange={handlePortfolioChange}
-        style={{ width: '300px', marginBottom: '20px' }}
+    <div className="container kv User" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <div
+        className=" w-50"
+        style={{
+          padding: '20px',
+          backgroundColor: 'rgba(232, 180, 188, 0.85)',
+          borderRadius: '10px',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+        }}
       >
-        {portfolios.map(portfolio => (
-          <Option key={portfolio.id} value={portfolio.id}>
-            {portfolio.name}
-          </Option>
-        ))}
-      </Select>
+        <h2 style={{ fontSize: '25px', textAlign: 'center', marginBottom: '20px' }}>批次下單零股</h2>
+        <Select
+          placeholder="選擇投資組合"
+          onChange={handlePortfolioChange}
+          style={{ width: '100%', marginBottom: '20px' }}
+        >
+          {portfolios.map((portfolio) => (
+            <Option key={portfolio.id} value={portfolio.id}>
+              {portfolio.name}
+            </Option>
+          ))}
+        </Select>
 
-      {stocks.length > 0 && (
-        <Table
-          columns={columns}
-          dataSource={stocks}
-          rowKey="symbol"
-          pagination={false}
-        />
-      )}
+        <div className="" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+          <Table
+            columns={columns}
+            dataSource={stocks.length ? stocks : []}
+            rowKey="symbol"
+            pagination={false}
+          />
+        </div>
 
-      <Button
-        type="primary"
-        onClick={handlePlaceOrders}
-        loading={loading}
-        disabled={stocks.length === 0}
-        style={{ marginTop: '20px' }}
-      >
-        下單
-      </Button>
+        <Button
+          className='button2'
+          onClick={handlePlaceOrders}
+          loading={loading}
+          disabled={stocks.length === 0}
+          style={{ width: '100%', marginTop: '5%' }}
+        >
+          下單
+        </Button>
+      </div>
     </div>
   );
 };
