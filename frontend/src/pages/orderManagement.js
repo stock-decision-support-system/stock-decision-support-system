@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Table, Button, message } from 'antd';
+import { Table, Button, message, Popconfirm } from 'antd';
+import { config } from '../config';
+
+const BASE_URL = config.API_URL
+
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
@@ -25,13 +29,13 @@ const OrderManagement = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     try {
-      const response = await axios.get('http://localhost:8000/api/order-status/', {
+      const response = await axios.get(`${BASE_URL}/api/order-status/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      console.log('訂單資料:', response.data); // 打印訂單資料
+      console.log('訂單資料:', response.data);
 
       if (response.data.status === 'success') {
         const translatedOrders = response.data.data.map(order => {
@@ -39,7 +43,7 @@ const OrderManagement = () => {
             ...order,
             status: {
               ...order.status,
-              status: statusTranslation[order.status.status] || order.status.status,  // 翻譯狀態
+              status: statusTranslation[order.status.status] || order.status.status,
             },
           };
         });
@@ -48,10 +52,10 @@ const OrderManagement = () => {
           message.info('當前沒有活躍的訂單');
         }
 
-        setOrders(translatedOrders); // 設置翻譯後的訂單資料
+        setOrders(translatedOrders);
       } else {
         message.warning(response.data.message || '沒有找到任何訂單');
-        setOrders([]); // 清空訂單列表
+        setOrders([]);
       }
     } catch (error) {
       console.error('無法獲取訂單資料:', error);
@@ -61,12 +65,12 @@ const OrderManagement = () => {
     }
   };
 
-  // 刪單功能
+  // 刪除委託單
   const cancelOrder = async (orderId) => {
     const token = localStorage.getItem('token');
     try {
       const response = await axios.post(
-        'http://localhost:8000/api/cancel-odd-lot-order/',
+        `${BASE_URL}/api/cancel-odd-lot-order/`,
         { order_id: orderId },
         {
           headers: {
@@ -86,30 +90,36 @@ const OrderManagement = () => {
     }
   };
 
+  // 手動刪除紀錄
+  const deleteOrderRecord = (orderId) => {
+    setOrders(orders.filter(order => order.order.id !== orderId));  // 刪除前端的紀錄
+    message.success('紀錄已刪除');
+  };
+
   const columns = [
     {
       title: '訂單ID',
-      dataIndex: ['order', 'id'],  // 對應資料結構中的 order.id
+      dataIndex: ['order', 'id'],
       key: 'id',
     },
     {
       title: '股票代號',
-      dataIndex: ['contract', 'code'],  // 對應資料結構中的 contract.code
+      dataIndex: ['contract', 'code'],
       key: 'stock_symbol',
     },
     {
       title: '下單價格',
-      dataIndex: ['order', 'price'],  // 對應資料結構中的 order.price
+      dataIndex: ['order', 'price'],
       key: 'price',
     },
     {
       title: '下單數量',
-      dataIndex: ['order', 'quantity'],  // 對應資料結構中的 order.quantity
+      dataIndex: ['order', 'quantity'],
       key: 'quantity',
     },
     {
       title: '狀態',
-      dataIndex: ['status', 'status'],  // 對應資料結構中的 status.status
+      dataIndex: ['status', 'status'],
       key: 'status',
     },
     {
@@ -119,6 +129,20 @@ const OrderManagement = () => {
         <Button danger onClick={() => cancelOrder(record.order.id)}>
           刪單
         </Button>
+      ),
+    },
+    {
+      title: '刪除紀錄',
+      key: 'delete_record',
+      render: (text, record) => (
+        <Popconfirm
+          title="確定要刪除此紀錄嗎？"
+          onConfirm={() => deleteOrderRecord(record.order.id)}
+          okText="是"
+          cancelText="否"
+        >
+          <Button danger>刪除紀錄</Button>
+        </Popconfirm>
       ),
     },
   ];

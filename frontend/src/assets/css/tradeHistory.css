@@ -4,31 +4,40 @@
     display: flex;
     flex-direction: row;
     margin-top: 4rem;
-  }
-
-.chart-card {
-    margin-left: 2rem;
-    width: 28%;
 }
 
-.chart-container {
+.history-container-all {
+    flex: 1;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    display: flex;
+    flex-direction: row;
+}
+
+.history-chart-card {
+    margin-left: 2rem;
+    width: 35%;
+}
+
+.history-chart-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
 }
 
-.chart-title {
+.history-chart-title {
     text-align: center;
 }
 
-.chart-pie-container {
+.history-chart-pie-container {
     height: 200px;
     width: 100%;
-    margin-bottom: 10rem; /* 圓餅圖容器的高度和底部間距 */
+    margin-bottom: 10rem;
+    /* 圓餅圖容器的高度和底部間距 */
 }
 
 /* 圓餅圖支出容器，不需要底部間距 */
-.chart-container .chart-pie-container:last-child {
+.history-chart-container .history-chart-pie-container:last-child {
     margin-bottom: 0;
 }

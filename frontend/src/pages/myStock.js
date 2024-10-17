@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Table } from 'antd';
 import axios from 'axios';
+import { config } from '../config';
+
+const BASE_URL = config.API_URL
 
 const MyStocks = () => {
   const [stockData, setStockData] = useState([]);
@@ -11,7 +14,7 @@ const MyStocks = () => {
     const startDate = "2024-05-05";  // 假設默認的開始日期
     const endDate = "2024-10-13";    // 假設默認的結束日期
   
-    axios.get('http://localhost:8000/api/portfolio-status/', {
+    axios.get(`${BASE_URL}/api/portfolio-status/`, {
       headers: {
         Authorization: `Bearer ${token}`,  // 在請求中加入 Token
       },
@@ -81,11 +84,12 @@ const MyStocks = () => {
 
   return (
     <div className='container'>
-      <h1 className="title">我的股票持有狀況與損益</h1>
+      <h1 className="title" style={{marginTop:'-15%'}}>我的股票持有狀況與損益</h1>
       <Table 
         columns={columns} 
         dataSource={stockData} 
-        rowKey="id" 
+        rowKey="id"
+        pagination={{ pageSize: 8 }}  // 每頁顯示 5 筆資料 
       />
     </div>
   );

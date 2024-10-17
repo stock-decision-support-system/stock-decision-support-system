@@ -109,33 +109,35 @@ const TradeHistory = () => {
                 isVisible={isVisible}
                 toggle={toggleVisibility}
             />
-            <AccountingList totalPages={totalPages * 8} isVisible={isVisible} /> {/* 8 是 size */}
-            <Card className="chart-card">
-                <Spin spinning={loading}>
-                    <div className="chart-container">
-                        {incomeData.length > 0 ? (
-                            <>
-                                <Typography.Title level={3} className="chart-title">收入圖表</Typography.Title>
-                                <div className="chart-pie-container">
-                                    <Pie {...incomeConfig} />
-                                </div>
-                            </>
-                        ) : (
-                            <Typography.Text>暫無收入圖表數據</Typography.Text>
-                        )}
-                        {expenseData.length > 0 ? (
-                            <>
-                                <Typography.Title level={3} className="chart-title">支出圖表</Typography.Title>
-                                <div className="chart-pie-container">
-                                    <Pie {...expenseConfig} />
-                                </div>
-                            </>
-                        ) : (
-                            <Typography.Text>暫無支出圖表數據</Typography.Text>
-                        )}
-                    </div>
-                </Spin>
-            </Card>
+            <div className="history-container-all">
+                <AccountingList totalPages={totalPages * 8} isVisible={isVisible} /> {/* 8 是 size */}
+                <Card className="history-chart-card">
+                    <Spin spinning={loading}>
+                        <div className="history-chart-container">
+                            {incomeData.length > 0 ? (
+                                <>
+                                    <Typography.Title level={3} className="history-chart-title">收入圖表</Typography.Title>
+                                    <div className="history-chart-pie-container">
+                                        <Pie {...incomeConfig} />
+                                    </div>
+                                </>
+                            ) : (
+                                <Typography.Text>暫無收入圖表數據</Typography.Text>
+                            )}
+                            {expenseData.length > 0 ? (
+                                <>
+                                    <Typography.Title level={3} className="history-chart-title">支出圖表</Typography.Title>
+                                    <div className="history-chart-pie-container">
+                                        <Pie {...expenseConfig} />
+                                    </div>
+                                </>
+                            ) : (
+                                <Typography.Text>暫無支出圖表數據</Typography.Text>
+                            )}
+                        </div>
+                    </Spin>
+                </Card>
+            </div>
         </div>
     );
 };

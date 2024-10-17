@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Select, Input } from 'antd';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { config } from '../config';
 
 const { Option } = Select;
+const BASE_URL = config.API_URL
 
 const DefaultInvestment = () => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -27,7 +29,7 @@ const DefaultInvestment = () => {
 
   // 取得所有投資組合資料
   useEffect(() => {
-    axios.get('http://localhost:8000/investment/default-investment-portfolios/')
+    axios.get(`${BASE_URL}/investment/default-investment-portfolios/`)
       .then(response => {
         const portfolios = response.data;
         setInvestmentData(portfolios);
@@ -41,21 +43,23 @@ const DefaultInvestment = () => {
   }, []);
 
   // 取得股票選項資料
-  useEffect(() => {
-    axios.get('http://localhost:8000/investment/stocks/')  // 假設這裡是 API 的股票資料端點
-      .then(response => {
-        setStockOptions(response.data);
-      })
-      .catch(error => {
-        console.error('無法獲取股票列表:', error);
-      });
-  }, []);
+// 取得股票選項資料
+useEffect(() => {
+  axios.get(`${BASE_URL}/investment/stocks/`)
+    .then(response => {
+      // console.log('取得的股票選項:', response.data);  // 確認股票選項資料
+      setStockOptions(response.data.data);  // 確保提取的是 data 裡的內容
+    })
+    .catch(error => {
+      console.error('無法獲取股票列表:', error);
+    });
+}, []);
 
   // 計算投資組合的投資門檻
   const calculateThreshold = (portfolioId) => {
     console.log(`計算門檻: 投資組合 ID = ${portfolioId}`);
     
-    axios.get(`http://localhost:8000/investment/calculate-threshold/${portfolioId}/`, {
+    axios.get(`${BASE_URL}/investment/calculate-threshold/${portfolioId}/`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
@@ -92,7 +96,7 @@ const DefaultInvestment = () => {
 
         console.log('即將發送至後端的數據:', newPortfolio);
 
-        axios.post('http://localhost:8000/investment/default-investment-portfolios/', newPortfolio)
+        axios.post(`${BASE_URL}/investment/default-investment-portfolios/`, newPortfolio)
           .then(response => {
             setInvestmentData([...investmentData, response.data]);
             setIsModalOpen(false);
@@ -121,7 +125,7 @@ const DefaultInvestment = () => {
 
     value.forEach(stockSymbol => {
       if (!stockPrices[stockSymbol]) {
-        axios.get(`http://localhost:8000/investment/stocks/${stockSymbol}/price/`)  // 假設這是股票價格的 API
+        axios.get(`${BASE_URL}/investment/stocks/${stockSymbol}/price/`)  // 假設這是股票價格的 API
           .then(response => {
             const price = response.data.price || 0;
             console.log(`Fetched price for ${stockSymbol}: ${price}`);
@@ -177,17 +181,19 @@ const DefaultInvestment = () => {
   ];
 
   return (
-    <div className='container'>
+    <div className='container' style={{marginTop:'8%'}}>
       <h1 className="title">投資組合總覽</h1>
 
       {isAdmin && (
-        <Button type="primary" onClick={handleAddPortfolio} style={{ marginBottom: '20px' }}>
+        <Button type="primary" onClick={handleAddPortfolio} style={{ marginBottom: '20px' }} className='button2'>
           新增預設投資組合
         </Button>
       )}
 
-      <Table columns={columns} dataSource={investmentData} rowKey="id" />
-
+      <div className="table-container">
+        <Table columns={columns} dataSource={investmentData} rowKey="id"  pagination={{ pageSize: 5 }}  // 每頁顯示 5 筆資料
+ />
+      </div>
       <Modal
         title="新增投資組合"
         open={isModalOpen}

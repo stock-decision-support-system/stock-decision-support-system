@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
-import { Modal, Button, Form, Input, DatePicker, message } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Modal, Button, Form, Input, DatePicker, Select, message } from 'antd';
 import { BudgetRequest } from '../api/request/budgetRequest.js';
+import axios from 'axios';
+
+const { Option } = Select;
 
 const BudgetDialog = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [investmentPortfolios, setInvestmentPortfolios] = useState([]); // 儲存投資組合資料
+    const [selectedThreshold, setSelectedThreshold] = useState(''); // 儲存選擇的門檻金額
     const [form] = Form.useForm(); // 使用 Ant Design 的 Form hook
     const token = localStorage.getItem('token');
 
@@ -14,7 +19,21 @@ const BudgetDialog = () => {
     const handleCancel = () => {
         setIsModalVisible(false);
         form.resetFields(); // 清空表單
+        setSelectedThreshold(''); // 重置門檻
     };
+
+    // 從後端 API 獲取所有預設投資組合
+    useEffect(() => {
+        axios.get('http://localhost:8000/investment/default-investment-portfolios/')
+            .then(response => {
+                console.log('獲取到的投資組合資料:', response.data);  // 確認返回的資料
+                setInvestmentPortfolios(response.data);  // 將獲取到的投資組合資料儲存
+            })
+            .catch(error => {
+                console.error('無法獲取投資組合資料:', error);
+                message.error('無法獲取投資組合資料');
+            });
+    }, []);
 
     const handleFormSubmit = async (values) => {
         // 提交表單前的數據處理
@@ -38,6 +57,15 @@ const BudgetDialog = () => {
             .catch((error) => {
                 message.error(error.message);
             });
+    };
+
+    // 當選擇投資組合時，自動填充目標金額
+    const handlePortfolioChange = (portfolioId) => {
+        const selectedPortfolio = investmentPortfolios.find(portfolio => portfolio.id === portfolioId);
+        if (selectedPortfolio) {
+            setSelectedThreshold(selectedPortfolio.investment_threshold); // 更新目標金額
+            form.setFieldsValue({ target: selectedPortfolio.investment_threshold }); // 設定表單中的目標金額
+        }
     };
 
     return (
@@ -75,13 +103,21 @@ const BudgetDialog = () => {
                     layout="vertical"
                     onFinish={handleFormSubmit}
                 >
+                    {/* 目標下拉選單 */}
                     <Form.Item
                         name="name"
                         label="目標"
-                        rules={[{ required: true, message: '請輸入目標名稱！' }]}
+                        rules={[{ required: true, message: '請選擇一個目標！' }]}
                     >
-                        <Input placeholder="目標" />
+                        <Select placeholder="選擇一個預設投資組合" onChange={handlePortfolioChange}>
+                            {investmentPortfolios.map(portfolio => (
+                                <Option key={portfolio.id} value={portfolio.id}>
+                                    {portfolio.name}
+                                </Option>
+                            ))}
+                        </Select>
                     </Form.Item>
+
                     <Form.Item
                         name="start_date"
                         label="起始日"
@@ -98,12 +134,13 @@ const BudgetDialog = () => {
                         <DatePicker format="YYYY-MM-DD" onChange={(date) => form.setFieldsValue({ 'end_date': date })} />
                     </Form.Item>
 
+                    {/* 目標金額 */}
                     <Form.Item
                         name="target"
                         label="目標金額"
-                        rules={[{ required: true, message: '請輸入目標金額' }]}
+                        rules={[{ required: true, message: '目標金額必填' }]}
                     >
-                        <Input type="number" placeholder="輸入目標金額" />
+                        <Input type="number" placeholder="目標金額" value={selectedThreshold} readOnly />
                     </Form.Item>
 
                     <Form.Item>

@@ -520,6 +520,8 @@ def cancel_odd_lot_order(request):
 @permission_classes([IsAuthenticated])
 def place_odd_lot_orders(request):
     try:
+        print("收到的請求資料: ", request.data)
+
         # 使用當前登錄的用戶進行操作
         user = request.user
         # user = '11046003'
@@ -532,6 +534,11 @@ def place_odd_lot_orders(request):
         actions = request.data.get("actions", [sj.constant.Action.Buy] * len(stock_symbols))  # 默認為買單
         price_types = request.data.get("price_types", [sj.constant.StockPriceType.LMT] * len(stock_symbols))  # 默認為限價單
         order_types = request.data.get("order_types", [sj.constant.OrderType.ROD] * len(stock_symbols)) # 默認為ROD
+
+        print("股票代號: ", stock_symbols)
+        print("下單股數: ", order_quantities)
+        print("下單價格: ", order_prices)
+        print("操作行為: ", actions)
 
 
         # 檢查參數是否一致
@@ -552,8 +559,13 @@ def place_odd_lot_orders(request):
             price_type = price_types[i]
             order_type = order_types[i]
 
-            # 構建股票合約
-            contract = api.Contracts.Stocks.TSE[stock_symbol]
+            # 檢查該股票代號是否存在於 API 合約中
+            contract = api.Contracts.Stocks.TSE.get(stock_symbol)
+            if contract is None:
+                return JsonResponse({
+                    "status": "error",
+                    "message": f"無效的股票代號: {stock_symbol}"
+                }, status=400)
 
             # 構建零股下單委託
             order = api.Order(

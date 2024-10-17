@@ -898,7 +898,6 @@ def assets_change_chart(request):
         end_date = datetime.now()
         start_date = end_date - timedelta(days=6)  # 前七天
     else:
-        # 如果提供了日期，則解析它們
         try:
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
@@ -927,7 +926,10 @@ def assets_change_chart(request):
     # 準備標籤和數據
     labels = []
     data = []
-
+    
+    # 計算前一日的累積總資產
+    cumulative_assets = Decimal(0)
+    cumulative_net_assets = Decimal(0)
     # 根據不同的日期範圍選擇按日、月或年分組
     if date_difference <= 30 * 4:  # 30天 * 4 = 120天
         # 按日分組
@@ -958,15 +960,19 @@ def assets_change_chart(request):
                 daily_records[date_key]["total_expense"] += record.amount
 
         labels = list(daily_records.keys())
-        data = [{
-            "date":
-            label,
-            "total_assets":
-            daily_records[label]["total_income"],
-            "net_assets":
-            daily_records[label]["total_income"] -
-            daily_records[label]["total_expense"],
-        } for label in labels]
+        for label in labels:
+            total_income = daily_records[label]["total_income"]
+            total_expense = daily_records[label]["total_expense"]
+
+            # 累加前一天的總資產，計算當天總資產變動
+            cumulative_assets += total_income
+            cumulative_net_assets += total_income - total_expense  # 收入 - 支出
+            
+            data.append({
+                "date": label,
+                "total_assets": cumulative_assets,  # 當天的總資產 = 累加後的結果
+                "net_assets": cumulative_net_assets,  # 當天的淨資產（收入減去支出）
+            })
 
     elif date_difference <= 30 * 23:  # 30天 * 23 = 690天
         # 按月分組
@@ -990,15 +996,19 @@ def assets_change_chart(request):
                 monthly_records[month_key]["total_expense"] += record.amount
 
         labels = list(monthly_records.keys())
-        data = [{
-            "date":
-            label,
-            "total_assets":
-            monthly_records[label]["total_income"],
-            "net_assets":
-            monthly_records[label]["total_income"] -
-            monthly_records[label]["total_expense"],
-        } for label in labels]
+        for label in labels:
+            total_income = monthly_records[label]["total_income"]
+            total_expense = monthly_records[label]["total_expense"]
+
+            # 累加前一個月的總資產，計算當月總資產變動
+            cumulative_assets += total_income
+            cumulative_net_assets += total_income - total_expense  # 收入 - 支出
+
+            data.append({
+                "date": label,
+                "total_assets": cumulative_assets,  # 當月的總資產 = 累加後的結果
+                "net_assets": cumulative_net_assets,  # 當月的淨資產（收入減去支出）
+            })
 
     else:
         # 按年分組
@@ -1022,15 +1032,19 @@ def assets_change_chart(request):
                 yearly_records[year_key]["total_expense"] += record.amount
 
         labels = list(yearly_records.keys())
-        data = [{
-            "date":
-            label,
-            "total_assets":
-            yearly_records[label]["total_income"],
-            "net_assets":
-            yearly_records[label]["total_income"] -
-            yearly_records[label]["total_expense"],
-        } for label in labels]
+        for label in labels:
+            total_income = yearly_records[label]["total_income"]
+            total_expense = yearly_records[label]["total_expense"]
+
+            # 累加前一年的總資產，計算當年總資產變動
+            cumulative_assets += total_income
+            cumulative_net_assets += total_income - total_expense  # 收入 - 支出
+
+            data.append({
+                "date": label,
+                "total_assets": cumulative_assets,  # 當年的總資產 = 累加後的結果
+                "net_assets": cumulative_net_assets,  # 當年的淨資產（收入減去支出）
+            })
 
     return Response(
         {
@@ -1039,6 +1053,7 @@ def assets_change_chart(request):
         },
         status=status.HTTP_200_OK,
     )
+
 
 
 class FinancialAnalysisView(APIView):

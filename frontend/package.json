@@ -5,6 +5,7 @@
   "dependencies": {
     "@ant-design/charts": "^1.4.3",
     "@ant-design/icons": "^5.3.7",
+    "@pdf-lib/fontkit": "^1.1.1",
     "@popperjs/core": "^2.11.8",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -15,8 +16,11 @@
     "emoji-picker-react": "^4.12.0",
     "flatpickr": "^4.6.13",
     "font-awesome": "^4.7.0",
+    "html2canvas": "^1.4.1",
     "jquery": "^3.7.1",
+    "jspdf": "^2.5.2",
     "ml-matrix": "^6.10.2",
+    "pdf-lib": "^1.17.1",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.5",
     "react-dom": "^18.2.0",
@@ -25,6 +29,7 @@
     "react-infinite-scroll-component": "^6.1.0",
     "react-router-dom": "^6.23.0",
     "react-scripts": "^3.4.4",
+    "react-signature-canvas": "^1.0.6",
     "recharts": "^2.12.7",
     "web-vitals": "^2.1.4"
   },

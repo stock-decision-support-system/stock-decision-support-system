@@ -141,7 +141,7 @@ logger = logging.getLogger(__name__)  # 創建日誌記錄器
 
 
 def verify_recaptcha(token):
-    """用于验证前端传递的 reCAPTCHA token 的函数"""
+    """用於驗證前端傳遞的 reCAPTCHA token 的函數"""
     secret_key = "6LdmwcgpAAAAAFkprWdUSzzAZ8dE-1obmzqLK3Nf"  # 您的 reCAPTCHA 密鑰
     data = {"secret": secret_key, "response": token}  # 準備要發送的數據
     r = requests.post(
