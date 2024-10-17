@@ -1043,7 +1043,6 @@ def assets_change_chart(request):
 
 class FinancialAnalysisView(APIView):
     # permission_classes = [IsAuthenticated]
-
     def get(self, request):
         user = request.user  # 獲取當前登入者
 
@@ -1114,7 +1113,7 @@ class FinancialAnalysisView(APIView):
                             "role": "system",
                             "content": "你是一個精通財務管理的專家，能夠給出適用於學生的理財及儲蓄建議，如果支出超過收入請教我怎麼儲蓄，"
                                        "如果收入超過支出請給我投資建議並且要適合投資新手像是學生的低風險投資策略，"
-                                       "低風險投資策略也請給我台股方面的，可以的話給我股票代號和標的名稱。",
+                                       "低風險投資策略也請給我台股方面的市值型和ETF，然後給我股票代號和標的名稱最多五個。",
                         },
                         {
                             "role": "user",
