@@ -179,7 +179,7 @@ def accounting_list_for_user(request):
             # 更新對應的 Budget 金額
             try:
                 budget = Budget.objects.get(username=user, available=True)
-                if accounting_record.transactionDate >= budget.start_date:  #判斷accounting_record.transactionDate是否在budget.start_date後
+                if request.data.transactionDate >= budget.start_date.date():  #判斷accounting_record.transactionDate是否在budget.start_date後
                     if accounting_record.assetType == '0':
                         budget.current += accounting_record.amount  # 更新金額
                     else:

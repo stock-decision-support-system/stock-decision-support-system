@@ -375,3 +375,35 @@ class TwoFactorAuthRecord(models.Model):
 
     class Meta:
         db_table = 'two_factor_auth_record'  # 在資料庫中的表名
+        
+# 個人資料運用告知同意書
+class BankConsentForm(models.Model):
+    id = models.AutoField(primary_key=True)  # 自動生成的主鍵
+    username = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        to_field="username",  # 使用 CustomUser 的 username 字段
+        related_name="bankconsentform_username"  # 為反向關聯設置一個唯一名稱
+    )
+    form_path = models.FileField(
+        upload_to="consent_form/",  # 個人資料運用告知同意書的路徑
+        max_length=250,
+        null=True,  # 允許欄位為 null
+    )
+    create_date = models.DateTimeField(auto_now_add=True)  # 填寫日期，自動生成
+    review = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        to_field="username",  # 使用 CustomUser 的 username 字段
+        db_column="review",  # 在資料庫中的列名
+        null=True,  # 允許資料庫欄位為 null
+        related_name="bankconsentform_review"  # 為反向關聯設置一個唯一名稱
+    )
+    available = models.BooleanField(default=False)  # 是否有效
+
+    def save(self, *args, **kwargs):
+        super(BankConsentForm, self).save(*args, **kwargs)  # 調用父類的save方法
+
+    class Meta:
+        db_table = 'bank_consent_form'  # 在資料庫中的表名
+

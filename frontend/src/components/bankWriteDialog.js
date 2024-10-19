@@ -7,9 +7,10 @@ import acceptForm from '../assets/pdf/acceptForm.pdf'; // 引入你的現有 PDF
 import fontkit from '@pdf-lib/fontkit'; // 引入 fontkit
 import { Button, Input, Checkbox, Card, Form } from 'antd';
 import { Document, Page, pdfjs } from 'react-pdf';
+
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`;
 
-function TestPage() {
+function BankWriteDialog() {
     const sigCanvas = useRef({});
     const guardianSigCanvas = useRef({});
     const [isAdult, setIsAdult] = useState(false); // 是否滿18歲
@@ -212,4 +213,4 @@ function TestPage() {
     );
 }
 
-export default TestPage;
+export default BankWriteDialog;
