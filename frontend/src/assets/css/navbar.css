@@ -34,20 +34,26 @@ body {
   content: '';
   position: absolute;
   width: 0;
-  height: 2px; /* 底線的高度 */
-  background-color: #E8B4BC; /* 底線顏色與字體顏色相同 */
-  bottom: -5px; /* 底線與文字的間距 */
+  height: 2px;
+  /* 底線的高度 */
+  background-color: #E8B4BC;
+  /* 底線顏色與字體顏色相同 */
+  bottom: -5px;
+  /* 底線與文字的間距 */
   left: 0;
-  transition: width 0.3s ease-in-out; /* 添加動畫效果 */
+  transition: width 0.3s ease-in-out;
+  /* 添加動畫效果 */
 }
 
 .navbar-nav .nav-item .nav-link:not(.no-underline):hover::after {
-  width: 100%; /* 滑鼠懸停時底線延伸到整個元素寬度 */
+  width: 100%;
+  /* 滑鼠懸停時底線延伸到整個元素寬度 */
 }
 
 /* 懸停時字體顏色變化 */
 .navbar-nav .nav-item .nav-link:hover {
-  color: #E8B4BC !important; /* 更改懸停時的字體顏色 */
+  color: #E8B4BC !important;
+  /* 更改懸停時的字體顏色 */
 }
 
 /* 帳號相關項目不帶底線動畫 */
@@ -116,4 +122,46 @@ body {
   /* 設置為與input相同的背景顏色 */
   border-right: 0;
   /* 移除圖標包裹span右側的邊框 */
+}
+
+/* 手機響應式處理 */
+@media (max-width: 768px) {
+  .navbar {
+    display: none;
+    /* 隱藏原本的 navbar */
+  }
+
+  .bottom-nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    border-top: 1px solid #ccc;
+    height: 60px;
+    z-index: 1000;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  .bottom-nav a {
+    flex-grow: 1;
+    text-align: center;
+    padding: 5px 0;
+    font-size: 14px;
+    color: #333;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  .bottom-nav a:hover {
+    color: #007bff;
+  }
+
+  .bottom-nav a i {
+    font-size: 24px;
+    margin-bottom: 2px;
+  }
 }

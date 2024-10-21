@@ -26,7 +26,11 @@ const App = () => {
   };
 
   const handleClick = () => {
-    navigate('#');
+    if (token) {
+      navigate('#');
+    } else {
+      navigate('/login');
+    }
   };
 
   useEffect(() => {
@@ -92,7 +96,7 @@ const App = () => {
             <h6>為您開啟一段輕鬆掌控財務的旅程</h6>
           </div>
           <button className="mt-4 px-5 py-3 button" type="button" onClick={handleClick}>
-            使用教學
+            {token ? '使用教學' : '開始使用'}
           </button>
         </div>
         {token ? (

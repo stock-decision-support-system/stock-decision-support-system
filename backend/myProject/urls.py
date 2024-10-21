@@ -83,7 +83,9 @@ urlpatterns = [
     path('bank-profile/delete/<int:id>/', views.delete_bank_profile, name='delete-bank-profile'),
     path('bank-profile/list/', views.get_bank_profile_list, name='get-bank-profile-list'),
     path('bank-profile/get/<int:id>/', views.get_bank_profile, name='get-bank-profile'),
-    
+    path('bank-profile/upload/', views.uploadPDF, name='uploadPDF'),
+    path('bank-profile/check/', views.check_upload_status, name='check-upload-status'),
+
     # 股票查詢
     path('stock/get/<str:id>/', stockViews.get_stock_detail, name='get-stock-detail'),
     path('stock/kbar/<str:id>/', stockViews.get_kbars, name='get-kbar'),

@@ -52,11 +52,20 @@
         opacity: 1;
     }
 
+    .menuButton {
+        position: fixed;
+        /* 固定在畫面上，不隨滾動移動 */
+        top: 1rem;
+        left: 1rem;
+        z-index: 1000;
+        transition: all 0.3s ease;
+    }
+
     .menuButton.hidden {
         height: '50px';
         width: '50px';
     }
-    
+
     .menuButton.visible {
         height: '50px';
         width: '50px';

@@ -4,6 +4,8 @@ import { LoadingOutlined } from '@ant-design/icons';
 import VirtualList from 'rc-virtual-list';
 import BankDialog from '../components/bankDialog';
 import { BankProfileRequest } from '../api/request/bankProfileRequest.js';
+import BankWriteDialog from '../components/bankWriteDialog';
+import { useNavigate } from 'react-router-dom'; // 使用 useNavigate 來進行跳轉
 
 const AddBankForm = () => {
     const [banks, setBanks] = useState([]);
@@ -11,10 +13,30 @@ const AddBankForm = () => {
     const [initialData, setInitialData] = useState(null);
     const [isDialogVisible, setIsDialogVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isWriteVisible, setIsWriteVisible] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
+        fetchCheck();
         fetchBankProfiles();
     }, []);
+
+    const fetchCheck = () => {
+        BankProfileRequest.checkUploadStatus()
+            .then(response => {
+                if (response.data.status === "0") {
+                    alert("同意書還在審核中，請等待審核通過後再進行操作");
+                    navigate('/');
+                } else if (response.data.status === "1") {
+                } else if (response.data.status === "2") {
+                    alert("請簽署同意書才能繼續進行");
+                    setIsWriteVisible(true)
+                }
+            })
+            .catch((error) => {
+                alert(error.message);
+            });
+    };
 
     const fetchBankProfiles = async () => {
         setIsLoading(true);
@@ -30,8 +52,6 @@ const AddBankForm = () => {
             setIsLoading(false);
         }
     };
-
-
 
     const handleAddClick = () => {
         setIsEdit(false);
@@ -131,6 +151,9 @@ const AddBankForm = () => {
                     initialData={initialData}
                     onClose={handleDialogClose}
                 />
+            )}
+            {isWriteVisible && (
+                <BankWriteDialog />
             )}
         </div>
     );

@@ -47,13 +47,11 @@
     width: 100%;
     display: flex;
     flex-direction: row;
-    margin-top: 4rem;
+    margin: 1rem;
   }
 
   .generalreport-container-all {
     flex: 1;
-    margin-left: 1rem;
-    margin-right: 1rem;
     display: flex;
     flex-direction: column;
   }

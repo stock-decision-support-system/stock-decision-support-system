@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate, login, logout
 from ..models import (
     APICredentials,
     AccountType,
+    BankConsentForm,
     CustomUser,
     TwoFactorAuthRecord,
 )
@@ -833,6 +834,65 @@ app = Flask(__name__)
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
+@api_view(["POST"])  # 只允許 POST 方法
+@permission_classes([IsAuthenticated])  # 需要身份驗證
+def uploadPDF(request):
+    # 確保已經有上傳的文件
+    if 'pdfFile' not in request.FILES:
+        return Response(
+            {"status": "error", "message": "同意書上傳失敗"},  # 回傳錯誤響應
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    pdf_file = request.FILES['pdfFile']
+    username = request.user  # 假設用戶已經通過身份驗證
+
+    # 儲存檔案的路徑
+    form_instance = BankConsentForm.objects.create(
+        form_path=pdf_file,
+        username=username
+    )
+
+    # 儲存完後，回傳成功訊息
+    return Response(
+        {"status": "success", "message": "同意書上傳成功"},
+        status=status.HTTP_201_CREATED,  # 返回201狀態表示創建成功
+    )
+
+@api_view(["GET"])  # 只允許 GET 方法
+@permission_classes([IsAuthenticated])  # 需要身份驗證
+def check_upload_status(request):
+    # 確認用戶是否已通過身份驗證
+    username = request.user  # 假設用戶已經通過身份驗證
+
+    try:
+        # 根據用戶名查詢該用戶的同意書
+        form_instance = BankConsentForm.objects.get(username=username)
+
+         # 根據 `available` 欄位的值判斷同意書的狀態
+        if form_instance.available == 0:
+            return Response(
+                {"status": "success", "message": "同意書還在審核中", "data":{ "status": "0" }},
+                status=status.HTTP_200_OK
+            )
+        elif form_instance.available == 1:
+            return Response(
+                {"status": "success", "message": "同意書審核成功", "data":{ "status": "1" }},
+                status=status.HTTP_200_OK
+            )
+
+    except BankConsentForm.DoesNotExist:
+        # 如果找不到同意書資料，表示該用戶還未上傳
+        return Response(
+            {"status": "success", "message": "用戶未上傳過同意書", "data":{ "status": "2" }},
+            status=status.HTTP_200_OK
+        )
+
+    return Response(
+        {"status": "error", "message": "未知錯誤"},
+        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+    )
 
 
 # 處理 reCAPTCHA 驗證的路由
