@@ -144,7 +144,7 @@ const BudgetDialog = () => {
                     </Form.Item>
 
                     <Form.Item>
-                        <Button type="primary" htmlType="submit">
+                        <Button className='button2 float-end' type="primary" htmlType="submit">
                             提交
                         </Button>
                     </Form.Item>
