@@ -24,16 +24,18 @@ const BudgetDialog = () => {
 
     // 從後端 API 獲取所有預設投資組合
     useEffect(() => {
-        axios.get('http://localhost:8000/investment/default-investment-portfolios/')
-            .then(response => {
-                console.log('獲取到的投資組合資料:', response.data);  // 確認返回的資料
-                setInvestmentPortfolios(response.data);  // 將獲取到的投資組合資料儲存
-            })
-            .catch(error => {
-                console.error('無法獲取投資組合資料:', error);
-                message.error('無法獲取投資組合資料');
-            });
-    }, []);
+        if (isModalVisible) {
+            axios.get('http://localhost:8000/investment/default-investment-portfolios/')
+                .then(response => {
+                    console.log('獲取到的投資組合資料:', response.data);  // 確認返回的資料
+                    setInvestmentPortfolios(response.data);  // 將獲取到的投資組合資料儲存
+                })
+                .catch(error => {
+                    console.error('無法獲取投資組合資料:', error);
+                    message.error('無法獲取投資組合資料');
+                });
+        }
+    }, [isModalVisible]);
 
     const handleFormSubmit = async (values) => {
         // 提交表單前的數據處理

@@ -144,10 +144,31 @@ class DefaultStockListSerializer(serializers.ModelSerializer):
         fields = ['stock_symbol', 'stock_name', 'quantity']
 
 class DefaultInvestmentPortfolioSerializer(serializers.ModelSerializer):
-    stocks = DefaultStockListSerializer(many=True, read_only=True)
+    stocks = DefaultStockListSerializer(many=True, required=False)
 
     class Meta:
         model = DefaultInvestmentPortfolio
-        fields = ['id', 'name', 'investment_threshold', 'stocks']  # 加入 stocks
+        fields = ['id', 'name', 'investment_threshold', 'stocks']
+
+    def create(self, validated_data):
+        stocks_data = validated_data.pop('stocks', [])
+        portfolio = DefaultInvestmentPortfolio.objects.create(**validated_data)
+        for stock_data in stocks_data:
+            DefaultStockList.objects.create(default_investment_portfolio=portfolio, **stock_data)
+        return portfolio
+
+    def update(self, instance, validated_data):
+        stocks_data = validated_data.pop('stocks', [])
+        instance.name = validated_data.get('name', instance.name)
+        instance.investment_threshold = validated_data.get('investment_threshold', instance.investment_threshold)
+        instance.save()
+
+        # Clear existing stocks and add the new ones
+        instance.stocks.all().delete()
+        for stock_data in stocks_data:
+            DefaultStockList.objects.create(default_investment_portfolio=instance, **stock_data)
+
+        return instance
+
 
 

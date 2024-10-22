@@ -22,6 +22,7 @@ from rest_framework.decorators import (
     authentication_classes,
     permission_classes,
 )
+from django.db import transaction
 import pandas as pd
 
 # 設置日誌
@@ -978,60 +979,131 @@ def get_tw_stocks(request):
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
+    
+def fetch_stock_price(symbol):
+    # 清空之前的價格
+    global last_price
+    last_price = None
 
-#抓預設投資組合資料
-@api_view(['GET', 'POST'])
+    # 查詢即時行情合約
+    contract = api.Contracts.Stocks.get(symbol)
+    if not contract:
+        return None, "無法找到指定股票合約"
+
+    # 股票名稱從合約中提取
+    stock_name = contract.name
+
+    # 訂閱即時行情
+    api.quote.subscribe(
+        contract,
+        quote_type=sj.constant.QuoteType.Tick,
+        version=sj.constant.QuoteVersion.v1,
+    )
+
+    # 嘗試獲取收盤價作為備用
+    if last_price is None:
+        snap = api.snapshots([contract])
+        last_price = snap[0].close if snap else None
+
+    # 取消訂閱
+    api.quote.unsubscribe(contract, quote_type=sj.constant.QuoteType.Tick)
+
+    if last_price is not None:
+        return last_price, None
+    else:
+        return None, "未能獲取即時價格或收盤價"
+
+
+@api_view(['GET', 'POST', 'PUT'])
 def default_investment_portfolios(request):
     if request.method == 'GET':
         try:
-            # 查詢所有投資組合
             portfolios = DefaultInvestmentPortfolio.objects.all()
+            for portfolio in portfolios:
+                investment_threshold = 0
+                stocks = portfolio.stocks.all()
+                for stock in stocks:
+                    price, error = fetch_stock_price(stock.stock_symbol)
+                    if price:
+                        investment_threshold += price * stock.quantity
+                    else:
+                        print(f"Error fetching price for {stock.stock_symbol}: {error}")
+                if not stocks.exists():
+                    investment_threshold = 100
+                portfolio.investment_threshold = investment_threshold
+                portfolio.save()
             serializer = DefaultInvestmentPortfolioSerializer(portfolios, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    elif request.method == 'POST':
-        print(request.data)  # 用於檢查接收到的數據
+    elif request.method in ['POST', 'PUT']:
+        serializer = DefaultInvestmentPortfolioSerializer(data=request.data)
+        if serializer.is_valid():
+            with transaction.atomic():
+                portfolio = serializer.save()
+                investment_threshold = 0
+                for stock_data in request.data.get('stocks', []):
+                    stock_symbol = stock_data['stock_symbol']
+                    quantity = stock_data.get('quantity', 1)
+                    price, error = fetch_stock_price(stock_symbol)
+                    if price:
+                        investment_threshold += price * quantity
+                    else:
+                        print(f"Error fetching price for {stock_symbol}: {error}")
 
-        if 'name' not in request.data or 'investment_threshold' not in request.data:
-            return Response({'error': '缺少必要參數'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # 根據投資組合名稱更新或創建投資門檻
-        portfolio_name = request.data.get('name')
-        investment_threshold = request.data.get('investment_threshold')
-
-        try:
-            portfolio, created = DefaultInvestmentPortfolio.objects.get_or_create(
-                name=portfolio_name,  # 根據名稱查詢或創建
-                defaults={'investment_threshold': investment_threshold}
-            )
-
-            if not created:
-                # 如果已存在，則更新門檻
                 portfolio.investment_threshold = investment_threshold
                 portfolio.save()
 
-            # 如果請求中還有 'stocks'，那麼處理投資組合中的股票
-            if 'stocks' in request.data:
-                for stock_data in request.data['stocks']:
-                    # 根據股票代碼和投資組合關聯，創建或更新股票
-                    stock, stock_created = DefaultStockList.objects.get_or_create(
-                        stock_symbol=stock_data['stock_symbol'],
-                        default_investment_portfolio=portfolio,
-                        defaults={'stock_name': stock_data.get('stock_name', '')}
-                    )
-                    # 可以選擇更新股票名稱
-                    if not stock_created:
-                        stock.stock_name = stock_data.get('stock_name', '')
-                        stock.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED if request.method == 'POST' else status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
 
-            serializer = DefaultInvestmentPortfolioSerializer(portfolio)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+#刪除預設投資組合        
+@api_view(['DELETE'])
+def delete_investment_portfolio(request, portfolio_id):
+    try:
+        portfolio = DefaultInvestmentPortfolio.objects.get(id=portfolio_id)
+        portfolio.delete()  # 刪除投資組合
+        return Response({'message': '投資組合已成功刪除'}, status=status.HTTP_200_OK)
+    except DefaultInvestmentPortfolio.DoesNotExist:
+        return Response({'error': '找不到該投資組合'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+#修改預設投資組合    
+@api_view(['GET', 'PUT'])
+def update_investment_portfolio(request, portfolio_id):
+    try:
+        # 確保該投資組合存在
+        portfolio = DefaultInvestmentPortfolio.objects.get(id=portfolio_id)
+
+        # 更新投資組合名稱
+        portfolio.name = request.data.get('name', portfolio.name)
+        portfolio.save()
+
+        # 處理股票更新
+        stocks_data = request.data.get('stocks', [])
         
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        # 刪除現有的所有股票並重新添加（可以改成更靈活的更新邏輯）
+        DefaultStockList.objects.filter(default_investment_portfolio=portfolio).delete()
 
+        for stock_data in stocks_data:
+            DefaultStockList.objects.create(
+                default_investment_portfolio=portfolio,
+                stock_symbol=stock_data['stock_symbol'],
+                stock_name=stock_data.get('stock_name', ''),
+                quantity=stock_data['quantity']
+            )
+
+        return Response({'message': '投資組合已更新'}, status=status.HTTP_200_OK)
+    except DefaultInvestmentPortfolio.DoesNotExist:
+        return Response({'error': '找不到該投資組合'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+#抓取預設投資股票細節
 @api_view(['GET'])
 def get_portfolio_detaila(request, portfolio_id):
     logger.info(f"Request received for portfolio ID: {portfolio_id}")
@@ -1142,7 +1214,6 @@ def tick_callback(exchange, tick):
 api.quote.set_on_tick_fop_v1_callback(tick_callback)
 
 
-# 獲取指定股票即時價格
 @api_view(["GET"])
 def get_stock_price(request, symbol):
     global last_price
@@ -1178,6 +1249,10 @@ def get_stock_price(request, symbol):
                 "name": stock_name,
                 "price": last_price,
             }
+
+            # 取消訂閱
+            api.quote.unsubscribe(contract, quote_type=sj.constant.QuoteType.Tick)
+
             return JsonResponse({
                 "status": "success",
                 "data": response_data
@@ -1189,11 +1264,17 @@ def get_stock_price(request, symbol):
 
     except Exception as e:
         logger.error(f"Error fetching stock price for {symbol}: {str(e)}")
+
+        # 確保在異常情況下也取消訂閱
+        if contract:
+            api.quote.unsubscribe(contract, quote_type=sj.constant.QuoteType.Tick)
+
         return JsonResponse({
             "status": "error",
             "message": str(e)
         },
                             status=status.HTTP_400_BAD_REQUEST)
+
 
 
 # 獲取當前用戶的所有投資組合
@@ -1277,6 +1358,53 @@ def create_portfolio(request):
         "message": serializer.errors
     },
                     status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_portfolio(request, portfolio_id):
+    try:
+        # 獲取投資組合並確認是否屬於當前用戶
+        portfolio = InvestmentPortfolio.objects.get(id=portfolio_id, user=request.user)
+
+        # 更新投資組合的名稱和描述
+        portfolio.name = request.data.get('name', portfolio.name)
+        portfolio.description = request.data.get('description', portfolio.description)
+        portfolio.save()
+
+        # 刪除現有的投資項目
+        portfolio.investments.all().delete()
+
+        # 新增或更新投資組合中的股票
+        investments = request.data.get('investments', [])
+        for stock_data in investments:
+            Investment.objects.create(
+                portfolio=portfolio,
+                symbol=stock_data['symbol'],
+                shares=stock_data['shares'],
+                buy_price=stock_data['buy_price'],
+            )
+
+        # 構建返回的投資組合數據，包括已更新的內容
+        portfolio_data = {
+            "id": portfolio.id,
+            "name": portfolio.name,
+            "description": portfolio.description,
+            "investments": [
+                {
+                    "symbol": investment.symbol,
+                    "shares": investment.shares,
+                    "buy_price": investment.buy_price
+                }
+                for investment in portfolio.investments.all()
+            ]
+        }
+
+        return Response({"status": "success", "data": portfolio_data}, status=status.HTTP_200_OK)
+    
+    except InvestmentPortfolio.DoesNotExist:
+        return Response({"error": "未找到投資組合"}, status=status.HTTP_404_NOT_FOUND)
+
+
 
 
 
