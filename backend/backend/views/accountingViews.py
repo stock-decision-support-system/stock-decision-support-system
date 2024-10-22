@@ -759,6 +759,10 @@ def budget_operations(request, id=None):
             budget.available = False
             budget.save()  # 保存更新
 
+        if timezone.now().date() > budget.end_date:
+            budget.available = False  # 設為不再可用
+            budget.save()  # 保存更新
+
         # 將 budget 的屬性轉換為字典
         data = {
             "id": budget.id,
@@ -795,6 +799,16 @@ def budget_operations(request, id=None):
         if end_date is None:
             # 設置 end_date 為今天 + 30 天
             data["end_date"] = timezone.now() + timedelta(days=30)
+        else:
+            # 檢查 end_date 是否小於今天
+            if timezone.now().date() > end_date:
+                return Response(
+                    {
+                        "status": "error",
+                        "message": "結束日不能小於今天"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         # 創建新的儲蓄目標
         serializer = BudgetSerializer(data=data,
                                       context={"request":

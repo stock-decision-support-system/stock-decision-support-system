@@ -132,10 +132,12 @@ function BankWriteDialog() {
 
         const pdfBytes = await pdfDoc.save();
 
+        const username = localStorage.getItem('username');
+
         // 創建 FormData 並將 PDF 檔案加入
         const formData = new FormData();
         const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
-        formData.append('pdfFile', pdfBlob, 'signed_document.pdf');
+        formData.append('pdfFile', pdfBlob, `${username}.pdf`);
 
         if (!isAgree) {
             alert("請詳閱後勾選我同意");

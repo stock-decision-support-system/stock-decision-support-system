@@ -19,6 +19,13 @@ export class FetchUtil {
       .then(this.handleResponse);
   }
 
+  static async getNoTokenAPI(url, data) {
+    const requestOptions = {
+      method: GET,
+    };
+    return await this.getPromise(url, requestOptions, data);
+  }
+
   static async getAPI(url, data) {
     const requestOptions = {
       method: GET,

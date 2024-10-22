@@ -94,7 +94,7 @@ const BankDialog = ({ isEdit, initialData, onClose }) => {
         open={isModalOpen}
         onCancel={handleCancel}
         footer={[
-          <Button key="submit" type="primary" onClick={handleOk}>
+          <Button className='button2' key="submit" type="primary" onClick={handleOk}>
             確定
           </Button>,
         ]}

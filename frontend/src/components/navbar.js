@@ -106,7 +106,9 @@ const Navbar = () => {
   );
 
   const handleNavigation = (path) => {
-    if (!username) {
+    if (path == '/stockList') {
+      navigate(path);
+    } else if (!username) {
       alert('請先登入以繼續訪問該頁面。');
       navigate('/login');
     } else {
@@ -150,45 +152,46 @@ const Navbar = () => {
                   股市
                 </a>
               </li>
-              <li className="nav-item">
-                <a
-                  className="nav-link me-5 justify-content-center d-flex align-items-center"
-                  aria-current="page"
-                  onClick={() => handleNavigation('/accounting')}
-                  style={{ height: '37px', cursor: 'pointer' }}
-                >
-                  記帳
-                </a>
-              </li>
-              <li className="nav-item">
-                <a
-                  className="nav-link me-5 justify-content-center d-flex align-items-center"
-                  onClick={() => handleNavigation('/generalreport')}
-                  style={{ height: '37px', cursor: 'pointer' }}
-                >
-                  報表
-                </a>
-              </li>
-              <li className="nav-item">
-                <Dropdown overlay={myStockMenu} placement="bottom">
-                  <a
-                    className="nav-link justify-content-center d-flex align-items-center"
-                    style={{ height: '37px', marginRight: '25px', cursor: 'pointer' }}
-                  >
-                    我的股票
-                  </a>
-                </Dropdown>
-              </li>
-              <li className="nav-item">
-                <Dropdown overlay={investmentMenu} placement="bottom">
-                  <a
-                    className="nav-link justify-content-center d-flex align-items-center"
-                    style={{ height: '37px', marginRight: '25px', cursor: 'pointer' }}
-                  >
-                    投資績效
-                  </a>
-                </Dropdown>
-              </li>
+              {token && (
+                <>
+                  <li className="nav-item">
+                    <a
+                      className="nav-link me-5 justify-content-center d-flex align-items-center"
+                      aria-current="page"
+                      onClick={() => handleNavigation('/accounting')}
+                      style={{ height: '37px', cursor: 'pointer' }}
+                    >
+                      記帳
+                    </a>
+                  </li><li className="nav-item">
+                    <a
+                      className="nav-link me-5 justify-content-center d-flex align-items-center"
+                      onClick={() => handleNavigation('/generalreport')}
+                      style={{ height: '37px', cursor: 'pointer' }}
+                    >
+                      報表
+                    </a>
+                  </li><li className="nav-item">
+                    <Dropdown overlay={myStockMenu} placement="bottom">
+                      <a
+                        className="nav-link justify-content-center d-flex align-items-center"
+                        style={{ height: '37px', marginRight: '25px', cursor: 'pointer' }}
+                      >
+                        我的股票
+                      </a>
+                    </Dropdown>
+                  </li><li className="nav-item">
+                    <Dropdown overlay={investmentMenu} placement="bottom">
+                      <a
+                        className="nav-link justify-content-center d-flex align-items-center"
+                        style={{ height: '37px', marginRight: '25px', cursor: 'pointer' }}
+                      >
+                        投資績效
+                      </a>
+                    </Dropdown>
+                  </li>
+                </>
+              )}
 
               <Dropdown overlay={userMenu} placement="bottomRight">
                 {token ? (

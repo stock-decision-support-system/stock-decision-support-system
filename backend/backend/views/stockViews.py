@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from ..models import InvestmentPortfolio, Investment, DefaultInvestmentPortfolio, APICredentials
 from ..serializers import InvestmentPortfolioSerializer, InvestmentSerializer, DefaultInvestmentPortfolioSerializer
 from backend.models import DefaultStockList, DefaultInvestmentPortfolio
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.decorators import (
     api_view,
@@ -746,6 +746,7 @@ def cancel_odd_lot_orders(request):
 # 股票資料查詢 (使用訂閱模式)
 # 這個端點根據股票 ID 獲取股票的詳細資料
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def get_stock_detail(request, id):
     try:
         # 根據傳入的股票 ID，從 API 獲取對應的股票合約
@@ -785,6 +786,7 @@ def get_stock_detail(request, id):
 # K線圖資料查詢
 # 這個端點根據股票 ID 和時間範圍（傳入類型）獲取股票的 K 線圖資料
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def get_kbars(request, id):
     try:
         # 根據傳入的 'type' 參數來判斷時間範圍（月、週、日）
@@ -895,6 +897,7 @@ def get_kbars(request, id):
 # 獲取特定台股股票的快照資料
 # 這個端點返回多支指定台股股票的即時快照資料
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def get_tw_stocks(request):
     # 定義一組股票合約，包括台灣市場上的幾支主要股票
     contracts = [

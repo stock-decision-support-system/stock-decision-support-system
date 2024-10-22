@@ -5,9 +5,9 @@ const GET_URL = "/get";
 const TW_URL = "/twfif";
 export class StockRequest {
   static getStock(id) {
-    return FetchUtil.getAPI(`${BASE_URL}${GET_URL}/${id}`);
+    return FetchUtil.getNoTokenAPI(`${BASE_URL}${GET_URL}/${id}`);
   }
   static getTwFif(id) {
-    return FetchUtil.getAPI(`${BASE_URL}${TW_URL}`);
+    return FetchUtil.getNoTokenAPI(`${BASE_URL}${TW_URL}`);
   }
 }
