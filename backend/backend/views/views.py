@@ -119,7 +119,7 @@ def register(request):
                 icon="💰",  # 預設的 icon
                 account_name="現金",  # 預設帳戶名稱
                 balance=0.00,  # 初始餘額
-                created_at=datetime.now(),  # 設置創建時間
+                createDate=datetime.now(),  # 設置創建時間
             )
 
             return Response({"status": "success"})  # 返回註冊成功的響應
@@ -208,6 +208,7 @@ def login_view(request):
                         "avatar": (
                             user.avatar_path.url if user.avatar_path else None
                         ),  # 返回用戶頭像的 URL
+                        
                     },
                     status=status.HTTP_200_OK,
                 )

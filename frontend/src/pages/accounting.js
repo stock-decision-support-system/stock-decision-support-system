@@ -94,10 +94,14 @@ const AccountingForm = () => {
   };
 
   const handleConsumeClose = () => {
+    setConsumeTypes([]);
+    fetchConsumeTypes();
     setIsConsumeDialogVisible(false);
   };
 
   const handleAccountClose = () => {
+    setAccountTypes([]);
+    fetchAccountTypes();
     setIsAccountDialogVisible(false);
   };
 

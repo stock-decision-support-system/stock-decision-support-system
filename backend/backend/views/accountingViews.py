@@ -179,12 +179,15 @@ def accounting_list_for_user(request):
             # 更新對應的 Budget 金額
             try:
                 budget = Budget.objects.get(username=user, available=True)
-                if request.data.transactionDate >= budget.start_date.date():  #判斷accounting_record.transactionDate是否在budget.start_date後
-                    if accounting_record.assetType == '0':
-                        budget.current += accounting_record.amount  # 更新金額
-                    else:
-                        budget.current -= accounting_record.amount  # 更新金額
-                    budget.save()
+                date_to_compare = datetime.strptime(request.data['transactionDate'], "%Y-%m-%d").date()
+                #if date_to_compare >= budget.start_date:  #判斷accounting_record.transactionDate是否在budget.start_date後
+                if accounting_record.assetType == '0':
+                    budget.current += accounting_record.amount  # 更新金額
+                else:
+                    budget.current -= accounting_record.amount  # 更新金額
+                if budget.current >= budget.target:
+                    budget.is_successful = True
+                budget.save()
             except Budget.DoesNotExist:  # 如果找不到儲蓄目標，這是正常情況，所以什麼也不做，繼續執行其他代碼
                 pass
 
@@ -241,6 +244,8 @@ def accounting_list_for_user(request):
                         budget.current += accounting_record.amount  # 更新金額
                     else:
                         budget.current -= accounting_record.amount  # 更新金額
+                    if budget.current >= budget.target:
+                        budget.is_successful = True
                     budget.save()
             except Budget.DoesNotExist:
                 return Response(
@@ -800,8 +805,9 @@ def budget_operations(request, id=None):
             # 設置 end_date 為今天 + 30 天
             data["end_date"] = timezone.now() + timedelta(days=30)
         else:
+            reference_date = datetime.strptime(end_date, "%Y-%m-%d").date()
             # 檢查 end_date 是否小於今天
-            if timezone.now().date() > end_date:
+            if timezone.now().date() > reference_date:
                 return Response(
                     {
                         "status": "error",
