@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Input, DatePicker, Select, message } from 'antd';
 import { BudgetRequest } from '../api/request/budgetRequest.js';
 import axios from 'axios';
+import { config } from "../config";
 
+const BASE_URL = config.API_URL;
 const { Option } = Select;
 
 const BudgetDialog = () => {
@@ -25,15 +27,19 @@ const BudgetDialog = () => {
     // 從後端 API 獲取所有預設投資組合
     useEffect(() => {
         if (isModalVisible) {
-            axios.get('http://localhost:8000/investment/default-investment-portfolios/')
-                .then(response => {
-                    console.log('獲取到的投資組合資料:', response.data);  // 確認返回的資料
-                    setInvestmentPortfolios(response.data);  // 將獲取到的投資組合資料儲存
-                })
-                .catch(error => {
-                    console.error('無法獲取投資組合資料:', error);
-                    message.error('無法獲取投資組合資料');
-                });
+            axios.get(`${BASE_URL}/investment/default-investment-portfolios/`, {
+                headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+            .then(response => {
+                console.log('獲取到的投資組合資料:', response.data);  // 確認返回的資料
+                setInvestmentPortfolios(response.data);  // 將獲取到的投資組合資料儲存
+            })
+            .catch(error => {
+                console.error('無法獲取投資組合資料:', error);
+                message.error('無法獲取投資組合資料');
+            });
         }
     }, [isModalVisible]);
 

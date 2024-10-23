@@ -9,10 +9,10 @@ import '../assets/css/tradeHistory.css';
 
 const TradeHistory = () => {
     const [loading, setLoading] = useState(false);
-    const [totalAmount, setTotalAmount] = useState(0)
-    const [netAmount, setNetAmount] = useState(0)
-    const [incomeData, setIncomeData] = useState([])
-    const [expenseData, setExpenseData] = useState([])
+    const [totalAmount, setTotalAmount] = useState(0);
+    const [netAmount, setNetAmount] = useState(0);
+    const [incomeData, setIncomeData] = useState([]);
+    const [expenseData, setExpenseData] = useState([]);
     const [totalPages, setTotalPages] = useState(null);
     const [isVisible, setIsVisible] = useState(false);  // 初始狀態為不顯示
 

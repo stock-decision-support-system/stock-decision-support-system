@@ -35,7 +35,6 @@ import MyStocks from './pages/myStock';
 import PlaceOrder from './pages/placeOrder'
 import OrderManagement from './pages/orderManagement';
 import BatchOrderPage from './pages/batchOrderPage';
-import TestSecond from './pages/testSecond';
 
 const root = createRoot(document.getElementById('root'));
 
@@ -71,7 +70,6 @@ root.render(
             <Route path="/placeOrder/" element={<PlaceOrder />} />
             <Route path="/orderManagement/" element={<OrderManagement />} />
             <Route path="/batchOrderPage/" element={<BatchOrderPage />} />
-            <Route path="/testSecond/" element={<TestSecond />} />
           </Routes>
         </div>
         <GoalProgressBar/>

@@ -6,6 +6,7 @@ import processImage1 from '../assets/images/processImage1.png';
 import successImage1 from '../assets/images/successImage1.png';
 import { BudgetRequest } from '../api/request/budgetRequest.js';
 import indexpic from '../assets/images/indexpic.png'
+import TeachingDialog from '../components/teachingDialog.js';
 
 const App = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const App = () => {
   const [targetDay, setTargetDay] = useState();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm(); // 使用 Ant Design 的 Form hook
+  const [isTeachingDialogVisible, setIsTeachingDialogVisible] = useState(false);
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -25,9 +27,17 @@ const App = () => {
     form.resetFields(); // 清空表單
   };
 
+  const handleTeachingClick = () => {
+    setIsTeachingDialogVisible(true);
+  };
+
+  const handleTeachingClose = () => {
+    setIsTeachingDialogVisible(false);
+  };
+
   const handleClick = () => {
     if (token) {
-      navigate('#');
+      handleTeachingClick();
     } else {
       navigate('/login');
     }
@@ -59,8 +69,6 @@ const App = () => {
       fetchBudgetData();
     }
   }, [token]);
-
-
 
   const handleFormSubmit = async (values) => {
     // 提交表單前的數據處理
@@ -192,6 +200,9 @@ const App = () => {
           </div>
         )}
       </div>
+      {isTeachingDialogVisible&&(
+        <TeachingDialog onClose={handleTeachingClose}/>
+      )}
       <Modal
         title="新增目標"
         open={isModalVisible}
