@@ -41,3 +41,17 @@
 .history-chart-container .history-chart-pie-container:last-child {
     margin-bottom: 0;
 }
+
+/* 媒體查詢，對手機進行調整 */
+@media (max-width: 768px) {
+    .accounting-kv {
+        display: flex; /* 啟用 Flexbox */
+        justify-content: center; /* 水平置中 */
+        align-items: flex-start;
+        height: 100vh; /* 讓父容器的高度為 100vh，以便可以完全填滿螢幕 */
+    }
+
+    .history-chart-card{
+        display: none; /* 隱藏元素 */
+    }
+}
