@@ -55,8 +55,8 @@ const StockList = () => {
     // 使用假資料來模擬股票
     const [stocks, setStocks] = useState([
         { id: 1101, name: '中油', selectedOption: 'buyAndHold', customAmount: '', amount: 0 },
-        { id: 2330, name: '台積電', selectedOption: 'buyAndHold', customAmount: '', amount: 0 },
-        { id: 2454, name: '聯發科', selectedOption: 'buyAndHold', customAmount: '', amount: 0 }
+        { id: 1216, name: '統一', selectedOption: 'buyAndHold', customAmount: '', amount: 0 },
+        { id: 1301, name: '台塑', selectedOption: 'buyAndHold', customAmount: '', amount: 0 }
     ]);
 
     // 處理選擇的投資方式變更
@@ -84,8 +84,8 @@ const StockList = () => {
     const totalPrice = (stock) => {
         const priceMap = {
             1101: 32.2, // 中油
-            2330: 550.0, // 台積電
-            2454: 780.0 // 聯發科
+            1216: 550.0, // 台積電
+            1301: 780.0 // 聯發科
         };
         const price = priceMap[stock.id] || 0; // 根據 ID 取得對應的股價
         const amount = stock.selectedOption === 'custom' ? stock.customAmount : stock.amount;
