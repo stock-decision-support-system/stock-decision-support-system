@@ -36,4 +36,8 @@ export class InvestmentRequest {
     static getPortfolioDetail(id) {
         return FetchUtil.getAPI(`${BASE_URL}${PORTFOLIOS_URL}/${id}`);
     }
+
+    static updatePortfolio(id, data) {
+        return FetchUtil.putAPI(`${BASE_URL}${PORTFOLIOS_URL}/${id}/update`, data);
+    }
 }

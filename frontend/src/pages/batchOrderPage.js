@@ -171,7 +171,7 @@ const BatchOrderPage = () => {
         <h2 style={{ fontSize: '25px', textAlign: 'center', marginBottom: '20px' }}>批次下單零股</h2>
         <Select
           placeholder="選擇投資組合"
-          onChange={handlePortfolioChange}
+          onChange={handlePortfolioChange} 
           style={{ width: '100%', marginBottom: '20px' }}
         >
           {portfolios.map((portfolio) => (

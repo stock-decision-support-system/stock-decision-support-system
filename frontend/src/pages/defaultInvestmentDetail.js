@@ -62,7 +62,7 @@ const DefaultInvestmentDetail = () => {
         />
       </Card>
 
-      <Card title="損益與投報率" className="stats-card" style={{ marginBottom: 20 }}>
+      <Card title="損益與投報率(2024/1/1至今)" className="stats-card" style={{ marginBottom: 20 }}>
         <Row gutter={16}>
           <Col span={12}>
             <Statistic

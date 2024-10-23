@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Table, Button, Modal, Form, Select, Input, Popover } from 'antd';
-import { InfoCircleOutlined } from '@ant-design/icons';  // 用於顯示圖示
+import { Table, Button, Modal, Form, Select, Input, Popover, notification } from 'antd';
+import { InfoCircleOutlined } from '@ant-design/icons';
 import '../assets/css/investmentList.css';
 import { InvestmentRequest } from '../api/request/investmentRequest.js';
 
 const { Option } = Select;
+const { confirm } = Modal;
 
 const InvestmentList = () => {
   const navigate = useNavigate();
   const [investmentData, setInvestmentData] = useState([]);  // 用來存儲投資組合
   const [isModalVisible, setIsModalVisible] = useState(false);  // 控制模態框顯示
+  const [editingPortfolioId, setEditingPortfolioId] = useState(null);  // 用於追踪是否正在編輯
   const [form] = Form.useForm();
   const [selectedStocks, setSelectedStocks] = useState([]);  // 用於儲存選擇的股票
   const [stockOptions, setStockOptions] = useState([]);  // 用於儲存股票選項
@@ -27,7 +29,6 @@ const InvestmentList = () => {
       });
   }, []);
 
-
   // 獲取用戶的投資組合資料
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -35,13 +36,11 @@ const InvestmentList = () => {
       InvestmentRequest.getPortfolios()
         .then(response => {
           const portfolios = response.data.map(item => ({ ...item, key: item.id }));
-          // 查詢所有投資組合中的股票價格和名稱
           portfolios.forEach(portfolio => {
             portfolio.investments.forEach(stock => {
               fetchStockPrice(stock.symbol);  // 自動查詢每個股票的價格和名稱
             });
           });
-
           setInvestmentData(portfolios);  // 更新投資組合數據
         })
         .catch(error => {
@@ -50,8 +49,12 @@ const InvestmentList = () => {
     } else {
       console.error('Token not found.');
     }
-  }, []);  // 這裡的依賴數組設置為空，確保只在頁面加載時運行
+  }, []);
 
+  // 控制模態框顯示
+  const showModal = () => {
+    setIsModalVisible(true);  // 打開模態框
+  };
 
   // 查詢股票即時價格或收盤價
   const fetchStockPrice = (symbol) => {
@@ -72,6 +75,7 @@ const InvestmentList = () => {
     }
   };
 
+  // 提交表單時處理的邏輯
   const handleOk = () => {
     form.validateFields()
       .then(values => {
@@ -81,24 +85,41 @@ const InvestmentList = () => {
           investments: selectedStocks.map(stockSymbol => ({
             symbol: stockSymbol,
             shares: values[`quantity_${stockSymbol}`],
-            buy_price: values[`price_${stockSymbol}`],
+            buy_price: values[`investment_cost_${stockSymbol}`], // 使用投資成本作為 buy_price
           }))
         };
 
         const token = localStorage.getItem('token');
         if (token) {
-          InvestmentRequest.createPortfolio(newPortfolio)
-            .then(response => {
-              setInvestmentData([...investmentData, { ...response.data, key: response.data.id }]);
-              setIsModalVisible(false);
-              form.resetFields();
+          if (editingPortfolioId) {
+            // 編輯狀態，更新投資組合
+            InvestmentRequest.updatePortfolio(editingPortfolioId, newPortfolio)
+              .then(response => {
+                const updatedData = investmentData.map(item =>
+                  item.id === editingPortfolioId ? { ...response.data, key: response.data.id } : item
+                );
+                setInvestmentData(updatedData);
+                setIsModalVisible(false);
+                form.resetFields();
+                setEditingPortfolioId(null);  // 清空編輯狀態
 
-              // 新增成功後刷新頁面
-              window.location.reload();
-            })
-            .catch(error => {
-              console.error('新增投資組合失敗:', error.response?.data || error.message);
-            });
+                // 顯示成功通知
+                notification.success({
+                  message: '更新成功',
+                  description: '投資組合更新成功',
+                });
+
+                // 重整頁面
+                window.location.reload(); // 刷新頁面
+              })
+              .catch(error => {
+                console.error('更新投資組合失敗:', error.response?.data || error.message);
+                notification.error({
+                  message: '更新失敗',
+                  description: '投資組合更新失敗，請重試。',
+                });
+              });
+          }
         } else {
           console.error('Token not found');
         }
@@ -108,6 +129,23 @@ const InvestmentList = () => {
       });
   };
 
+  // 刪除投資組合時彈出確認對話框
+  const showDeleteConfirm = (id, name) => {
+    confirm({
+      title: `確定刪除 ${name} 嗎?`,
+      content: '這個操作無法撤銷。',
+      okText: '是',
+      okType: 'danger',
+      cancelText: '否',
+      onOk() {
+        handleDelete(id);
+      },
+      onCancel() {
+        console.log('取消刪除');
+      },
+    });
+  };
+
   // 刪除投資組合
   const handleDelete = (id) => {
     const token = localStorage.getItem('token');
@@ -115,9 +153,17 @@ const InvestmentList = () => {
       InvestmentRequest.deletePortfolio(id)
         .then(() => {
           setInvestmentData(investmentData.filter(item => item.id !== id));
+          notification.success({
+            message: '刪除成功',
+            description: '投資組合已成功刪除',
+          });
         })
         .catch(error => {
           console.error('刪除投資組合失敗:', error);
+          notification.error({
+            message: '刪除失敗',
+            description: '刪除投資組合失敗，請重試。',
+          });
         });
     } else {
       console.error('Token not found');
@@ -126,21 +172,40 @@ const InvestmentList = () => {
 
   // 編輯投資組合
   const handleEdit = (record) => {
+    // 設置投資組合的現有股票到表單中
+    const stockFields = {};
+    record.investments.forEach(stock => {
+      stockFields[`quantity_${stock.symbol}`] = stock.shares;
+      stockFields[`investment_cost_${stock.symbol}`] = stock.buy_price;  // 將 buy_price 顯示為投資成本
+    });
+
     form.setFieldsValue({
       portfolioName: record.name,
       description: record.description,
+      stocks: record.investments.map(stock => stock.symbol),
+      ...stockFields,  // 將股票數據設置到表單中
     });
-    setIsModalVisible(true);
-  };
 
-  // 控制模態框顯示
-  const showModal = () => {
+    setSelectedStocks(record.investments.map(stock => stock.symbol));  // 設置選中的股票
+    setEditingPortfolioId(record.id);  // 設置為編輯模式
     setIsModalVisible(true);
   };
 
   const handleCancel = () => {
     setIsModalVisible(false);
     form.resetFields();
+    setEditingPortfolioId(null);  // 清空編輯狀態
+  };
+
+  // 處理投資成本變化
+  const handleInvestmentCostChange = (stockSymbol, investmentCost) => {
+    const quantity = form.getFieldValue(`quantity_${stockSymbol}`);
+    if (quantity > 0) {
+      const pricePerShare = investmentCost / quantity;
+      form.setFieldsValue({
+        [`price_${stockSymbol}`]: pricePerShare.toFixed(2),
+      });
+    }
   };
 
   const handleStocksChange = (value) => {
@@ -256,7 +321,7 @@ const InvestmentList = () => {
       render: (text, record) => (
         <span>
           <Button type="link" onClick={() => handleEdit(record)}>編輯</Button>
-          <Button type="link" danger onClick={() => handleDelete(record.id)}>刪除</Button>
+          <Button type="link" danger onClick={() => showDeleteConfirm(record.id, record.name)}>刪除</Button>
         </span>
       ),
     }
@@ -271,11 +336,6 @@ const InvestmentList = () => {
       <Table
         columns={columns}
         dataSource={investmentData}
-        onRow={(record) => ({
-          onClick: () => {
-            navigate(`/portfolio/${record.id}`);
-          },
-        })}
         pagination={false}
         bordered
         scroll={{ y: 400 }}
@@ -283,7 +343,7 @@ const InvestmentList = () => {
       />
 
       <Modal
-        title="新增投資組合"
+        title={editingPortfolioId ? "編輯投資組合" : "新增投資組合"}
         open={isModalVisible}  // 控制模態框顯示
         onOk={handleOk}
         onCancel={handleCancel}
@@ -291,31 +351,16 @@ const InvestmentList = () => {
         cancelText="取消"
       >
         <Form form={form} layout="vertical">
-          <Form.Item
-            name="portfolioName"
-            label="投資組合名稱"
-            rules={[{ required: true, message: '請輸入投資組合名稱' }]}
-          >
+          <Form.Item name="portfolioName" label="投資組合名稱" rules={[{ required: true, message: '請輸入投資組合名稱' }]}>
             <Input placeholder="請輸入投資組合名稱" />
           </Form.Item>
-          <Form.Item
-            name="description"
-            label="投資組合描述"
-            rules={[{ required: true, message: '請輸入投資組合描述' }]}
-          >
+
+          <Form.Item name="description" label="投資組合描述" rules={[{ required: true, message: '請輸入投資組合描述' }]}>
             <Input placeholder="請輸入投資組合描述" />
           </Form.Item>
-          <Form.Item
-            name="stocks"
-            label="選擇股票"
-            rules={[{ required: true, message: '請選擇至少一支股票' }]}
-          >
-            <Select
-              mode="multiple"
-              placeholder="選擇股票"
-              onChange={handleStocksChange}
-              style={{ width: '100%' }}
-            >
+
+          <Form.Item name="stocks" label="選擇股票" rules={[{ required: true, message: '請選擇至少一支股票' }]}>
+            <Select mode="multiple" placeholder="選擇股票" onChange={handleStocksChange} style={{ width: '100%' }}>
               {stockOptions.map(stock => (
                 <Option key={stock.symbol} value={stock.symbol}>
                   {stock.name} ({stock.symbol})
@@ -323,22 +368,24 @@ const InvestmentList = () => {
               ))}
             </Select>
           </Form.Item>
+
           {selectedStocks.map(stockSymbol => (
             <div key={stockSymbol}>
-              <Form.Item
-                name={`quantity_${stockSymbol}`}
-                label={`股數 (${stockSymbol})`}
-                rules={[{ required: true, message: `請輸入 ${stockSymbol} 的股數` }]}
-              >
+              <Form.Item name={`quantity_${stockSymbol}`} label={`股數 (${stockSymbol})`} rules={[{ required: true, message: `請輸入 ${stockSymbol} 的股數` }]}>
                 <Input placeholder={`請輸入 ${stockSymbol} 的股數`} type="number" />
               </Form.Item>
               <Form.Item
-                name={`price_${stockSymbol}`}
-                label={`每股價格 (${stockSymbol})`}
-                rules={[{ required: true, message: `請輸入 ${stockSymbol} 的每股價格` }]}
+                name={`investment_cost_${stockSymbol}`}
+                label={`投資成本 (${stockSymbol})`}
+                rules={[{ required: true, message: `請輸入 ${stockSymbol} 的投資成本` }]}
               >
-                <Input placeholder={`請輸入 ${stockSymbol} 的每股價格`} type="number" />
+                <Input
+                  placeholder={`請輸入 ${stockSymbol} 的投資成本`}
+                  type="number"
+                  onChange={e => handleInvestmentCostChange(stockSymbol, e.target.value)}
+                />
               </Form.Item>
+              <Button type="link" danger onClick={() => handleDelete(stockSymbol)}>刪除股票</Button>
             </div>
           ))}
         </Form>
