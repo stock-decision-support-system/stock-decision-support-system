@@ -78,6 +78,7 @@ const AccountingForm = () => {
       .then(response => {
         message.success(response.message);
         form.resetFields(); // 重置表單
+        window.location.reload();
       })
       .catch((error) => {
         message.error(error.message);
