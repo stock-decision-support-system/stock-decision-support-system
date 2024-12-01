@@ -407,3 +407,19 @@ class BankConsentForm(models.Model):
     class Meta:
         db_table = 'bank_consent_form'  # 在資料庫中的表名
 
+
+class Notification(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="notifications")
+    message = models.TextField()
+    available = models.BooleanField(default=True)
+    is_read = models.BooleanField(default=False)  # 是否已讀
+    created_at = models.DateTimeField(auto_now_add=True)
+    generated_date = models.DateField(null=True, blank=True)  # 新增這個字段
+
+    def __str__(self):
+        return f"通知: {self.message[:20]} ({self.user.username})"
+
+    class Meta:
+        db_table = "notifications"  # 資料表名稱
+        ordering = ['-created_at']  # 通知按時間倒序排列
+

@@ -10,6 +10,7 @@ from .models import (
     Budget,
     DefaultInvestmentPortfolio,
     DefaultStockList,
+    Notification,
 )
 
 
@@ -170,5 +171,8 @@ class DefaultInvestmentPortfolioSerializer(serializers.ModelSerializer):
 
         return instance
 
-
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'message', 'created_at', 'is_read']
 

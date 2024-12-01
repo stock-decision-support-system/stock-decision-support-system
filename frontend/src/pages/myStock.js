@@ -1,50 +1,64 @@
 import React, { useState, useEffect } from 'react';
-import { Table } from 'antd';
+import { Table, Modal, Badge, Popover, Button, List } from 'antd';
+import { BellOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { config } from '../config';
 
-const BASE_URL = config.API_URL
+const BASE_URL = config.API_URL;
 
 const MyStocks = () => {
   const [stockData, setStockData] = useState([]);
-  const [profitLossData, setProfitLossData] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false); // 控制通知視窗的狀態
+  const [notifications, setNotifications] = useState([]); // 存儲通知內容
+  const [isPopoverVisible, setIsPopoverVisible] = useState(false); // 小鈴鐺的狀態
 
   useEffect(() => {
     const token = localStorage.getItem('token'); // 從 localStorage 獲取保存的 Token
-    const startDate = "2024-05-05";  // 假設默認的開始日期
-    const endDate = "2024-10-13";    // 假設默認的結束日期
-  
-    axios.get(`${BASE_URL}/api/portfolio-status/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,  // 在請求中加入 Token
-      },
-      params: {
-        start_date: startDate,
-        end_date: endDate
+    const todayKey = new Date().toISOString().split('T')[0]; // 當天日期作為鍵值
+
+
+    // 獲取持有股票數據
+    axios
+      .get(`${BASE_URL}/api/portfolio-status/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        const { positions } = response.data;
+        setStockData(positions);
+      })
+      .catch((error) => {
+        console.error('無法獲取持有股票資料:', error);
+      });
+
+  // 獲取通知數據
+  axios
+    .get(`${BASE_URL}/api/notifications/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    .then((response) => {
+      console.log('通知數據:', response.data.notifications); // 打印通知數據
+      setNotifications(response.data.notifications || []);
+
+      // 檢查是否已顯示過當天通知
+      const shownNotifications = JSON.parse(localStorage.getItem('shownNotifications')) || [];
+      if (!shownNotifications.includes(todayKey)) {
+        setIsModalVisible(true); // 顯示模態框
+        localStorage.setItem(
+          'shownNotifications',
+          JSON.stringify([...shownNotifications, todayKey])
+        );
       }
     })
-    .then(response => {
-      const { positions, profit_loss } = response.data;
-      setStockData(positions);
-      setProfitLossData(profit_loss);
-    })
-    .catch(error => {
-      console.error('無法獲取持有股票或損益資料:', error);
-      if (error.response) {
-        // 打印返回的錯誤訊息及詳細資料
-        console.log('錯誤的狀態碼:', error.response.status);
-        console.log('錯誤的資料:', error.response.data);
-        console.log('錯誤的標頭:', error.response.headers);
-      } else if (error.request) {
-        // 請求發出但無回應
-        console.log('請求發出但無回應:', error.request);
-      } else {
-        // 其他錯誤
-        console.log('錯誤訊息:', error.message);
-      }
-      console.log('完整的錯誤配置:', error.config);
+    .catch((error) => {
+      console.error('無法獲取通知:', error);
     });
-  }, []);
+}, []);
+
+  const handleModalClose = () => {
+    setIsModalVisible(false);
+  };
 
   const columns = [
     {
@@ -64,15 +78,26 @@ const MyStocks = () => {
       render: (text) => `${text} 股`,
     },
     {
-      title: '持倉狀態',
-      dataIndex: 'direction',
-      key: 'direction',
+      title: '總成本 (NT$)',
+      key: 'total_cost',
+      render: (_, record) => {
+        const totalCost = record.quantity * record.price;
+        return `NT$ ${totalCost.toLocaleString()}`;
+      },
     },
     {
       title: '目前價格 (NT$)',
       dataIndex: 'last_price',
       key: 'last_price',
       render: (price) => `NT$ ${price.toLocaleString()}`,
+    },
+    {
+      title: '總市價 (NT$)',
+      key: 'total_market_value',
+      render: (_, record) => {
+        const totalMarketValue = record.quantity * record.last_price;
+        return `NT$ ${totalMarketValue.toLocaleString()}`;
+      },
     },
     {
       title: '損益 (NT$)',
@@ -83,14 +108,46 @@ const MyStocks = () => {
   ];
 
   return (
-    <div className='container'>
-      <h1 className="title" style={{marginTop:'-15%'}}>我的股票持有狀況與損益</h1>
+    <div className="container">
+      <h1 className="title" style={{ marginTop: '-15%' }}>我的股票持有狀況與損益</h1>
+      <div style={{ textAlign: 'right', marginBottom: '10px' }}>
+        <Popover
+          content={
+            <List
+              dataSource={notifications}
+              renderItem={(item) => (
+                <List.Item>
+                  <div>
+                    <strong>{item.date}</strong>: {item.message}
+                  </div>
+                </List.Item>
+              )}
+            />
+          }
+          title="通知記錄"
+          trigger="click"
+          visible={isPopoverVisible}
+          onVisibleChange={(visible) => setIsPopoverVisible(visible)}
+        >
+          <Badge count={notifications.length}>
+            <Button shape="circle" icon={<BellOutlined />} />
+          </Badge>
+        </Popover>
+      </div>
       <Table 
         columns={columns} 
         dataSource={stockData} 
         rowKey="id"
-        pagination={{ pageSize: 8 }}  // 每頁顯示 5 筆資料 
+        pagination={{ pageSize: 8 }}
       />
+      <Modal
+        title="投資組合通知"
+        visible={isModalVisible}
+        onOk={handleModalClose}
+        onCancel={handleModalClose}
+      >
+        <p>您有新的投資建議，請查看小鈴鐺。</p>
+      </Modal>
     </div>
   );
 };
