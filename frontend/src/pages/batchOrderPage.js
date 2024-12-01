@@ -16,7 +16,6 @@ const BatchOrderPage = () => {
 
   const navigate = useNavigate(); // 使用 useNavigate 來跳轉頁面
 
-  // 獲取預設投資組合
   useEffect(() => {
     axios
       .get(`${BASE_URL}/investment/default-investment-portfolios/`)
@@ -29,29 +28,47 @@ const BatchOrderPage = () => {
       });
   }, []);
 
-  // 當選取的投資組合改變時，獲取投資組合的股票資料
-  const handlePortfolioChange = (portfolioId) => {
-    axios
-      .get(`${BASE_URL}/investment/default-investment-portfolios/${portfolioId}/`)
-      .then((response) => {
-        const portfolio = response.data;
-        const stocks = portfolio.stocks || [];
+  const fetchStockPrice = async (symbol) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/investment/stock_price/${symbol}/`);
+      if (response.data.status === 'success') {
+        return response.data.data.price;
+      } else {
+        console.error('無法獲取股票價格:', response.data.message);
+        return 0;
+      }
+    } catch (error) {
+      console.error('無法獲取股票價格:', error);
+      return 0;
+    }
+  };
 
-        setSelectedPortfolio(portfolio);
-        setStocks(stocks);
-        setStockOrders(
-          stocks.map((stock) => ({
+  const handlePortfolioChange = async (portfolioId) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/investment/default-investment-portfolios/${portfolioId}/`);
+      const portfolio = response.data;
+      const stocks = portfolio.stocks || [];
+
+      setSelectedPortfolio(portfolio);
+      setStocks(stocks);
+
+      const updatedOrders = await Promise.all(
+        stocks.map(async (stock) => {
+          const price = await fetchStockPrice(stock.stock_symbol);
+          return {
             symbol: stock.stock_symbol,
             quantity: stock.quantity || 1,
-            price: stock.price || 0,
+            price: price || 0,
             action: 'Buy',
-          }))
-        );
-      })
-      .catch((error) => {
-        console.error('無法獲取投資組合股票資料:', error);
-        message.error('無法獲取投資組合股票資料');
-      });
+          };
+        })
+      );
+
+      setStockOrders(updatedOrders);
+    } catch (error) {
+      console.error('無法獲取投資組合股票資料:', error);
+      message.error('無法獲取投資組合股票資料');
+    }
   };
 
   const handlePlaceOrders = () => {
@@ -61,7 +78,7 @@ const BatchOrderPage = () => {
       return;
     }
 
-    setLoading(true); // 開始加載狀態
+    setLoading(true);
 
     axios
       .post(
@@ -82,18 +99,17 @@ const BatchOrderPage = () => {
       )
       .then((response) => {
         message.success('批次下單成功!');
-        navigate('/orderManagement/'); // 跳轉到 /orderManagement/
+        navigate('/orderManagement/');
       })
       .catch((error) => {
         console.error('批次下單失敗:', error.response?.data || error.message);
         message.error('批次下單失敗');
       })
       .finally(() => {
-        setLoading(false); // 結束加載狀態
+        setLoading(false);
       });
   };
 
-  // 更新股票的下單數量、價格和操作(買/賣)
   const handleOrderChange = (symbol, field, value) => {
     setStockOrders(
       stockOrders.map((order) => {
@@ -171,7 +187,7 @@ const BatchOrderPage = () => {
         <h2 style={{ fontSize: '25px', textAlign: 'center', marginBottom: '20px' }}>批次下單零股</h2>
         <Select
           placeholder="選擇投資組合"
-          onChange={handlePortfolioChange} 
+          onChange={handlePortfolioChange}
           style={{ width: '100%', marginBottom: '20px' }}
         >
           {portfolios.map((portfolio) => (
@@ -191,7 +207,7 @@ const BatchOrderPage = () => {
         </div>
 
         <Button
-          className='button2'
+          className="button2"
           onClick={handlePlaceOrders}
           loading={loading}
           disabled={stocks.length === 0}
