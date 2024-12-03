@@ -4,6 +4,7 @@ from django.contrib.auth.hashers import check_password
 from django.contrib.auth import login as django_login
 from django.contrib.auth import authenticate, login, logout
 from datetime import date
+from .stockViews import get_portfolio_status
 
 from ..models import (
     APICredentials,
@@ -1002,57 +1003,4 @@ def create_assessment(
 
     return response  # 返回評估結果
 
-def generate_monthly_notifications():
-    today = date.today()
-    print("正在生成通知...")
 
-    # 獲取所有活躍用戶
-    users = CustomUser.objects.filter(is_active=True)
-
-    for user in users:
-        # 檢查是否已經為該用戶生成過當日通知
-        if Notification.objects.filter(user=user, generated_date=today).exists():
-            print(f"用戶 {user.username} 的當日通知已存在，跳過生成")
-            continue
-
-        # 獲取用戶的投資組合
-        portfolios = InvestmentPortfolio.objects.filter(user=user, available=True)
-        message = ""
-
-        # 遍歷投資組合生成建議
-        for portfolio in portfolios:
-            investments = Investment.objects.filter(portfolio=portfolio, available=True)
-            portfolio_message = f"投資組合: {portfolio.name}\n"
-
-            for investment in investments:
-                portfolio_message += f"- 股票代碼 {investment.symbol} 建議調整到 {investment.shares * 1.1:.0f} 股\n"
-
-            message += portfolio_message + "\n"
-
-        # 如果有建議則創建通知
-        if message.strip():
-            Notification.objects.create(
-                user=user,
-                message=message,
-                generated_date=today,  # 記錄通知生成日期
-            )
-            print(f"通知已創建給用戶: {user.username}\n內容: {message}")
-
-@api_view(['GET'])
-def get_notifications(request):
-    try:
-        user = request.user  # 獲取當前登入用戶
-
-        # 每月 1 號自動生成通知
-        today = date.today()
-        if today.day == 2:  # 檢查是否是每月 1 號
-            if not Notification.objects.filter(user=user, generated_date=today).exists():
-                generate_monthly_notifications()
-
-        # 獲取該用戶的通知
-        notifications = Notification.objects.filter(user=user, available=True).order_by('-created_at')
-        serializer = NotificationSerializer(notifications, many=True)
-        return Response({"notifications": serializer.data})
-    except Exception as e:
-        print(f"後端錯誤: {str(e)}")  # 打印詳細錯誤
-        return Response({"error": "無法獲取通知", "details": str(e)}, status=500)

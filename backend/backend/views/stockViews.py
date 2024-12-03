@@ -1,6 +1,8 @@
 import traceback
 from datetime import datetime, timedelta
 import time
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -9,6 +11,15 @@ from rest_framework.decorators import api_view
 import shioaji as sj
 import yaml
 import logging
+from datetime import date
+from ..models import (
+Notification,
+CustomUser)
+from ..serializers import (
+    APICredentialsSerializer,
+    CustomUserSerializer,
+    NotificationSerializer,
+)
 
 from rest_framework import status  # 新增這行導入
 from rest_framework.response import Response
@@ -24,6 +35,8 @@ from rest_framework.decorators import (
 )
 from django.db import transaction
 import pandas as pd
+
+
 
 # 設置日誌
 logger = logging.getLogger(__name__)
@@ -245,7 +258,7 @@ def get_portfolio_status(request):
         api, accounts = login_to_shioaji(user)
 
         start_date = request.query_params.get("start_date", "2024-05-05")
-        end_date = request.query_params.get("end_date", "2024-10-13")
+        end_date = request.query_params.get("end_date", datetime.today().strftime("%Y-%m-%d"))
 
         positions = api.list_positions(api.stock_account,unit=sj.constant.Unit.Share)
         profit_loss = api.list_profit_loss(api.stock_account, start_date, end_date)
@@ -312,6 +325,89 @@ def get_portfolio_status(request):
             "message": str(e),
             "details": traceback.format_exc()
         }, status=400)
+
+import json
+
+from django.test import RequestFactory
+from django.db import transaction
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_user_notification(request):
+    """
+    當使用者進入頁面時，生成專屬的通知。
+    """
+    try:
+        user = request.user  # 獲取當前登入用戶
+        today = date.today()
+
+        with transaction.atomic():
+            # 檢查是否已經為該用戶生成過當日通知
+            if Notification.objects.filter(user=user, generated_date=today).exists():
+                return Response({"status": "success", "message": "今天的通知已存在"})
+
+            # 使用 RequestFactory 模擬 HttpRequest
+            factory = RequestFactory()
+            fake_request = factory.get('/api/portfolio-status/', {
+                "start_date": "2024-05-05",
+                "end_date": today.strftime("%Y-%m-%d"),
+            })
+
+            # 添加 JWT Token 到 Authorization 標頭
+            jwt_authenticator = JWTAuthentication()
+            validated_token = jwt_authenticator.get_validated_token(request.headers.get('Authorization').split(" ")[1])
+            fake_request.META['HTTP_AUTHORIZATION'] = f"Bearer {validated_token}"
+
+            # 設置用戶
+            fake_request.user = user
+
+            # 調用 get_portfolio_status 方法
+            response = get_portfolio_status(fake_request)
+
+            # 驗證響應
+            if response.status_code != 200:
+                return Response({"status": "error", "message": f"獲取股票數據失敗，狀態碼: {response.status_code}"}, status=500)
+
+            # 解析數據
+            data = json.loads(response.content.decode('utf-8'))  # 使用 json.loads 解析內容
+            positions = data.get('positions', [])
+            message = "您的股票建議：\n"
+
+            # 構建通知內容
+            for position in positions:
+                stock_code = position['code']
+                stock_name = position['name']
+                quantity = position['quantity']
+                suggested_quantity = round(quantity * 1.1)
+
+                message += f"- 股票代號: {stock_code} ({stock_name})，建議調整至 {suggested_quantity} 股\n"
+
+            # 創建通知
+            Notification.objects.create(
+                user=user,
+                message=message,
+                generated_date=today,
+            )
+
+            return Response({"status": "success", "message": "通知已生成"})
+    except Exception as e:
+        error_details = traceback.format_exc()
+        print(f"生成通知時出錯: {str(e)}\n詳細堆疊:\n{error_details}")
+        return Response({"status": "error", "message": str(e)}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_notifications(request):
+    try:
+        user = request.user  # 獲取當前登入用戶
+
+        # 獲取該用戶的通知
+        notifications = Notification.objects.filter(user=user, available=True).order_by('-created_at')
+        serializer = NotificationSerializer(notifications, many=True)
+        return Response({"notifications": serializer.data})
+    except Exception as e:
+        print(f"後端錯誤: {str(e)}")  # 打印詳細錯誤
+        return Response({"error": "無法獲取通知", "details": str(e)}, status=500)
 
 
 def get_stock_name_by_id(stock_id):

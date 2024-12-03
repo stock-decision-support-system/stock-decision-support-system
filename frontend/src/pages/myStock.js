@@ -12,10 +12,37 @@ const MyStocks = () => {
   const [notifications, setNotifications] = useState([]); // 存儲通知內容
   const [isPopoverVisible, setIsPopoverVisible] = useState(false); // 小鈴鐺的狀態
 
+  const fetchNotifications = (token) => {
+    axios
+      .get(`${BASE_URL}/api/notifications/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        console.log('通知數據:', response.data.notifications);
+        setNotifications(response.data.notifications || []);
+
+        // 檢查是否已顯示過當天通知
+        const todayKey = new Date().toISOString().split('T')[0];
+        const shownNotifications = JSON.parse(localStorage.getItem('shownNotifications')) || [];
+        if (!shownNotifications.includes(todayKey)) {
+          setIsModalVisible(true); // 顯示模態框
+          localStorage.setItem(
+            'shownNotifications',
+            JSON.stringify([...shownNotifications, todayKey])
+          );
+        }
+      })
+      .catch((error) => {
+        console.error('無法獲取通知:', error);
+      });
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token'); // 從 localStorage 獲取保存的 Token
-    const todayKey = new Date().toISOString().split('T')[0]; // 當天日期作為鍵值
-
+    if (!token) {
+      console.error('Token 不存在，無法進行請求');
+      return;
+    }
 
     // 獲取持有股票數據
     axios
@@ -32,29 +59,23 @@ const MyStocks = () => {
         console.error('無法獲取持有股票資料:', error);
       });
 
-  // 獲取通知數據
-  axios
-    .get(`${BASE_URL}/api/notifications/`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    .then((response) => {
-      console.log('通知數據:', response.data.notifications); // 打印通知數據
-      setNotifications(response.data.notifications || []);
+    // 生成專屬通知
+    axios
+      .post(`${BASE_URL}/api/generate-user-notification/`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => {
+        console.log('生成通知:', response.data.message);
+        // 生成成功後立即刷新通知列表
+        fetchNotifications(token);
+      })
+      .catch((error) => {
+        console.error('無法生成通知:', error);
+      });
 
-      // 檢查是否已顯示過當天通知
-      const shownNotifications = JSON.parse(localStorage.getItem('shownNotifications')) || [];
-      if (!shownNotifications.includes(todayKey)) {
-        setIsModalVisible(true); // 顯示模態框
-        localStorage.setItem(
-          'shownNotifications',
-          JSON.stringify([...shownNotifications, todayKey])
-        );
-      }
-    })
-    .catch((error) => {
-      console.error('無法獲取通知:', error);
-    });
-}, []);
+    // 初次進入頁面時獲取通知數據
+    fetchNotifications(token);
+  }, []);
 
   const handleModalClose = () => {
     setIsModalVisible(false);
@@ -134,9 +155,9 @@ const MyStocks = () => {
           </Badge>
         </Popover>
       </div>
-      <Table 
-        columns={columns} 
-        dataSource={stockData} 
+      <Table
+        columns={columns}
+        dataSource={stockData}
         rowKey="id"
         pagination={{ pageSize: 8 }}
       />

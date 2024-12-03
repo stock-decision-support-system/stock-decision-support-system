@@ -108,8 +108,8 @@ urlpatterns = [
     path('investment/calculate-threshold/<int:portfolio_id>/', stockViews.calculate_threshold, name='calculate_threshold'),
 
     #每月通知
-    path('api/notifications/', views.get_notifications, name='get_notifications'),
-    path('api/generate-notifications/', views.generate_monthly_notifications, name='generate_notifications'),
+    path('api/notifications/', stockViews.get_notifications, name='get_notifications'),
+    path('api/generate-user-notification/', stockViews.generate_user_notification, name='generate_notifications'),
 
 
 

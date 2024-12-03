@@ -41,7 +41,6 @@ const root = createRoot(document.getElementById('root'));
 root.render(
   <UserProvider>
     <Router>
-      <React.StrictMode>
         <Navbar />
         <div className='d-flex justify-content-center align-items-center vh-100'>
           <Routes>
@@ -74,7 +73,6 @@ root.render(
         </div>
         <GoalProgressBar/>
         <BudgetDialog />
-      </React.StrictMode>
     </Router>
   </UserProvider>
 );
