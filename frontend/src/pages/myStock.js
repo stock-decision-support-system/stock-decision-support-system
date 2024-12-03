@@ -39,6 +39,7 @@ const MyStocks = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token'); // 從 localStorage 獲取保存的 Token
+
     if (!token) {
       console.error('Token 不存在，無法進行請求');
       return;
@@ -72,7 +73,6 @@ const MyStocks = () => {
       .catch((error) => {
         console.error('無法生成通知:', error);
       });
-
     // 初次進入頁面時獲取通知數據
     fetchNotifications(token);
   }, []);

@@ -18,11 +18,11 @@ from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from backend.views import views
-from backend.views import stockViews
-from backend.views import accountingViews
+from myProject.views import views
+from myProject.views import stockViews
+from myProject.views import accountingViews
 
-from backend.views.accountingViews import FinancialAnalysisView
+from myProject.views.accountingViews import FinancialAnalysisView
 
 urlpatterns = [
     # django後台
@@ -110,9 +110,6 @@ urlpatterns = [
     #每月通知
     path('api/notifications/', stockViews.get_notifications, name='get_notifications'),
     path('api/generate-user-notification/', stockViews.generate_user_notification, name='generate_notifications'),
-
-
-
 
     # 資產負債查詢
     path('users/<username>/financial-summary/', accountingViews.financial_summary, name='financial-summary'),

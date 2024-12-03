@@ -1,15 +1,11 @@
 import traceback
 from datetime import datetime, timedelta
-import time
 from rest_framework_simplejwt.authentication import JWTAuthentication
-
-
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 import shioaji as sj
-import yaml
 import logging
 from datetime import date
 from ..models import (
@@ -25,7 +21,7 @@ from rest_framework import status  # 新增這行導入
 from rest_framework.response import Response
 from ..models import InvestmentPortfolio, Investment, DefaultInvestmentPortfolio, APICredentials
 from ..serializers import InvestmentPortfolioSerializer, InvestmentSerializer, DefaultInvestmentPortfolioSerializer
-from backend.models import DefaultStockList, DefaultInvestmentPortfolio
+from myProject.models import DefaultStockList, DefaultInvestmentPortfolio
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.decorators import (
@@ -35,15 +31,11 @@ from rest_framework.decorators import (
 )
 from django.db import transaction
 import pandas as pd
-
-
+from dotenv import load_dotenv
+import os
 
 # 設置日誌
 logger = logging.getLogger(__name__)
-
-# 加載配置
-with open("config.yaml", "r") as file:
-    config = yaml.safe_load(file)
 
 # 初始化 Shioaji API 並登錄
 api = sj.Shioaji(simulation=True)
@@ -53,10 +45,17 @@ api = sj.Shioaji(simulation=True)
 def contracts_callback(security_type):
     logger.info(f"{security_type} contracts fetch done.")
 
+# 載入 .env 文件
+load_dotenv()
 
+# 從 .env 文件讀取 Shioaji API 金鑰
+api_key = os.getenv('SHIOAJI_API_KEY')
+secret_key = os.getenv('SHIOAJI_SECRET_KEY')
+
+# 呼叫 api.login 並傳入 API 金鑰
 api.login(
-    api_key=config["shioaji"]["api_key"],
-    secret_key=config["shioaji"]["secret_key"],
+    api_key=api_key,
+    secret_key=secret_key,
     contracts_cb=contracts_callback,  # 使用回調函數來確認合約加載完成
 )
 
@@ -408,7 +407,6 @@ def get_notifications(request):
     except Exception as e:
         print(f"後端錯誤: {str(e)}")  # 打印詳細錯誤
         return Response({"error": "無法獲取通知", "details": str(e)}, status=500)
-
 
 def get_stock_name_by_id(stock_id):
     try:

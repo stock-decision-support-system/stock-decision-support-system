@@ -14,12 +14,12 @@ from pathlib import Path
 from datetime import timedelta
 
 import pymysql
-import yaml
 from cryptography.fernet import Fernet
+from dotenv import load_dotenv
+import os
 
-# 讀取配置文件
-with open("config.yaml", "r") as file:
-    config = yaml.safe_load(file)  # 讀取 YAML 配置檔案
+# 載入 .env 文件
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -41,7 +41,7 @@ APPEND_SLASH = False
 pymysql.install_as_MySQLdb()
 
 INSTALLED_APPS = [
-    'backend',
+    'myProject',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -68,7 +68,6 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
@@ -84,7 +83,7 @@ SIMPLE_JWT = {
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-ROOT_URLCONF = 'myProject.urls'
+ROOT_URLCONF = 'backend.urls'
 
 TEMPLATES = [
     {
@@ -102,7 +101,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'myProject.wsgi.application'
+WSGI_APPLICATION = 'backend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -110,15 +109,15 @@ WSGI_APPLICATION = 'myProject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': config["database"]["name"],
-        'USER': config["database"]["user"],
-        'PASSWORD': config["database"]["password"],
-        'HOST': config["database"]["host"],
-        "PORT": config["database"]["port"],
+        'NAME': os.getenv("DATABASE_NAME"),
+        'USER': os.getenv("DATABASE_USER"),
+        'PASSWORD': os.getenv("DATABASE_PASSWORD"),
+        'HOST': os.getenv("DATABASE_HOST"),
+        'PORT': os.getenv("DATABASE_PORT", "3306"),  # 預設值為 3306
         'OPTIONS': {
             'charset': 'utf8mb4',
             'collation': 'utf8mb4_0900_ai_ci',
-        }
+        },
     }
 }
 
@@ -147,7 +146,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-AUTH_USER_MODEL = 'backend.CustomUser'
+AUTH_USER_MODEL = 'myProject.CustomUser'
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -200,4 +199,4 @@ RECAPTCHA_SECRET_KEY = '6LdmwcgpAAAAAFkprWdUSzzAZ8dE-1obmzqLK3Nf'
 
 OPENAI_API_KEY = ''
 
-ENCRYPTION_KEY = 'kXZ5gUwuh9RaSOM3BlJ8CJH8UxiRtKMOvZLno5YZH-k='
+ENCRYPTION_KEY = Fernet.generate_key().decode('utf-8')

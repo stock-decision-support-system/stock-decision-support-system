@@ -10,7 +10,7 @@ from django.db.models.functions import TruncMonth, TruncYear
 from django.utils import timezone
 from datetime import timedelta
 
-from myProject import settings
+from backend import settings
 
 # 自訂用戶管理器
 class CustomUserManager(BaseUserManager):

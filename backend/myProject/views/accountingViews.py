@@ -7,6 +7,8 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework.views import APIView
 
+from backend import settings
+
 from ..models import (
     AccountType,
     Budget,
@@ -28,20 +30,12 @@ from ..serializers import (
     ConsumeTypeSerializer,
 )
 from django.db import models
-import yaml
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 import logging
 
-from myProject import settings
-
 # 設置日誌
 logger = logging.getLogger(__name__)
-
-# 讀取配置文件
-with open("config.yaml", "r") as file:
-    config = yaml.safe_load(file)  # 讀取 YAML 配置檔案
-
 
 # 獲取記帳紀錄總頁數的 API
 @api_view(["GET"])  # 允許 GET 方法
@@ -180,13 +174,13 @@ def accounting_list_for_user(request):
             try:
                 budget = Budget.objects.get(username=user, available=True)
                 date_to_compare = datetime.strptime(request.data['transactionDate'], "%Y-%m-%d").date()
-                #if date_to_compare >= budget.start_date:  #判斷accounting_record.transactionDate是否在budget.start_date後
-                if accounting_record.assetType == '0':
-                    budget.current += accounting_record.amount  # 更新金額
-                else:
-                    budget.current -= accounting_record.amount  # 更新金額
-                if budget.current >= budget.target:
-                    budget.is_successful = True
+                if date_to_compare >= budget.start_date:  #判斷accounting_record.transactionDate是否在budget.start_date後
+                    if accounting_record.assetType == '0':
+                        budget.current += accounting_record.amount  # 更新金額
+                    else:
+                        budget.current -= accounting_record.amount  # 更新金額
+                    if budget.current >= budget.target:
+                        budget.is_successful = True
                 budget.save()
             except Budget.DoesNotExist:  # 如果找不到儲蓄目標，這是正常情況，所以什麼也不做，繼續執行其他代碼
                 pass

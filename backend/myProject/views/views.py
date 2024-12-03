@@ -35,7 +35,6 @@ from ..serializers import (
     CustomUserSerializer,
     NotificationSerializer,
 )
-import yaml
 from flask import Flask, request, jsonify
 import requests
 
@@ -44,30 +43,26 @@ from google.cloud import recaptchaenterprise_v1
 import os
 
 # 朱崇銘
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
-   "C:\\github\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
-)
+#os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
+#   "C:\\github\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
+#)
 from django.http import JsonResponse
 
 # 彭軍翔
-# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
-#     "C:\\Users\\NAOPIgee\\Desktop\\fork\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
-# )
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
+    "C:\\Users\\NAOPIgee\\Desktop\\fork\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
+)
 
-# # 歐晉廷
-# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
-#     "/Users/allenou/stock-decision-support-system/my-project-8423-1685343098922-1fed5b68860e.json"
-# )
+# 歐晉廷
+#os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
+#    "/Users/allenou/stock-decision-support-system/my-project-8423-1685343098922-1fed5b68860e.json"
+#)
 
 
 import random
 import string
 from django.template.loader import render_to_string
 from datetime import timedelta
-
-# 讀取配置文件
-with open("config.yaml", "r") as file:
-    config = yaml.safe_load(file)  # 讀取 YAML 配置檔案
 
 
 # 用戶列表視圖
@@ -1002,5 +997,3 @@ def create_assessment(
         print(f"Assessment name: {assessment_name}")
 
     return response  # 返回評估結果
-
-
