@@ -1683,3 +1683,73 @@ def delete_portfolio(request, portfolio_id):
 @permission_classes([IsAuthenticated])  # 確保只有認證用戶可以訪問
 def some_protected_view(request):
     return JsonResponse({"message": "已通過身份驗證"})  # 返回簡單的成功信息
+
+#選取股票至投資組合前的查詢
+@api_view(["POST"])  # 使用 POST 方法來接收股票代碼列表
+@permission_classes([AllowAny])
+def get_select_stocks(request):
+    try:
+        # 從請求中提取用戶傳入的 codeList
+        code_list = request.data.get("codeList", [])
+        
+        if not code_list:
+            return Response(
+                {
+                    "status": "error",
+                    "message": "codeList is required and cannot be empty."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 確保 codeList 是列表類型
+        if not isinstance(code_list, list):
+            return Response(
+                {
+                    "status": "error",
+                    "message": "codeList must be a list."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 根據傳入的代碼動態構建 contracts
+        contracts = []
+        for code in code_list:
+            try:
+                contract = api.Contracts.Stocks[code]
+                contracts.append(contract)
+            except KeyError:
+                # 如果代碼無效，返回相應的錯誤信息
+                return Response(
+                    {
+                        "status": "error",
+                        "message": f"Invalid stock code: {code}"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        # 使用 API 獲取動態生成的 contracts 的快照資料
+        snapshots = api.snapshots(contracts)
+
+        # 附加股票名稱到結果中
+        result = []
+        for i, snapshot in enumerate(snapshots):
+            result.append({**vars(snapshot), "name": contracts[i].name})
+
+        # 返回成功響應，包含股票快照資料
+        return Response(
+            {
+                "status": "success",
+                "data": result
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    except Exception as e:
+        # 捕獲異常並返回錯誤信息
+        return Response(
+            {
+                "status": "error",
+                "message": str(e)
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
