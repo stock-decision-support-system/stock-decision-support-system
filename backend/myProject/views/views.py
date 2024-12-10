@@ -41,6 +41,8 @@ import requests
 import logging
 from google.cloud import recaptchaenterprise_v1
 import os
+# server
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/case/stock-decision-support-system/my-project-8423-1685343098922-1fed5b68860e.json"
 
 # 朱崇銘
 #os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
@@ -49,9 +51,9 @@ import os
 from django.http import JsonResponse
 
 # 彭軍翔
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
-    "C:\\Users\\NAOPIgee\\Desktop\\fork\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
-)
+#os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
+#    "C:\\Users\\NAOPIgee\\Desktop\\fork\\stock-decision-support-system\\my-project-8423-1685343098922-1fed5b68860e.json"
+#)
 
 # 歐晉廷
 #os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (

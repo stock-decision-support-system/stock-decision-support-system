@@ -1,15 +1,11 @@
-# 使用 Python 基本映像檔
-FROM python:3.11-slim
-
-# 設定工作目錄
+# docker_tutorial/backend/Dockerfile
+FROM python:3.11
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+COPY . /app
 WORKDIR /app
-
-# 安裝必要套件
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
-# 複製專案程式碼
-COPY . .
-
-# 啟動命令
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+RUN pip install -r requirements.txt
+RUN pip install gunicorn gevent
+RUN python manage.py makemigrations
+RUN python manage.py migrate --fake
+CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000", "--worker-class=gevent", "--workers=5", "--worker-connections=1000"]
