@@ -17,7 +17,7 @@ const StockTable = ({ data, onCheckboxChange, selectedCodes }) => {
       render: (text, record) => (
         <Checkbox
           checked={selectedCodes.includes(record.code)} // 判斷是否選中
-          onChange={(e) => onCheckboxChange(e, record.code)}
+          onChange={(e) => onCheckboxChange(e, record)}
         />
       ),
     },
@@ -123,7 +123,7 @@ const StockTable = ({ data, onCheckboxChange, selectedCodes }) => {
         pageSize={pageSize} // 每頁顯示的數量
         total={data.length} // 總數據量
         onChange={handlePageChange} // 頁數改變時調用的函數
-        style={{ textAlign: 'center', marginTop: '20px' }} // 分頁器的樣式
+        style={{ textAlign: 'center', marginTop: '20px', display: 'block' }} // 分頁器的樣式
       />
     </div>
   );

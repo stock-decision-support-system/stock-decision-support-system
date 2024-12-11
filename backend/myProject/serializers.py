@@ -110,14 +110,26 @@ class InvestmentPortfolioSerializer(serializers.ModelSerializer):
             "id", "name", "description", "available", "user", "investments"
         ]
 
+class InvestmentPortfolioSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source="user.username")
+    investments = InvestmentSerializer(many=True, required=False)  # 設為選填
+
+    class Meta:
+        model = InvestmentPortfolio
+        fields = [
+            "id", "name", "description", "available", "user", "investments"
+        ]
+
     def create(self, validated_data):
-        investments_data = validated_data.pop("investments", [])  # 獲取投資數據
+        # 獲取 investments，默認為空列表
+        investments_data = validated_data.pop("investments", [])
         portfolio = InvestmentPortfolio.objects.create(
             **validated_data)  # 創建投資組合
 
-        # 保存每一個投資項目
-        for investment_data in investments_data:
-            Investment.objects.create(portfolio=portfolio, **investment_data)
+        # 僅在有 investments 時保存每個投資項目
+        if investments_data:
+            for investment_data in investments_data:
+                Investment.objects.create(portfolio=portfolio, **investment_data)
 
         return portfolio
 

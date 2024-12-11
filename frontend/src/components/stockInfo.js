@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Modal, Input, Select, Radio, Card, Col, Row, Statistic, Spin, Flex } from 'antd';
+import { Button, Modal, Input, Select, Radio, Card, Col, Row, Statistic, Spin, Flex, Form } from 'antd';
 import { ArrowDownOutlined, ArrowUpOutlined } from '@ant-design/icons';
 import { StockRequest } from '../api/request/stockRequest.js';
 import { LoadingOutlined } from '@ant-design/icons';
 import KBar from './kbar.js';
 import '../assets/css/InvestmentModal.css';
+import { InvestmentRequest } from '../api/request/investmentRequest.js';
 
 const { Option } = Select;
 
@@ -15,9 +16,13 @@ const StockInfo = ({ id }) => {
   const [customAmount, setCustomAmount] = useState('');
   const [totalPrice, setTotalPrice] = useState(0);
   const [portfolioName, setPortfolioName] = useState('');
+  const [description, setDescription] = useState('');
   const [formData, setFormData] = useState({});
   const [formattedDate, setFormattedDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [form] = Form.useForm();
+  const [investmentData, setInvestmentData] = useState([]);  // 用來存儲投資組合
+  const [stockPrices, setStockPrices] = useState({}); // 儲存每個股票的價格
 
   const priceColor = formData.change_price < 0 ? '#09CF41' : '#dc3545';
   const changeIcon = formData.change_price < 0 ? <ArrowDownOutlined /> : <ArrowUpOutlined />;
@@ -52,12 +57,54 @@ const StockInfo = ({ id }) => {
   }, []);
 
   const showModal = () => {
+    fetchDropdownData();
     setIsModalVisible(true);
   };
 
+  const fetchDropdownData = () => {
+    InvestmentRequest.getPortfolios()
+      .then(response => {
+        const portfolios = response.data.map(item => ({ ...item, key: item.id }));
+        portfolios.forEach(portfolio => {
+          portfolio.investments.forEach(stock => {
+            fetchStockPrice(stock.symbol);  // 自動查詢每個股票的價格和名稱
+          });
+        });
+        setInvestmentData(portfolios);  // 更新投資組合數據
+      })
+      .catch(error => {
+        console.error('無法獲取投資組合:', error);
+      });
+  }
+
+  // 查詢股票即時價格或收盤價
+  const fetchStockPrice = (symbol) => {
+    if (!stockPrices[symbol]) {
+      InvestmentRequest.getStockPrice(symbol)
+        .then(response => {
+          if (response.data) {
+            setStockPrices(prevPrices => ({
+              ...prevPrices,
+              [symbol]: {
+                price: response.data.price || 0,  // 預設為 0
+                name: response.data.name || '未知股票'  // 預設名稱
+              }
+            }));
+          } else {
+            console.error(`無法獲取股票 ${symbol} 的資料`);
+          }
+        })
+        .catch(error => {
+          console.error(`無法獲取股票 ${symbol} 的價格:`, error);
+        });
+    }
+  };
+
+  // 提交表單時處理的邏輯 (新增投資組合)
   const handleOk = () => {
     setIsModalVisible(false);
   };
+
 
   const handleCancel = () => {
     setIsModalVisible(false);
@@ -82,14 +129,35 @@ const StockInfo = ({ id }) => {
     setIsAddPortfolioModalVisible(true);
   };
 
-  const handleAddPortfolioOk = () => {
-    console.log('New portfolio name:', portfolioName);
-    setIsAddPortfolioModalVisible(false);
-    setPortfolioName('');
-  };
-
   const handleAddPortfolioCancel = () => {
     setIsAddPortfolioModalVisible(false);
+  };
+
+  const handleAddPortfolioOk = () => {
+    form.validateFields()
+      .then(values => {
+        const newPortfolio = {
+          name: values.portfolioName,
+          description: values.description,
+        };
+        InvestmentRequest.createPortfolio(newPortfolio)
+          .then(response => {
+            if (response.data && response.data.id) {
+              setIsAddPortfolioModalVisible(false);
+              form.resetFields();
+              alert('投資組合新增成功');
+              fetchDropdownData();
+            } else {
+              console.error('無法取得新建投資組合的 ID');
+            }
+          })
+          .catch(error => {
+            alert('新增投資組合失敗，請重試。');
+          });
+      })
+      .catch(info => {
+        console.log('驗證失敗:', info);
+      });
   };
 
   return (
@@ -181,35 +249,46 @@ const StockInfo = ({ id }) => {
                     </div>
                   </div>
                   <div style={{ marginTop: '20px' }}>
-                    <Select placeholder="選擇投資組合" style={{ width: '200px', marginRight: '10px' }}>
-                      <Option value="portfolio1">投資組合 1</Option>
-                      <Option value="portfolio2">投資組合 2</Option>
-                      <Option value="portfolio3">投資組合 3</Option>
+                    <Select
+                      style={{ width: '200px', marginRight: '10px' }}
+                      placeholder="選擇投資組合"
+                      onChange={value => console.log(`選擇的投資組合 ID: ${value}`)}
+                    >
+                      {investmentData.map(portfolio => (
+                        <Option key={portfolio.id} value={portfolio.id}>
+                          {portfolio.name}
+                        </Option>
+                      ))}
                     </Select>
-                    <Button type="primary" className="ms-auto button2" onClick={handleAddPortfolioClick}>新增投資組合</Button>
-                  </div>
+                  <Button type="primary" className="ms-auto button2" onClick={handleAddPortfolioClick}>新增投資組合</Button>
                 </div>
-              </Modal>
-              <Modal
-                title="新增投資組合"
-                open={isAddPortfolioModalVisible}
-                onOk={handleAddPortfolioOk}
-                onCancel={handleAddPortfolioCancel}
-              >
-                <Input
-                  value={portfolioName}
-                  onChange={e => setPortfolioName(e.target.value)}
-                  placeholder="輸入投資組合名稱" />
-              </Modal>
-            </>
-          ) : (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-              <p>無法獲取股票信息</p>
-            </div>
+              </div>
+            </Modal>
+          <Modal
+            title="新增投資組合"
+            open={isAddPortfolioModalVisible}
+            onOk={handleAddPortfolioOk}
+            onCancel={handleAddPortfolioCancel}
+          >
+            <Form form={form} layout="vertical">
+              <Form.Item name="portfolioName" label="投資組合名稱" rules={[{ required: true, message: '請輸入投資組合名稱' }]}>
+                <Input placeholder="請輸入投資組合名稱" />
+              </Form.Item>
+
+              <Form.Item name="description" label="投資組合描述" rules={[{ required: true, message: '請輸入投資組合描述' }]}>
+                <Input placeholder="請輸入投資組合描述" />
+              </Form.Item>
+            </Form>
+          </Modal>
+        </>
+        ) : (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+          <p>無法獲取股票信息</p>
+        </div>
           )}
-        </Spin >
-      </Flex>
-    </Card>
+      </Spin >
+    </Flex>
+    </Card >
   );
 };
 

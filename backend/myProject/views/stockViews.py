@@ -1462,6 +1462,14 @@ def get_portfolios(request):
 def create_portfolio(request):
     user = request.user
     print(f"Authenticated user: {user}")  # 調試：檢查後端是否識別到用戶
+
+    # 檢查是否包含 investments，如果沒有則設為空列表
+    investments = request.data.get("investments", [])
+    if not isinstance(investments, list):
+        return Response({
+            "status": "error",
+            "message": "investments 必須是列表。"
+        }, status=status.HTTP_400_BAD_REQUEST)
     serializer = InvestmentPortfolioSerializer(data=request.data)
 
     if serializer.is_valid():
@@ -1469,23 +1477,22 @@ def create_portfolio(request):
         portfolio = serializer.save(user=user)
         print(f"Portfolio created: {portfolio}")  # 調試：確認創建的投資組合
 
-        # 檢查是否傳遞了投資資料並進行調試輸出
-        for investment in request.data.get("investments", []):
-            print(f"Investment: {investment}")  # 調試：打印每個投資項目的資料
+        # 僅當 investments 不為空時處理
+        if investments:
+            for investment in investments:
+                print(f"Investment: {investment}")  # 調試：打印每個投資項目的資料
 
         # 返回成功響應與創建的投資組合資料
         return Response({
             "status": "success",
             "data": serializer.data
-        },
-                        status=status.HTTP_201_CREATED)
+        }, status=status.HTTP_201_CREATED)
     else:
         print(f"Serializer errors: {serializer.errors}")  # 調試：輸出序列化過程中的錯誤
-    return Response({
-        "status": "error",
-        "message": serializer.errors
-    },
-                    status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            "status": "error",
+            "message": serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
