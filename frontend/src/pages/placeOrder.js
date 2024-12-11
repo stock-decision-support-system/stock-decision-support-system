@@ -65,25 +65,40 @@ const PlaceOrder = () => {
   // 提交訂單
   const placeOrder = async () => {
     setLoading(true);
-    const token = localStorage.getItem('token'); // 假設已經有 JWT token 驗證機制
+    const token = localStorage.getItem('token'); 
+  
+    // 验证参数
+    if (!stockSymbol) {
+      message.error('請選擇或輸入有效的股票代號');
+      setLoading(false);
+      return;
+    }
+    if (!orderPrice || isNaN(orderPrice) || parseFloat(orderPrice) <= 0) {
+      message.error('請輸入有效的下單價格');
+      setLoading(false);
+      return;
+    }
+    if (!orderQuantity || isNaN(orderQuantity) || parseInt(orderQuantity, 10) <= 0) {
+      message.error('請輸入有效的下單股數');
+      setLoading(false);
+      return;
+    }
+  
+    const payload = {
+      stock_symbol: stockSymbol,
+      order_quantity: parseInt(orderQuantity, 10),
+      order_price: parseFloat(orderPrice),
+      action: action === '買入' ? 'Buy' : 'Sell',
+    };
+  
+    // 打印请求参数
+    console.log('Placing order with payload:', payload);
+    console.log('Selected stock symbol:', stockSymbol);
   
     try {
-      console.log('Placing order...');
-      console.log('Order data:', {
-        stock_symbol: stockSymbol,
-        order_quantity: parseInt(orderQuantity, 10), // 確保為整數
-        order_price: parseFloat(orderPrice), // 確保為浮點數
-        action: action === '買入' ? 'Buy' : 'Sell', // 將繁體中文轉換為英文字串
-      });
-  
       const response = await axios.post(
         `${BASE_URL}/api/place-odd-lot-order/`,
-        {
-          stock_symbol: stockSymbol,
-          order_quantity: parseInt(orderQuantity, 10), // 整數
-          order_price: parseFloat(orderPrice), // 浮點數
-          action: action === '買入' ? 'Buy' : 'Sell', // 轉換為英文字串
-        },
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -91,24 +106,24 @@ const PlaceOrder = () => {
         }
       );
   
-      console.log('Order response:', response.data);
       if (response.data.status === 'success') {
         message.success('下單成功！');
       } else {
         message.error(response.data.message || '下單失敗');
       }
     } catch (error) {
-      console.error('下單失敗:', error);
       if (error.response) {
-        console.log('Order error response:', error.response.data);
+        console.error('Order error response data:', error.response.data);
         message.error(`下單失敗：${error.response.data.message || '伺服器回應錯誤'}`);
       } else {
+        console.error('Order error:', error);
         message.error('下單失敗，請檢查網路連線');
       }
     } finally {
       setLoading(false);
     }
   };
+  
   
 
   // 處理股票搜尋選項

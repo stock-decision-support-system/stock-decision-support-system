@@ -340,59 +340,83 @@ def generate_user_notification(request):
         user = request.user  # 獲取當前登入用戶
         today = date.today()
 
-        with transaction.atomic():
-            # 檢查是否已經為該用戶生成過當日通知
-            if Notification.objects.filter(user=user, generated_date=today).exists():
-                return Response({"status": "success", "message": "今天的通知已存在"})
+        # 檢查是否已經為該用戶生成過當日通知
+        if Notification.objects.filter(user=user, generated_date=today).exists():
+            return Response({"status": "success", "message": "今天的通知已存在"})
 
-            # 使用 RequestFactory 模擬 HttpRequest
-            factory = RequestFactory()
-            fake_request = factory.get('/api/portfolio-status/', {
-                "start_date": "2024-05-05",
-                "end_date": today.strftime("%Y-%m-%d"),
-            })
+        # 使用 RequestFactory 模擬 HttpRequest
+        factory = RequestFactory()
+        fake_request = factory.get('/api/portfolio-status/', {
+            "start_date": "2024-05-05",
+            "end_date": today.strftime("%Y-%m-%d"),
+        })
 
-            # 添加 JWT Token 到 Authorization 標頭
-            jwt_authenticator = JWTAuthentication()
-            validated_token = jwt_authenticator.get_validated_token(request.headers.get('Authorization').split(" ")[1])
-            fake_request.META['HTTP_AUTHORIZATION'] = f"Bearer {validated_token}"
+        # 添加 JWT Token 到 Authorization 標頭
+        jwt_authenticator = JWTAuthentication()
+        validated_token = jwt_authenticator.get_validated_token(request.headers.get('Authorization').split(" ")[1])
+        fake_request.META['HTTP_AUTHORIZATION'] = f"Bearer {validated_token}"
+        fake_request.user = user
 
-            # 設置用戶
-            fake_request.user = user
+        # 調用 get_portfolio_status 方法
+        response = get_portfolio_status(fake_request)
 
-            # 調用 get_portfolio_status 方法
-            response = get_portfolio_status(fake_request)
+        # 驗證響應
+        if response.status_code != 200:
+            return Response({"status": "error", "message": f"獲取股票數據失敗，狀態碼: {response.status_code}"}, status=500)
 
-            # 驗證響應
-            if response.status_code != 200:
-                return Response({"status": "error", "message": f"獲取股票數據失敗，狀態碼: {response.status_code}"}, status=500)
+        # 解析數據
+        data = json.loads(response.content.decode('utf-8'))  # 使用 json.loads 解析內容
+        positions = data.get('positions', [])
 
-            # 解析數據
-            data = json.loads(response.content.decode('utf-8'))  # 使用 json.loads 解析內容
-            positions = data.get('positions', [])
-            message = "您的股票建議：\n"
+        # # **新增測試數據**
+        # positions.append({
+        #     "code": "TEST1",
+        #     "name": "測試股票1",
+        #     "quantity": 3,
+        #     "price": 100,
+        #     "last_price": 120
+        # })
+        # positions.append({
+        #     "code": "TEST2",
+        #     "name": "測試股票2",
+        #     "quantity": 3,
+        #     "price": 200,
+        #     "last_price": 210
+        # })
 
-            # 構建通知內容
+        # 根據測試數據計算 Naive 策略
+        today_str = today.strftime("%Y-%m-%d")  # 將日期格式化為字符串
+        message = f"日期: {today_str}\n您的股票建議：\n"
+        
+        # 如果股票數量 <= 2，不執行 Naive 策略
+        if len(positions) <= 2:
+            message += "股票種類少於 3 種，不進行調整。\n"
+        else:
+            # Naive 投資策略
+            total_value = sum(pos['quantity'] * pos['last_price'] for pos in positions)
+            weight = 1 / len(positions)
             for position in positions:
                 stock_code = position['code']
                 stock_name = position['name']
-                quantity = position['quantity']
-                suggested_quantity = round(quantity * 1.1)
+                current_quantity = position['quantity']
+                allocated_funds = weight * total_value
+                suggested_quantity = int(allocated_funds / position['last_price'])
 
                 message += f"- 股票代號: {stock_code} ({stock_name})，建議調整至 {suggested_quantity} 股\n"
 
-            # 創建通知
-            Notification.objects.create(
-                user=user,
-                message=message,
-                generated_date=today,
-            )
+        # 創建通知
+        Notification.objects.create(
+            user=user,
+            message=message,
+            generated_date=today,
+        )
 
-            return Response({"status": "success", "message": "通知已生成"})
+        return Response({"status": "success", "message": "通知已生成", "details": message})
     except Exception as e:
         error_details = traceback.format_exc()
         print(f"生成通知時出錯: {str(e)}\n詳細堆疊:\n{error_details}")
         return Response({"status": "error", "message": str(e)}, status=500)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -454,7 +478,17 @@ def place_odd_lot_order(request):
         order_type = request.data.get("order_type", sj.constant.OrderType.ROD) # 默認為ROD
 
         # 構建股票合約
-        contract = api.Contracts.Stocks.TSE[stock_symbol]
+        try:
+            contract = api.Contracts.Stocks.TSE[stock_symbol]
+            if contract is None:
+                raise ValueError("Invalid stock symbol or contract not found")
+        except KeyError:
+            return JsonResponse({"status": "error", "message": "無效的股票代號"}, status=400)
+        except ValueError as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+        if contract is None:
+            return JsonResponse({"status": "error", "message": "合約無效，請確認股票代號"}, status=400)
+
 
         # 構建零股下單委託
         order = api.Order(

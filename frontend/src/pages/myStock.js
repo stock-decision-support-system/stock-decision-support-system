@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Modal, Badge, Popover, Button, List } from 'antd';
+import { Table, Modal, Badge, Button, List } from 'antd';
 import { BellOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { config } from '../config';
@@ -8,9 +8,9 @@ const BASE_URL = config.API_URL;
 
 const MyStocks = () => {
   const [stockData, setStockData] = useState([]);
-  const [isModalVisible, setIsModalVisible] = useState(false); // 控制通知視窗的狀態
+  const [isModalVisible, setIsModalVisible] = useState(false); // 控制投資建議通知彈窗
+  const [isNotificationModalVisible, setIsNotificationModalVisible] = useState(false); // 控制通知紀錄彈窗
   const [notifications, setNotifications] = useState([]); // 存儲通知內容
-  const [isPopoverVisible, setIsPopoverVisible] = useState(false); // 小鈴鐺的狀態
 
   const fetchNotifications = (token) => {
     axios
@@ -25,7 +25,7 @@ const MyStocks = () => {
         const todayKey = new Date().toISOString().split('T')[0];
         const shownNotifications = JSON.parse(localStorage.getItem('shownNotifications')) || [];
         if (!shownNotifications.includes(todayKey)) {
-          setIsModalVisible(true); // 顯示模態框
+          setIsModalVisible(true); // 顯示投資建議彈窗
           localStorage.setItem(
             'shownNotifications',
             JSON.stringify([...shownNotifications, todayKey])
@@ -77,7 +77,15 @@ const MyStocks = () => {
     fetchNotifications(token);
   }, []);
 
-  const handleModalClose = () => {
+  const handleNotificationModalOpen = () => {
+    setIsNotificationModalVisible(true);
+  };
+
+  const handleNotificationModalClose = () => {
+    setIsNotificationModalVisible(false);
+  };
+
+  const handleInvestmentModalClose = () => {
     setIsModalVisible(false);
   };
 
@@ -132,28 +140,13 @@ const MyStocks = () => {
     <div className="container">
       <h1 className="title" style={{ marginTop: '-15%' }}>我的股票持有狀況與損益</h1>
       <div style={{ textAlign: 'right', marginBottom: '10px' }}>
-        <Popover
-          content={
-            <List
-              dataSource={notifications}
-              renderItem={(item) => (
-                <List.Item>
-                  <div>
-                    <strong>{item.date}</strong>: {item.message}
-                  </div>
-                </List.Item>
-              )}
-            />
-          }
-          title="通知記錄"
-          trigger="click"
-          visible={isPopoverVisible}
-          onVisibleChange={(visible) => setIsPopoverVisible(visible)}
-        >
-          <Badge count={notifications.length}>
-            <Button shape="circle" icon={<BellOutlined />} />
-          </Badge>
-        </Popover>
+        <Badge count={notifications.length}>
+          <Button
+            shape="circle"
+            icon={<BellOutlined />}
+            onClick={handleNotificationModalOpen}
+          />
+        </Badge>
       </div>
       <Table
         columns={columns}
@@ -164,10 +157,30 @@ const MyStocks = () => {
       <Modal
         title="投資組合通知"
         visible={isModalVisible}
-        onOk={handleModalClose}
-        onCancel={handleModalClose}
+        onOk={handleInvestmentModalClose}
+        onCancel={handleInvestmentModalClose}
       >
-        <p>您有新的投資建議，請查看小鈴鐺。</p>
+        <p>您有新的投資建議，請查看通知記錄。</p>
+      </Modal>
+      <Modal
+        title="通知記錄"
+        visible={isNotificationModalVisible}
+        onOk={handleNotificationModalClose}
+        onCancel={handleNotificationModalClose}
+        footer={null}
+        width={700} // 設置彈窗寬度
+        bodyStyle={{ maxHeight: '400px', overflowY: 'auto' }} // 設置彈窗內部樣式
+      >
+      <List
+        dataSource={notifications}
+        renderItem={(item) => (
+          <List.Item style={{ display: 'block', padding: '10px 0' }}>
+            <div style={{ lineHeight: '1.5', whiteSpace: 'pre-line' }}>
+              {item.message}
+            </div>
+          </List.Item>
+        )}
+      />
       </Modal>
     </div>
   );
