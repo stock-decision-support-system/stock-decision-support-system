@@ -3,6 +3,7 @@ import { Table, Modal, Badge, Button, List } from 'antd';
 import { BellOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { config } from '../config';
+import { message } from 'antd';
 
 const BASE_URL = config.API_URL;
 
@@ -47,18 +48,22 @@ const MyStocks = () => {
 
     // 獲取持有股票數據
     axios
-      .get(`${BASE_URL}/api/portfolio-status/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        const { positions } = response.data;
-        setStockData(positions);
-      })
-      .catch((error) => {
-        console.error('無法獲取持有股票資料:', error);
-      });
+  .get(`${BASE_URL}/api/portfolio-status/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  .then((response) => {
+    const { positions } = response.data;
+    setStockData(positions);
+  })
+  .catch((error) => {
+    // 打印完整錯誤信息以便調試
+    console.error('無法獲取持有股票資料:', error.response?.data || error.message);
+
+    // 提示用戶友好的錯誤信息
+    message.error(
+      error.response?.data?.message || '無法獲取數據，請稍後重試！'
+    );
+  });
 
     // 生成專屬通知
     axios

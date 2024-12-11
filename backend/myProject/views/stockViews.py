@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view
 import shioaji as sj
 import logging
-from datetime import date
+from datetime import date, datetime, time
 from ..models import (
 Notification,
 CustomUser)
@@ -340,6 +340,16 @@ def generate_user_notification(request):
         user = request.user  # 獲取當前登入用戶
         today = date.today()
 
+        # 當前時間判斷
+        now = datetime.now()
+        cutoff_time = time(14, 30)  # 下午2:30
+
+        if now.time() < cutoff_time:
+            return Response({
+                "status": "error",
+                "message": "通知生成僅限於當天下午2:30之後",
+            }, status=400)
+
         # 檢查是否已經為該用戶生成過當日通知
         if Notification.objects.filter(user=user, generated_date=today).exists():
             return Response({"status": "success", "message": "今天的通知已存在"})
@@ -367,22 +377,6 @@ def generate_user_notification(request):
         # 解析數據
         data = json.loads(response.content.decode('utf-8'))  # 使用 json.loads 解析內容
         positions = data.get('positions', [])
-
-        # # **新增測試數據**
-        # positions.append({
-        #     "code": "TEST1",
-        #     "name": "測試股票1",
-        #     "quantity": 3,
-        #     "price": 100,
-        #     "last_price": 120
-        # })
-        # positions.append({
-        #     "code": "TEST2",
-        #     "name": "測試股票2",
-        #     "quantity": 3,
-        #     "price": 200,
-        #     "last_price": 210
-        # })
 
         # 根據測試數據計算 Naive 策略
         today_str = today.strftime("%Y-%m-%d")  # 將日期格式化為字符串
