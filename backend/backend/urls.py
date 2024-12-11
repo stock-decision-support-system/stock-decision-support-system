@@ -91,12 +91,14 @@ urlpatterns = [
     path('stock/kbar/<str:id>/', stockViews.get_kbars, name='get-kbar'),
     path('investment/stocks/', stockViews.get_all_stocks, name='get_all_stocks'),
     path('stock/twfif/', stockViews.get_tw_stocks, name='get-tw-stocks'),
+    path('stock/select/', stockViews.get_select_stocks, name='get-select-stocks'),
 
     # 投資組合
     path('investment/portfolios/', stockViews.get_portfolios, name='get_portfolios'),
     path('investment/portfolios/create/', stockViews.create_portfolio, name='create_portfolio'),
     path('investment/portfolios/<int:portfolio_id>/update/', stockViews.update_portfolio, name='update_portfolio'),
     path('investment/portfolios/<int:id>/investments/', stockViews.add_investment, name='add_investment'),
+    path('investment/portfolios/<int:id>/investments/list/', stockViews.add_investment_list, name='add_investment_list'),
     path('investment/portfolios/<int:portfolio_id>/delete/', stockViews.delete_portfolio, name='delete_portfolio'),
     path('investment/stock_price/<str:symbol>/', stockViews.get_stock_price, name='get_stock_price'),
     path('investment/portfolios/<int:portfolio_id>/', stockViews.get_portfolio_detail, name='get_portfolio_detail'),

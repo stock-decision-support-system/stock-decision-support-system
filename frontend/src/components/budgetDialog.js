@@ -11,6 +11,7 @@ const BudgetDialog = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [investmentPortfolios, setInvestmentPortfolios] = useState([]); // 儲存投資組合資料
     const [selectedThreshold, setSelectedThreshold] = useState(''); // 儲存選擇的門檻金額
+    const [targetName, setTargetName] = useState(''); // 儲存選擇的門檻金額
     const [form] = Form.useForm(); // 使用 Ant Design 的 Form hook
     const token = localStorage.getItem('token');
 
@@ -55,6 +56,8 @@ const BudgetDialog = () => {
             values["end_date"] = endDate.toISOString().split('T')[0];  // 格式化為 YYYY-MM-DD
         }
 
+        values["name"] = targetName;
+        
         BudgetRequest.addBudget(values)
             .then(response => {
                 message.success(response.message);
@@ -71,6 +74,7 @@ const BudgetDialog = () => {
     const handlePortfolioChange = (portfolioId) => {
         const selectedPortfolio = investmentPortfolios.find(portfolio => portfolio.id === portfolioId);
         if (selectedPortfolio) {
+            setTargetName(selectedPortfolio.name)
             setSelectedThreshold(selectedPortfolio.investment_threshold); // 更新目標金額
             form.setFieldsValue({ target: selectedPortfolio.investment_threshold }); // 設定表單中的目標金額
         }

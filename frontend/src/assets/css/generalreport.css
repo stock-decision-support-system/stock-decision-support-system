@@ -1,36 +1,3 @@
-.typewriter {
-  width: '80%';
-  overflow: hidden;
-  border-right: .15em solid black;
-  white-space: nowrap;
-  margin: 0 auto;
-  letter-spacing: .15em;
-  animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end 3.5s;
-  /* 停止閃爍光標3.5秒後消失 */
-  animation-fill-mode: forwards; /* 保持打字效果結束時的狀態 */
-}
-
-/* 停止光標閃爍3.5秒後消失 */
-@keyframes typing {
-  from {
-    width: 0;
-  }
-
-  to {
-    width: 100%;
-  }
-}
-
-@keyframes blink-caret {
-  from,
-  to {
-    border-color: transparent;
-  }
-  50% {
-    border-color: black;
-  }
-}
-
 .ant-card {
   transition: none; /* 移除卡片的過渡效果 */
 }

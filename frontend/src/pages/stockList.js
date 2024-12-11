@@ -4,7 +4,7 @@ import SearchContainer from '../components/searchContainer';
 import { StockRequest } from '../api/request/stockRequest.js';
 import { InvestmentRequest } from '../api/request/investmentRequest.js';
 import { LoadingOutlined } from '@ant-design/icons';
-import { Button, Modal, Input, Select, Radio, Card, Spin, Form } from 'antd';
+import { Button, Modal, Input, Select, Radio, Card, Spin, Form, notification } from 'antd';
 
 const { Option } = Select;
 
@@ -20,7 +20,8 @@ const StockList = () => {
     const [investmentData, setInvestmentData] = useState([]);  // 用來存儲投資組合
     const [form] = Form.useForm();
     const [stockPrices, setStockPrices] = useState({}); // 儲存每個股票的價格
-    const [selectedOption, setSelectedOption] = useState('buyAndHold');
+    const [selectedOption, setSelectedOption] = useState('0');
+    const [selectedInvest, setSelectedInvest] = useState(null);
 
     // 處理選擇股票的變更
     const handleCheckboxChange = (e, stock) => {
@@ -42,7 +43,6 @@ const StockList = () => {
         });
     };
 
-
     // 獲取股票資料
     const fetchStockData = async () => {
         setIsLoading(true); // 開始載入
@@ -63,7 +63,6 @@ const StockList = () => {
     const showModal = () => {
         fetchDropdownData();
         setIsModalVisible(true);
-        console.log(selectedStocks)
     };
 
     const fetchDropdownData = () => {
@@ -106,18 +105,44 @@ const StockList = () => {
     };
 
     const handleOk = () => {
-        setIsModalVisible(false);
+        const investmentData = selectedStocks.map(item => ({
+            symbol: item.code,
+            buy_price: item.price,
+            shares: item.amount,
+        }));
+        
+        // 調用 API 傳遞數據
+        InvestmentRequest.addInvestmentList(selectedInvest, investmentData)
+            .then(response => {
+                if (response.data) {
+                    handleCancel();
+
+                    notification.success({
+                        message: '新增成功',
+                        description: '投資組合新增成功',
+                    });
+                } else {
+                    console.error('無法取得新建投資組合的 ID');
+                }
+            })
+            .catch(error => {
+                notification.error({
+                    message: '新增失敗',
+                    description: '新增投資組合失敗，請重試。',
+                });
+            });
     };
+
 
     const handleCancel = () => {
         setIsModalVisible(false);
     };
 
     // 處理數量變更並重新計算 totalPrice
-    const handleAmountChange = (id, value) => {
+    const handleAmountChange = (code, value) => {
         const updatedStocks = selectedStocks.map(stock => {
             // 計算 totalPrice = price * amount
-            if (stock.id === id) {
+            if (stock.code === code) {
                 const updatedStock = {
                     ...stock,
                     amount: value,
@@ -144,6 +169,8 @@ const StockList = () => {
                 const newPortfolio = {
                     name: values.portfolioName,
                     description: values.description,
+                    buyType: selectedOption,
+                    quota: values.quota,
                 };
                 InvestmentRequest.createPortfolio(newPortfolio)
                     .then(response => {
@@ -198,10 +225,23 @@ const StockList = () => {
                 >
                     <div>
                         <Radio.Group onChange={handleOptionChange} value={selectedOption}>
-                            <Radio value="buyAndHold">Buy and Hold</Radio>
-                            <Radio value="naive" style={{ marginLeft: '10px' }}>Naive</Radio>
-                            <Radio value="custom" style={{ marginLeft: '10px' }}>自訂</Radio>
+                            <Radio value="0">Buy and Hold</Radio>
+                            <Radio value="1" style={{ marginLeft: '10px' }}>Naive</Radio>
+                            <Radio value="2" style={{ marginLeft: '10px' }}>自訂</Radio>
                         </Radio.Group>
+                        {selectedOption === "0" ? (
+                            <p>
+                                未來將會依照投資金額每月買入最大股數
+                            </p>
+                        ) : selectedOption === "1" ? (
+                            <p>
+                                每日將會寄送股數變動建議給您
+                            </p>
+                        ) : (
+                            <p>
+                                依您的個人喜好來決定購買的股數
+                            </p>
+                        )}
                         {selectedStocks.map(stock => (
                             <div key={stock.code} style={{ marginBottom: '15px' }}>
                                 <h4>{stock.name} (代碼: {stock.code})</h4>
@@ -209,7 +249,7 @@ const StockList = () => {
                                     <Input
                                         type="number"
                                         value={stock.amount}
-                                        onChange={(e) => handleAmountChange(stock.id, e.target.value)}
+                                        onChange={(e) => handleAmountChange(stock.code, e.target.value)}
                                         placeholder="輸入股數"
                                         style={{ width: '150px', marginRight: '10px' }}
                                     />
@@ -221,7 +261,7 @@ const StockList = () => {
                             <Select
                                 style={{ width: '200px', marginRight: '10px' }}
                                 placeholder="選擇投資組合"
-                                onChange={value => console.log(`選擇的投資組合 ID: ${value}`)}
+                                onChange={value => setSelectedInvest(value)}
                             >
                                 {investmentData.map(portfolio => (
                                     <Option key={portfolio.id} value={portfolio.id}>
@@ -244,6 +284,32 @@ const StockList = () => {
                                     <Form.Item name="description" label="投資組合描述" rules={[{ required: true, message: '請輸入投資組合描述' }]}>
                                         <Input placeholder="請輸入投資組合描述" />
                                     </Form.Item>
+                                    <Radio.Group onChange={handleOptionChange} value={selectedOption}>
+                                        <Radio value="0">Buy and Hold</Radio>
+                                        <Radio value="1" style={{ marginLeft: '10px' }}>Naive</Radio>
+                                        <Radio value="2" style={{ marginLeft: '10px' }}>自訂</Radio>
+                                    </Radio.Group>
+                                    {selectedOption === "0" ? (
+                                        <p>
+                                            未來將會依照投資金額每月買入最大股數
+                                        </p>
+                                    ) : selectedOption === "1" ? (
+                                        <p>
+                                            每日將會寄送股數變動建議給您
+                                        </p>
+                                    ) : (
+                                        <p>
+                                            依您的個人喜好來決定購買的股數
+                                        </p>
+                                    )}
+                                    {(selectedOption === "0") && (
+                                        <Form.Item name="quota" label="投資金額" required>
+                                            <Input
+                                                type="number"
+                                                placeholder="請輸入投資金額"
+                                            />
+                                        </Form.Item>
+                                    )}
                                 </Form>
                             </Modal>
                         </div>

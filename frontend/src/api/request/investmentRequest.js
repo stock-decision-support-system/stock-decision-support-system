@@ -7,6 +7,7 @@ const CREATE_URL = "/create";
 const INVESTMENTS_URL = "/investments";
 const DELETE_URL = "/delete";
 const STOCK_PRICE_URL = "/stock_price";
+const LIST_URL = "/list";
 
 export class InvestmentRequest {
     static getAllStocks() {
@@ -23,6 +24,10 @@ export class InvestmentRequest {
 
     static addInvestment(id, data) {
         return FetchUtil.postAPI(`${BASE_URL}${PORTFOLIOS_URL}/${id}${INVESTMENTS_URL}`, data);
+    }
+
+    static addInvestmentList(id, data) {
+        return FetchUtil.postAPI(`${BASE_URL}${PORTFOLIOS_URL}/${id}${INVESTMENTS_URL}${LIST_URL}`, data);
     }
 
     static deletePortfolio(id) {

@@ -117,7 +117,7 @@ class InvestmentPortfolioSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvestmentPortfolio
         fields = [
-            "id", "name", "description", "available", "user", "investments"
+            "id", "name", "description", "available", "user", "investments", "quota"
         ]
 
     def create(self, validated_data):

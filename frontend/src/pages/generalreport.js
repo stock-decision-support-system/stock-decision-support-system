@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { message, Card, DatePicker, Button } from 'antd';
+import { message, Card, DatePicker, Button, Modal, Spin } from 'antd';
 import { DualAxes } from '@ant-design/plots';
 import { AccountingRequest } from '../api/request/accountingRequest';
 import AccountingSidebar from '../components/accountingSidebar.js'; // 引入 Sidebar 組件
-import adviceImage from '../assets/images/advice.png';
+import AdviceModal from '../components/adviceModal.js';
 import '../assets/css/generalreport.css';
 import { FinancialAnalysisRequest } from '../api/request/financialAnalysisRequest.js';
 import axios from 'axios';
@@ -15,13 +15,13 @@ const { RangePicker } = DatePicker;
 const GeneralReport = () => {
     const [totalAmount, setTotalAmount] = useState(0);
     const [netAmount, setNetAmount] = useState(0);
-    const [aIAdviceArray, setAIAdviceArray] = useState([]);
     const [advice, setAdvice] = useState('')
-    const [visibleAdvice, setVisibleAdvice] = useState(1); // 用於追蹤可見的建議數量
-    const [totalLength, setTotalLength] = useState(null);
     const [chartData, setChartData] = useState([]);
     const [selectedDates, setSelectedDates] = useState([null, null]); // 儲存選擇的日期範圍
     const [isVisible, setIsVisible] = useState(false);  // 初始狀態為不顯示
+    const [isModalVisible, setIsModalVisible] = useState(false); // 控制 Modal 顯示狀態
+    const [loading, setLoading] = useState(false); // 控制加載狀態
+    const [stocks, setStocks] = useState([]);
 
     const toggleVisibility = () => {
         setIsVisible(!isVisible);  // 切換顯示狀態
@@ -29,49 +29,23 @@ const GeneralReport = () => {
 
     useEffect(() => {
         fetchTotalAmount();
-        fetchAIAdvice();
         handleFetchData();
     }, []);
 
-    const splitAIAdvice = (text) => {
-        const paragraphs = text.split('\n\n').map(item => item.trim());
-        const result = [];
-
-        paragraphs.forEach(paragraph => {
-            if (paragraph.length > 75) {
-                // 如果段落長度超過 75，則再分割
-                const splitParagraphs = paragraph.match(/.{1,75}/g) || []; // 每 75 字一段
-                result.push(...splitParagraphs);
-            } else {
-                // 如果段落長度不超過 75，則直接加入
-                result.push(paragraph);
-            }
-        });
-        setTotalLength(result.length);
-        return result;
-    };
-
     const fetchAIAdvice = async () => {
+        setLoading(true); // 開始加載
         FinancialAnalysisRequest.getAccountingAI()
             .then(response => {
                 setAdvice(response.data[0].advice);
-                setAIAdviceArray(splitAIAdvice(response.data[0].advice));
+                setStocks(response.data[0].advice_json.stocks);
+                setLoading(false);
             })
             .catch((error) => {
+                setLoading(false);
+                setAdvice('回應超時，請稍後在試');
                 message.error(error.message);
             });
     }
-
-    useEffect(() => {
-        if (totalLength !== null) {
-            // 每 4 秒顯示一個新段落
-            const interval = setInterval(() => {
-                setVisibleAdvice(prev => Math.min(prev + 1, aIAdviceArray.length)); // 增加可見建議的數量
-            }, 4000); // 每 4 秒執行一次
-
-            return () => clearInterval(interval); // 清除定時器
-        }
-    }, [totalLength, aIAdviceArray]);
 
     const fetchTotalAmount = async () => {
         AccountingRequest.getFinancialSummary()
@@ -142,6 +116,28 @@ const GeneralReport = () => {
         },
     };
 
+    const showModal = () => {
+        setIsModalVisible(true);
+        fetchAIAdvice();
+    };
+
+    const handleCancel = () => {
+        setIsModalVisible(false);
+    };
+
+    const formatAdvice = (adviceText) => {
+        const parts = adviceText.split("\n\n"); // 分割段落
+        return parts.map((part, index) => {
+            if (part.match(/^\d+\./)) {
+                // 處理以數字開頭的項目列表
+                const items = part.split("\n").map((item, idx) => (
+                    <li key={`item-${index}-${idx}`}>{item.replace(/^\d+\.\s*/, '')}</li>
+                ));
+                return <ul key={`list-${index}`}>{items}</ul>;
+            }
+            return <p key={`para-${index}`}>{part}</p>;
+        });
+    };
 
     return (
         <div className="w-100" style={{ height: '80%', display: 'flex' }}>
@@ -165,32 +161,22 @@ const GeneralReport = () => {
                             </div>
                             <div style={{ display: 'flex', margin: '1rem' }}>
                                 <div>
-                                    <img
-                                        src={adviceImage}
-                                        alt="ai建議"
-                                        style={{ height: '150px' }}
-                                    />
-                                    <h3 style={{
-                                        display: 'flex',
-                                        justifyContent: 'center'
-                                    }}>
-                                        AI儲蓄建議
-                                    </h3>
+                                    <Button
+                                        type="primary"
+                                        style={{ display: 'block', margin: '0.5rem auto' }}
+                                        onClick={showModal}
+                                    >
+                                        查看AI儲蓄建議
+                                    </Button>
                                 </div>
-                                <Card
-                                    style={{
-                                        margin: '1rem',
-                                        width: '90%',
-                                        overflowX: 'hidden', // 禁用水平滑軌
-                                        overflowY: 'auto', // 讓內容超出時顯示垂直滑軌
-                                        maxHeight: '150px', // 設定最大高度
-                                        textAlign: 'left', // 讓文字靠左
-                                    }}
-                                >
-                                    {aIAdviceArray.slice(0, visibleAdvice).map((advice, index) => (
-                                        <p className="typewriter" key={index}>{advice}</p>
-                                    ))}
-                                </Card>
+                                <AdviceModal
+                                    isModalVisible={isModalVisible}
+                                    loading={loading}
+                                    advice={advice}
+                                    formatAdvice={formatAdvice}
+                                    handleCancel={handleCancel}
+                                    stocks={stocks}
+                                />
                             </div>
                         </div>
                     </div>
